@@ -45,6 +45,9 @@ class RNN:
         self.avg_loss = ema.average(self.loss)
         self.avg_acc = ema.average(self.acc)
 
+        tf.scalar_summary("Loss", self.loss)
+        tf.scalar_summary("Accuracy", self.acc)
+
         self.it = tf.Variable(0, trainable=False, dtype=tf.int64)
         optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
         train_op = optimizer.minimize(self.loss, global_step=self.it)

@@ -36,8 +36,8 @@ class Loader:
         self._label_to_int = {l : i for i, l in self._int_to_label.iteritems()}
 
         self._train = self.preprocess(self._train)
-        # TODO, awni, some keys in valid and test not in train.
-        #self._valid = self.preprocess(self._valid)
+        self._valid = self.preprocess(self._valid)
+        # TODO, awni, some classes in test but not in train
         #self._test = self.preprocess(self._test)
 
     def batches(self, data):

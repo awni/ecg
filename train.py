@@ -11,19 +11,37 @@ import time
 
 from models import rnn
 import loader
+import utils
 
 tf.flags.DEFINE_string("config", "mitdb_config.json",
                        "Configuration file for training.")
 FLAGS = tf.flags.FLAGS
 
-def run_epoch(model, data_loader, session):
+def run_epoch(model, data_loader, session, summarizer):
+    summary_op = tf.merge_all_summaries()
+
     for batch in data_loader.batches(data_loader.train):
-        ops = [model.train_op, model.avg_loss, model.avg_acc, model.it]
+        ops = [model.train_op, model.avg_loss, model.avg_acc, model.it, summary_op]
         res = session.run(ops, feed_dict=model.feed_dict(*batch))
-        _, loss, acc, it = res
+        _, loss, acc, it, summary = res
+        summarizer.add_summary(summary, it)
         if it % 100 == 0:
             msg = "Iter {}: AvgLoss {:.3f}, AvgAcc {:.3f}"
             print(msg.format(it, loss, acc))
+
+def run_validation(model, data_loader, session, summarizer):
+    results = []
+    for batch in data_loader.batches(data_loader.valid):
+        ops = [model.acc, model.loss]
+        res = session.run(ops, feed_dict=model.feed_dict(*batch))
+        results.append(res)
+    acc, loss = np.mean(zip(*results), axis=1)
+    summary = utils.make_summary("Dev Accuracy", float(acc))
+    summarizer.add_summary(summary)
+    summary = utils.make_summary("Dev Loss", float(loss))
+    summarizer.add_summary(summary)
+    msg = "Validation: Loss {:.3f}, Acc {:.3f}"
+    print(msg.format(loss, acc))
 
 def main(argv=None):
 
@@ -52,11 +70,14 @@ def main(argv=None):
         model.init_train(config['optimizer'])
         tf.initialize_all_variables().run()
         saver = tf.train.Saver(tf.all_variables())
+        summarizer = tf.train.SummaryWriter(save_path, sess.graph)
         for e in range(epochs):
             start = time.time()
-            run_epoch(model, data_loader, sess)
+            run_epoch(model, data_loader, sess, summarizer)
             saver.save(sess, os.path.join(save_path, "model"))
             print("Epoch {} time {:.1f} (s)".format(e, time.time() - start))
+            run_validation(model, data_loader, sess, summarizer)
+
 
 if __name__ == '__main__':
     tf.app.run()
