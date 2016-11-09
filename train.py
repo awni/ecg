@@ -19,17 +19,20 @@ FLAGS = tf.flags.FLAGS
 
 def run_epoch(model, data_loader, session, summarizer):
     summary_op = tf.merge_all_summaries()
+    model.set_momentum()
 
     for batch in data_loader.batches(data_loader.train):
-        ops = [model.train_op, model.avg_loss, model.avg_acc, model.it, summary_op]
+        ops = [model.train_op, model.avg_loss,
+               model.avg_acc, model.it, summary_op]
         res = session.run(ops, feed_dict=model.feed_dict(*batch))
         _, loss, acc, it, summary = res
-        summarizer.add_summary(summary, it)
+        summarizer.add_summary(summary, global_step=it)
         if it % 100 == 0:
             msg = "Iter {}: AvgLoss {:.3f}, AvgAcc {:.3f}"
             print(msg.format(it, loss, acc))
 
 def run_validation(model, data_loader, session, summarizer):
+    it = model.it.eval(session)
     results = []
     for batch in data_loader.batches(data_loader.valid):
         ops = [model.acc, model.loss]
@@ -37,9 +40,9 @@ def run_validation(model, data_loader, session, summarizer):
         results.append(res)
     acc, loss = np.mean(zip(*results), axis=1)
     summary = utils.make_summary("Dev Accuracy", float(acc))
-    summarizer.add_summary(summary)
+    summarizer.add_summary(summary, global_step=it)
     summary = utils.make_summary("Dev Loss", float(loss))
-    summarizer.add_summary(summary)
+    summarizer.add_summary(summary, global_step=it)
     msg = "Validation: Loss {:.3f}, Acc {:.3f}"
     print(msg.format(loss, acc))
 
@@ -64,8 +67,7 @@ def main(argv=None):
 
     with tf.Graph().as_default(), tf.Session() as sess:
         tf.set_random_seed(config['seed'])
-        mean, std = data_loader.mean_and_std()
-        model.init_inference(config['model'], mean=mean, std=std)
+        model.init_inference(config['model'])
         model.init_loss()
         model.init_train(config['optimizer'])
         tf.initialize_all_variables().run()

@@ -6,25 +6,21 @@ import tensorflow.contrib.layers as tfl
 
 class RNN:
 
-    def init_inference(self, config, mean=0, std=1):
+    def init_inference(self, config):
         self.output_dim = num_labels = config['output_dim']
         self.batch_size = batch_size = config['batch_size']
 
-        mean = tf.Variable(mean, dtype=tf.float32, trainable=False)
-        std = tf.Variable(std, dtype=tf.float32, trainable=False)
-
         self.inputs = inputs = tf.placeholder(tf.float32, shape=(batch_size, None))
-        inputs = (inputs - mean) / std
         acts = tf.reshape(inputs, (batch_size, 1, -1, 1)) #NHWC
 
-        acts = tfl.convolution2d(acts, num_outputs=32, kernel_size=[1, 8])
-        acts = tfl.max_pool2d(acts, kernel_size=[1, 2], padding='SAME')
+        acts = tfl.convolution2d(acts, num_outputs=32, kernel_size=[1, 8], stride=4)
+        #acts = tfl.max_pool2d(acts, kernel_size=[1, 2], padding='SAME')
 
-        acts = tfl.convolution2d(acts, num_outputs=64, kernel_size=[1, 8])
-        acts = tfl.max_pool2d(acts, kernel_size=[1, 2], padding='SAME')
+        acts = tfl.convolution2d(acts, num_outputs=64, kernel_size=[1, 8], stride=4)
+        #acts = tfl.max_pool2d(acts, kernel_size=[1, 2], padding='SAME')
 
-        acts = tfl.convolution2d(acts, num_outputs=128, kernel_size=[1, 8])
-        acts = tfl.max_pool2d(acts, kernel_size=[1, 2], padding='SAME')
+        acts = tfl.convolution2d(acts, num_outputs=128, kernel_size=[1, 8], stride=4)
+        #acts = tfl.max_pool2d(acts, kernel_size=[1, 2], padding='SAME')
 
         acts = tf.squeeze(tf.reduce_mean(acts, reduction_indices=2))
         acts = tfl.fully_connected(acts, 256)
@@ -39,8 +35,10 @@ class RNN:
 
     def init_train(self, config):
         learning_rate = config['learning_rate']
-        momentum = config['momentum']
-        ema = tf.train.ExponentialMovingAverage(0.99)
+        self.momentum = tf.Variable(config['momentum'],
+                                    trainable=False,
+                                    dtype=tf.float32)
+        ema = tf.train.ExponentialMovingAverage(0.95)
         ema_op = ema.apply([self.loss, self.acc])
         self.avg_loss = ema.average(self.loss)
         self.avg_acc = ema.average(self.acc)
@@ -49,10 +47,13 @@ class RNN:
         tf.scalar_summary("Accuracy", self.acc)
 
         self.it = tf.Variable(0, trainable=False, dtype=tf.int64)
-        optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
+        optimizer = tf.train.MomentumOptimizer(learning_rate, self.momentum)
         train_op = optimizer.minimize(self.loss, global_step=self.it)
         with tf.control_dependencies([train_op]):
             self.train_op = tf.group(ema_op)
+
+    def set_momentum(self):
+        self.momentum.assign(0.999)
 
     def feed_dict(self, inputs, labels=None):
         """

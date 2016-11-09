@@ -8,6 +8,9 @@ import os
 import random
 
 class Loader:
+
+    max_len = 500
+
     def __init__(self, data_path, batch_size):
         self.batch_size = batch_size
         self.data_path = data_path
@@ -36,7 +39,12 @@ class Loader:
         self._label_to_int = {l : i for i, l in self._int_to_label.iteritems()}
 
         self._train = self.preprocess(self._train)
+        self._train = filter(lambda x : x[0].shape[0] < Loader.max_len,
+                             self._train)
         self._valid = self.preprocess(self._valid)
+        self.compute_mean_std()
+        self.normalize(self._train)
+        self.normalize(self._valid)
         # TODO, awni, some classes in test but not in train
         #self._test = self.preprocess(self._test)
 
@@ -49,14 +57,17 @@ class Loader:
             batch_labels = labels[i:i + batch_size]
             yield (batch_data, batch_labels)
 
-    def mean_and_std(self):
+    def normalize(self, dataset):
+        for example in dataset:
+            example[0][:] = (example[0] - self.mean) / self.std
+
+    def compute_mean_std(self):
         """
         Estimates the mean and std over the training set.
         """
         all_dat = np.hstack(w for w, _ in self._train)
-        mean = np.mean(all_dat)
-        std = np.std(all_dat)
-        return mean, std
+        self.mean = np.mean(all_dat)
+        self.std = np.std(all_dat)
 
     @property
     def vocab_size(self):
@@ -111,4 +122,3 @@ if __name__ == "__main__":
         assert len(labels) == batch_size, "Bad labels size."
     assert (e + 1) == int(len(ldr.train) / batch_size), \
             "Bad number of batches."
-    mean, std = ldr.mean_and_std()
