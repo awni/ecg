@@ -9,8 +9,8 @@ import random
 import tensorflow as tf
 import time
 
-from models import rnn
 import loader
+import models
 import utils
 
 tf.flags.DEFINE_string("config", "mitdb_config.json",
@@ -19,7 +19,6 @@ FLAGS = tf.flags.FLAGS
 
 def run_epoch(model, data_loader, session, summarizer):
     summary_op = tf.merge_all_summaries()
-    model.set_momentum()
 
     for batch in data_loader.batches(data_loader.train):
         ops = [model.train_op, model.avg_loss,
@@ -27,6 +26,8 @@ def run_epoch(model, data_loader, session, summarizer):
         res = session.run(ops, feed_dict=model.feed_dict(*batch))
         _, loss, acc, it, summary = res
         summarizer.add_summary(summary, global_step=it)
+        if it == 50:
+            model.set_momentum(session)
         if it % 100 == 0:
             msg = "Iter {}: AvgLoss {:.3f}, AvgAcc {:.3f}"
             print(msg.format(it, loss, acc))
@@ -55,7 +56,8 @@ def main(argv=None):
     epochs = config['optimizer']['epochs']
     data_loader = loader.Loader(config['data']['path'],
                                 config['model']['batch_size'])
-    model = rnn.RNN()
+
+    model = getattr(models, config['model']['model_class'])()
 
     save_path = config['io']['save_path']
     if not os.path.exists(save_path):

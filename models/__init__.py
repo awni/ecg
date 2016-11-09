@@ -1,0 +1,2 @@
+from cnn import CNN
+
