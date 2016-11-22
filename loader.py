@@ -35,6 +35,7 @@ class Loader:
         self._test = segment_all(patients[44:])
         classes = set(c for _, c in self._train)
         self._vocab_size = len(classes)
+        # TODO, these need to be serialized no guarantee on order
         self._int_to_label = dict(enumerate(classes))
         self._label_to_int = {l : i for i, l in self._int_to_label.iteritems()}
 
