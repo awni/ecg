@@ -56,5 +56,8 @@ class Model:
         input_mat = np.zeros((batch_size, max(seq_lens)), dtype=np.float32)
         for b in range(batch_size):
             input_mat[b, :seq_lens[b]] = inputs[b]
-        return {self.inputs : input_mat, self.labels : labels}
+        feed_dict = {self.inputs : input_mat}
+        if labels is not None:
+            feed_dict[self.labels] = labels
+        return feed_dict
 

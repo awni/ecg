@@ -14,6 +14,7 @@ class RNN(model.Model):
         acts = tf.reshape(inputs, (batch_size, -1, 1, 1))
 
         num_filters = [32, 64, 128]
+
         for nf in num_filters:
             acts = tfl.convolution2d(acts, num_outputs=nf,
                                      kernel_size=[8, 1], stride=4)
@@ -28,7 +29,7 @@ class RNN(model.Model):
         acts, _ = tf.nn.dynamic_rnn(cell, acts, dtype=tf.float32)
                         #sequence_length=sequence_length)
 
-        acts = tf.squeeze(tf.reduce_mean(acts, reduction_indices=1))
+        acts = tf.reduce_mean(acts, reduction_indices=1)
         acts = tfl.fully_connected(acts, 256)
         self.logits = tfl.fully_connected(acts, self.output_dim)
 

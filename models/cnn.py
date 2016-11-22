@@ -21,7 +21,8 @@ class CNN(model.Model):
             #acts = tfl.max_pool2d(acts, kernel_size=[2, 1],
             #                      padding='SAME')
 
-        acts = tf.squeeze(tf.reduce_mean(acts, reduction_indices=1))
+        acts = tf.squeeze(acts, squeeze_dims=[2])
+        acts = tf.reduce_mean(acts, reduction_indices=1)
         acts = tfl.fully_connected(acts, 256)
         self.logits = tfl.fully_connected(acts, self.output_dim)
 
