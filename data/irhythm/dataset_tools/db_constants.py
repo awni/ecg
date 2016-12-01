@@ -5,6 +5,7 @@ Constants to be shared between different iRhythm databases
 # ECG file constants
 ECG_SAMP_RATE = 200.0  # Hz
 ECG_COUNTS_PER_MV = 1049  # counts/mv
+ECG_BYTES_PER_SAMPLE = 2
 
 
 # File extensions
