@@ -1,0 +1,11 @@
+docopt==0.6.2
+funcsigs==1.0.2
+mock==2.0.0
+numpy==1.11.2
+pandas==0.19.1
+pbr==1.10.0
+protobuf==3.1.0
+python-dateutil==2.6.0
+pytz==2016.7
+six==1.10.0
+tensorflow-gpu==0.12.0rc0
