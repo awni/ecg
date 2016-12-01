@@ -103,6 +103,7 @@ if __name__ == '__main__':
             ee = json.load(f)
 
         epis = pd.DataFrame(ee['episodes'])
+        rec_dur_samples = epis.offset.iloc[-1]  # total record length
 
         # select long enough episodes (treat PAUSE differently)
         epis = epis.assign(dur_samples=epis.offset-epis.onset+1)
@@ -115,11 +116,12 @@ if __name__ == '__main__':
         # 1) extract windows from pause episodes
         for idx, rhy_epi in pause_epis.iloc[:max_xt_per_rhythm].iterrows():
             win_center_idx = (rhy_epi['onset'] + rhy_epi['offset'])//2
-            if win_center_idx < half_win_dur_samples:
-                continue
-
             win_onset = win_center_idx - half_win_dur_samples
             win_offset = win_dur_samples - half_win_dur_samples + win_center_idx
+
+            if (win_onset < 0) or (win_offset > rec_dur_samples):
+                continue
+
             recs_win_info = recs_win_info.append({'rec': rec,
                                                   'rhythm_name': 'PAUSE',
                                                   'start_idx': win_onset,
