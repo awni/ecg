@@ -6,16 +6,16 @@
     },
 
     "optimizer" : {
-        "epochs" : 10,
-        "learning_rate" : 1e-1,
-        "momentum" : 0.9,
-        "decay_rate" : 0.99,
-        "decay_steps" : 1000
+        "epochs" : 40,
+        "learning_rate" : 1e-2,
+        "momentum" : 0.95,
+        "decay_rate" : 0.9,
+        "decay_steps" : 500
     },
 
     "model" : {
         "model_class" : "RNN",
-        "batch_size" : 16
+        "batch_size" : 32 
     },
 
     "io" : {
