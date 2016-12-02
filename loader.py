@@ -41,8 +41,8 @@ class Loader:
         self._val = _read_dataset(data_path, "val")
 
         self.compute_mean_std()
-        self.normalize(self._train)
-        self.normalize(self._val)
+        self._train = [(self.normalize(ecg), l) for ecg, l in self._train]
+        self._val = [(self.normalize(ecg), l) for ecg, l in self._val]
 
         # Can use this to look at the distribution of classes
         # for each rhythm.
@@ -71,9 +71,13 @@ class Loader:
             batch_labels = labels[i:i + batch_size]
             yield (batch_data, batch_labels)
 
-    def normalize(self, dataset):
-        for example in dataset:
-            example[0][:] = (example[0] - self.mean) / self.std
+    def normalize(self, example):
+        """
+        Normalizes a given example by the training mean and std.
+        :param: example: 1D numpy array
+        :return: normalized example
+        """
+        return (example - self.mean) / self.std
 
     def compute_mean_std(self):
         """
