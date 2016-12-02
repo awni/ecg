@@ -27,7 +27,6 @@ class RNN(model.Model):
 
         cell = tf.nn.rnn_cell.GRUCell(128)
         acts, _ = tf.nn.dynamic_rnn(cell, acts, dtype=tf.float32)
-                        #sequence_length=sequence_length)
 
         acts = tf.reduce_mean(acts, reduction_indices=1)
         acts = tfl.fully_connected(acts, 256)

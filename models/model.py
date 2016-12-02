@@ -30,7 +30,7 @@ class Model:
 
         self.it = tf.Variable(0, trainable=False, dtype=tf.int64)
 
-        learning_rate = tf.train.exponential_decay(config['learning_rate'],
+        learning_rate = tf.train.exponential_decay(float(config['learning_rate']),
                             self.it, config['decay_steps'],
                             config['decay_rate'], staircase=True)
 

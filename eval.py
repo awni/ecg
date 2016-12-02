@@ -28,8 +28,8 @@ class Evaler:
         self.session = sess = tf.Session(graph=self.graph)
         with self.graph.as_default():
             self.model.init_inference(config['model'])
-            tf.initialize_all_variables().run(session=sess)
-            saver = tf.train.Saver(tf.all_variables())
+            tf.global_variables_initializer().run(session=sess)
+            saver = tf.train.Saver(tf.global_variables())
             saver.restore(sess, os.path.join(save_path, "model"))
 
     def predict(self, inputs):
@@ -48,7 +48,7 @@ def main(argv=None):
     data_loader = loader.Loader(config['data']['path'], 1)
     evaler = Evaler(FLAGS.save_path)
 
-    for inputs, label in data_loader.batches(data_loader.valid):
+    for inputs, label in data_loader.batches(data_loader.val):
         prediction = evaler.predict(inputs)
 
 if __name__ == "__main__":
