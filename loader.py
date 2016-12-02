@@ -27,6 +27,9 @@ class Loader:
     normalizing the inputs.
     """
 
+    # TODO, awni, don't hard code this here, didn't want to re-preprocess the data.
+    FILTER_LABELS = ['SVT', 'BIGEMINY', 'TRIGEMINY']
+
     def __init__(self, data_path, batch_size):
         """
         :param data_path: path to the training and validation files
@@ -36,9 +39,15 @@ class Loader:
         self.batch_size = batch_size
 
         self._train = _read_dataset(data_path, "train")
-        random.shuffle(self._train)
-
         self._val = _read_dataset(data_path, "val")
+
+        def filter_fn(dset):
+            return filter(lambda x : x[1] not in Loader.FILTER_LABELS, dset)
+
+        self._train = filter_fn(self._train)
+        self._val = filter_fn(self._val)
+
+        random.shuffle(self._train)
 
         self.compute_mean_std()
         self._train = [(self.normalize(ecg), l) for ecg, l in self._train]
