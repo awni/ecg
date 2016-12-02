@@ -2,7 +2,7 @@
     "seed" : 4337,
 
     "data" : {
-        "path" : "/deep/group/med/irhythm/ecg/extracted_clean_5min_recs"
+        "path" : "/deep/group/med/irhythm/ecg/extracted_clean"
     },
 
     "optimizer" : {

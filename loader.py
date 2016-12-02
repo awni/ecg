@@ -28,7 +28,7 @@ class Loader:
     """
 
     # TODO, awni, don't hard code this here, didn't want to re-preprocess the data.
-    FILTER_LABELS = ['SVT', 'BIGEMINY', 'TRIGEMINY']
+    FILTER_LABELS = ['SVT', 'BIGEMINY', 'TRIGEMINY', 'NOISE']
 
     def __init__(self, data_path, batch_size):
         """
@@ -56,6 +56,7 @@ class Loader:
         # Can use this to look at the distribution of classes
         # for each rhythm.
         label_counter = collections.Counter(l for _, l in self._train)
+        print(label_counter)
 
         classes = [c for c, _ in label_counter.most_common()]
 
@@ -131,7 +132,7 @@ def _read_dataset(data_path, dataset):
     return examples
 
 if __name__ == "__main__":
-    data_path = "/deep/group/med/irhythm/ecg/extracted_clean_5min_recs"
+    data_path = "/deep/group/med/irhythm/ecg/extracted_clean_all"
     batch_size = 32
     ldr = Loader(data_path, batch_size)
     print("Length of training set {}".format(len(ldr.train)))
