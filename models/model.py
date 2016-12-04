@@ -17,6 +17,13 @@ class Model:
         self.acc = tf.reduce_mean(tf.cast(correct, tf.float32))
 
     def init_train(self, config):
+
+        l2_weight = config.get('l2_weight', None)
+        if l2_weight is not None:
+            # *NB* assumes we want an l2 penalty for all trainable variables.
+            l2s = [tf.nn.l2_loss(p) for p in tf.trainable_variables()]
+            self.loss += l2_weight * tf.add_n(l2s)
+
         self.momentum = config['momentum']
         self.mom_var = tf.Variable(MOMENTUM_INIT, trainable=False,
                                    dtype=tf.float32)
