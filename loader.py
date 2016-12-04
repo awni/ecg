@@ -36,6 +36,10 @@ class Loader:
         :param batch_size: size of the minibatches to train on
         :param rng_seed: seed the rng for shuffling data
         """
+        if not os.path.exists(data_path):
+            msg = "Non-existent data path: {}".format(data_path)
+            raise ValueError(msg)
+
         self.batch_size = batch_size
 
         self._train = _read_dataset(data_path, "train")
@@ -56,7 +60,6 @@ class Loader:
         # Can use this to look at the distribution of classes
         # for each rhythm.
         label_counter = collections.Counter(l for _, l in self._train)
-        print(label_counter)
 
         classes = [c for c, _ in label_counter.most_common()]
 
