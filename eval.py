@@ -16,12 +16,12 @@ FLAGS = tf.flags.FLAGS
 
 class Evaler:
 
-    def __init__(self, save_path):
+    def __init__(self, save_path, batch_size=1):
         config_file = os.path.join(save_path, "config.json")
 
         with open(config_file, 'r') as fid:
             config = json.load(fid)
-        config['model']['batch_size'] = 1
+        config['model']['batch_size'] = batch_size
 
         self.model = getattr(models, config['model']['model_class'])()
         self.graph = tf.Graph()
@@ -35,7 +35,7 @@ class Evaler:
     def predict(self, inputs):
         model = self.model
         logits, = self.session.run([model.logits], model.feed_dict(inputs))
-        return np.argmax(logits)
+        return np.argmax(logits, axis=1)
 
 def main(argv=None):
     assert FLAGS.save_path is not None, \
@@ -45,11 +45,18 @@ def main(argv=None):
     with open(config_file, 'r') as fid:
         config = json.load(fid)
 
-    data_loader = loader.Loader(config['data']['path'], 1)
-    evaler = Evaler(FLAGS.save_path)
+    batch_size = 32
+    data_loader = loader.Loader(config['data']['path'], batch_size)
+    evaler = Evaler(FLAGS.save_path, batch_size=batch_size)
 
-    for inputs, label in data_loader.batches(data_loader.val):
-        prediction = evaler.predict(inputs)
+    corr = 0.0
+    total = 0
+    for inputs, labels in data_loader.batches(data_loader.val):
+        predictions = evaler.predict(inputs)
+        corr += np.sum(predictions == labels)
+        total += len(labels)
+    print("Number {}, Accuracy {:.2f}".format(total, corr / total))
+
 
 if __name__ == "__main__":
     tf.app.run()
