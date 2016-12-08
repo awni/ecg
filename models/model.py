@@ -42,7 +42,15 @@ class Model:
                             config['decay_rate'], staircase=True)
 
         optimizer = tf.train.MomentumOptimizer(learning_rate, self.mom_var)
-        train_op = optimizer.minimize(self.loss, global_step=self.it)
+
+        gvs = optimizer.compute_gradients(self.loss)
+
+        # Gradient clipping
+        clip_norm = config.get('clip_norm', None)
+        if clip_norm is not None:
+            tf.clip_by_global_norm([g for g, _ in gvs], clip_norm=clip_norm)
+
+        train_op = optimizer.apply_gradients(gvs, global_step=self.it)
         with tf.control_dependencies([train_op]):
             self.train_op = tf.group(ema_op)
 
