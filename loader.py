@@ -30,7 +30,7 @@ class Loader:
     # TODO, awni, don't hard code this here, didn't want to re-preprocess the data.
     FILTER_LABELS = ['SVT', 'BIGEMINY', 'TRIGEMINY', 'NOISE']
 
-    def __init__(self, data_path, batch_size):
+    def __init__(self, data_path, batch_size, seed=None):
         """
         :param data_path: path to the training and validation files
         :param batch_size: size of the minibatches to train on
@@ -39,6 +39,9 @@ class Loader:
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
             raise ValueError(msg)
+
+        if seed is not None:
+            random.seed(seed)
 
         self.batch_size = batch_size
 
