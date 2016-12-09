@@ -109,6 +109,7 @@ if __name__ == '__main__':
         epis = epis.assign(dur_samples=epis.offset-epis.onset+1)
         non_pause_epis = epis[(epis.dur_samples >= win_dur_samples) &
                               (epis.rhythm_name != 'PAUSE')]
+
         pause_epis = epis[(epis.rhythm_name == 'PAUSE') &
                           (epis.dur_samples >= min_pause_dur_samples) &
                           (epis.dur_samples < win_dur_samples)]
@@ -129,12 +130,13 @@ if __name__ == '__main__':
                                                  ignore_index=True)
 
         # 2) extract windows from non-pause episodes
-        non_pause_epi_groups = epis.groupby('rhythm_name')
+        non_pause_epi_groups = non_pause_epis.groupby('rhythm_name')
         for rhy_name,  rhy_group in non_pause_epi_groups:
             # keep track of number of extractions per rhythm-type
             max_xt = max_xt_per_rhythm
             # select random intervals from each episode
             for idx, rhy_epi in rhy_group.iterrows():
+
                 # select starting of extracted windows and update remaining
                 # number of windows that can be extracted
                 rec_rhy_windows = \
