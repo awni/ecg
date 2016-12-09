@@ -17,6 +17,13 @@ class Model:
         self.acc = tf.reduce_mean(tf.cast(correct, tf.float32))
 
     def init_train(self, config):
+
+        l2_weight = config.get('l2_weight', None)
+        if l2_weight is not None:
+            # *NB* assumes we want an l2 penalty for all trainable variables.
+            l2s = [tf.nn.l2_loss(p) for p in tf.trainable_variables()]
+            self.loss += l2_weight * tf.add_n(l2s)
+
         self.momentum = config['momentum']
         self.mom_var = tf.Variable(MOMENTUM_INIT, trainable=False,
                                    dtype=tf.float32)
@@ -30,12 +37,20 @@ class Model:
 
         self.it = tf.Variable(0, trainable=False, dtype=tf.int64)
 
-        learning_rate = tf.train.exponential_decay(config['learning_rate'],
+        learning_rate = tf.train.exponential_decay(float(config['learning_rate']),
                             self.it, config['decay_steps'],
                             config['decay_rate'], staircase=True)
 
         optimizer = tf.train.MomentumOptimizer(learning_rate, self.mom_var)
-        train_op = optimizer.minimize(self.loss, global_step=self.it)
+
+        gvs = optimizer.compute_gradients(self.loss)
+
+        # Gradient clipping
+        clip_norm = config.get('clip_norm', None)
+        if clip_norm is not None:
+            tf.clip_by_global_norm([g for g, _ in gvs], clip_norm=clip_norm)
+
+        train_op = optimizer.apply_gradients(gvs, global_step=self.it)
         with tf.control_dependencies([train_op]):
             self.train_op = tf.group(ema_op)
 

@@ -13,7 +13,7 @@ import loader
 import models
 import utils
 
-tf.flags.DEFINE_string("config", "mitdb_config.json",
+tf.flags.DEFINE_string("config", "configs/irhythm_config.json",
                        "Configuration file for training.")
 FLAGS = tf.flags.FLAGS
 
@@ -35,7 +35,7 @@ def run_epoch(model, data_loader, session, summarizer):
 def run_validation(model, data_loader, session, summarizer):
     it = model.it.eval(session)
     results = []
-    for batch in data_loader.batches(data_loader.valid):
+    for batch in data_loader.batches(data_loader.val):
         ops = [model.acc, model.loss]
         res = session.run(ops, feed_dict=model.feed_dict(*batch))
         results.append(res)
@@ -63,7 +63,7 @@ def main(argv=None):
     if not os.path.exists(save_path):
         os.mkdir(save_path)
 
-    config['model']['output_dim'] = data_loader.vocab_size
+    config['model']['output_dim'] = data_loader.output_dim
     with open(os.path.join(save_path, "config.json"), 'w') as fid:
         json.dump(config, fid)
 
@@ -72,8 +72,8 @@ def main(argv=None):
         model.init_inference(config['model'])
         model.init_loss()
         model.init_train(config['optimizer'])
-        tf.initialize_all_variables().run()
-        saver = tf.train.Saver(tf.all_variables())
+        tf.global_variables_initializer().run()
+        saver = tf.train.Saver(tf.global_variables())
         summarizer = tf.train.SummaryWriter(save_path, sess.graph)
         for e in range(epochs):
             start = time.time()
@@ -81,7 +81,6 @@ def main(argv=None):
             saver.save(sess, os.path.join(save_path, "model"))
             print("Epoch {} time {:.1f} (s)".format(e, time.time() - start))
             run_validation(model, data_loader, sess, summarizer)
-
 
 if __name__ == '__main__':
     tf.app.run()

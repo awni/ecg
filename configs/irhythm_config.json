@@ -1,0 +1,43 @@
+{
+    "seed" : 4337,
+
+    "data" : {
+        "path" : "/deep/group/med/irhythm/ecg/extracted_clean_all"
+    },
+
+    "optimizer" : {
+        "epochs" : 30,
+        "learning_rate" : 1e-2,
+        "momentum" : 0.95,
+        "decay_rate" : 0.9,
+        "decay_steps" : 500,
+        "l2_weight" : 1e-5
+    },
+
+    "model" : {
+        "model_class" : "RNN",
+        "batch_size" : 32,
+        "conv_layers" : [
+            { "kernel_size" : 32,
+              "stride" : 4,
+              "num_filters" : 32
+            },
+            { "kernel_size" : 32,
+              "stride" : 4,
+              "num_filters" : 64
+            },
+            { "kernel_size" : 32,
+              "stride" : 4,
+              "num_filters" : 128
+            }
+        ],
+        "rnn" : {
+            "bidirectional" : false,
+            "dim" : 128
+        }
+    },
+
+    "io" : {
+        "save_path" : "<fill_in>"
+    }
+}

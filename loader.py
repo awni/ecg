@@ -2,55 +2,84 @@ from __future__ import division
 from __future__ import print_function
 
 import cPickle as pickle
+import collections
 import glob
 import numpy as np
 import os
 import random
 
 class Loader:
+    """
+    Loader class for feeding data to the network. This class loads the training
+    and validation data sets. Once the datasets are loaded, they can be batched
+    and fed to the network. Example usage:
 
-    max_len = 500
+        ```
+        data_path = <path_to_data>
+        batch_size = 32
+        ldr = Loader(data_path, batch_size)
+        for batch in ldr.batches(ldr.train):
+            run_sgd_on(batch)
+        ```
 
-    def __init__(self, data_path, batch_size):
+    At the moment we expect the location where the data is stored to have
+    train/ and val/ directories.  This class is also responsible for
+    normalizing the inputs.
+    """
+
+    # TODO, awni, don't hard code this here, didn't want to re-preprocess the data.
+    FILTER_LABELS = ['SVT', 'BIGEMINY', 'TRIGEMINY', 'NOISE']
+
+    def __init__(self, data_path, batch_size, seed=None):
+        """
+        :param data_path: path to the training and validation files
+        :param batch_size: size of the minibatches to train on
+        :param rng_seed: seed the rng for shuffling data
+        """
+        if not os.path.exists(data_path):
+            msg = "Non-existent data path: {}".format(data_path)
+            raise ValueError(msg)
+
+        if seed is not None:
+            random.seed(seed)
+
         self.batch_size = batch_size
-        self.data_path = data_path
-        wave_files = glob.glob(os.path.join(data_path, "*.npy"))
-        patients = [os.path.basename(p).split(".")[0] for p in wave_files]
-        patient_waves = [np.load(f) for f in wave_files]
-        patient_annotations = []
-        for p in patients:
-            ann_file = os.path.join(data_path, "{}.pkl".format(p))
-            with open(ann_file, 'r') as fid:
-                patient_annotations.append(pickle.load(fid))
-        patients = zip(patient_waves, patient_annotations)
 
-        self._train = segment_all(patients[:40])
-        # We *may* want to consider sorting by input length for efficiency
-        # reasons. Though this could bias minibatches since examples with a
-        # similar length are more likely to come from the same person since
-        # they have a consistent heart rhythm
+        self._train = _read_dataset(data_path, "train")
+        self._val = _read_dataset(data_path, "val")
+
+        def filter_fn(dset):
+            return filter(lambda x : x[1] not in Loader.FILTER_LABELS, dset)
+
+        self._train = filter_fn(self._train)
+        self._val = filter_fn(self._val)
+
         random.shuffle(self._train)
 
-        self._valid = segment_all(patients[40:44])
-        self._test = segment_all(patients[44:])
-        classes = set(c for _, c in self._train)
-        self._vocab_size = len(classes)
-        # TODO, these need to be serialized no guarantee on order
-        self._int_to_label = dict(enumerate(classes))
-        self._label_to_int = {l : i for i, l in self._int_to_label.iteritems()}
-
-        self._train = self.preprocess(self._train)
-        self._train = filter(lambda x : x[0].shape[0] < Loader.max_len,
-                             self._train)
-        self._valid = self.preprocess(self._valid)
         self.compute_mean_std()
-        self.normalize(self._train)
-        self.normalize(self._valid)
-        # TODO, awni, some classes in test but not in train
-        #self._test = self.preprocess(self._test)
+        self._train = [(self.normalize(ecg), l) for ecg, l in self._train]
+        self._val = [(self.normalize(ecg), l) for ecg, l in self._val]
+
+        # Can use this to look at the distribution of classes
+        # for each rhythm.
+        label_counter = collections.Counter(l for _, l in self._train)
+
+        classes = [c for c, _ in label_counter.most_common()]
+
+        # TODO, awni, these should be serialized with the loader.
+        self._int_to_class = dict(zip(xrange(len(classes)), classes))
+        self._class_to_int = {c : i for i, c in self._int_to_class.iteritems()}
 
     def batches(self, data):
+        """
+        :param data: the raw dataset from e.g. `loader.train`
+        :returns: Iterator to the minibatches. Each minibatch consists
+                  of an (ecgs, labels) pair. The ecgs is a list of 1D
+                  numpy arrays, the labels is a list of integer labels
+                  for each ecg.
+        """
         inputs, labels = zip(*data)
+        labels = [self._class_to_int[c] for c in labels]
         batch_size = self.batch_size
         data_size = len(labels)
         for i in range(0, data_size - batch_size + 1, batch_size):
@@ -58,9 +87,13 @@ class Loader:
             batch_labels = labels[i:i + batch_size]
             yield (batch_data, batch_labels)
 
-    def normalize(self, dataset):
-        for example in dataset:
-            example[0][:] = (example[0] - self.mean) / self.std
+    def normalize(self, example):
+        """
+        Normalizes a given example by the training mean and std.
+        :param: example: 1D numpy array
+        :return: normalized example
+        """
+        return (example - self.mean) / self.std
 
     def compute_mean_std(self):
         """
@@ -71,55 +104,55 @@ class Loader:
         self.std = np.std(all_dat)
 
     @property
-    def vocab_size(self):
-        return self._vocab_size
-
-    def preprocess(self, examples):
-        """
-        Select the first channel and convert labels to integer ids.
-        """
-        return [(w[:,1], self._label_to_int[l]) for w, l in examples]
+    def output_dim(self):
+        """ Returns number of output classes. """
+        return len(self._int_to_class)
 
     @property
     def train(self):
+        """ Returns the raw training set. """
         return self._train
 
     @property
-    def valid(self):
-        return self._valid
+    def val(self):
+        """ Returns the raw validation set. """
+        return self._val
 
-    @property
-    def test(self):
-        return self._test
-
-def segment_all(patients):
-    return [example for p in patients
-                    for example in segment(*p)]
-
-def segment(wave, labels):
-    # TODO, awni, some of the labels aren't actually beats.
-    for e, label in enumerate(labels):
-        # Skip first and last
-        if e == 0 or e == (len(labels) - 1): continue
-
-        _, idx, beat, _ = label
-        prev_idx = labels[e - 1][1]
-        next_idx =  labels[e + 1][1]
-        start = int((idx + prev_idx) / 2)
-        end = int((idx + next_idx) / 2)
-        yield (wave[start:end], beat)
+def _read_dataset(data_path, dataset):
+    """
+    Reads an irhythm dataset into a list of examples.
+    :param data_path: specifies the top level path of the data.
+    :param dataset: specifies the train / val / test data.
+    :return: A list of examples. Each example is an ecg, label pair.
+             The ecg is a numpy array and the label is a string.
+    """
+    ecg_pattern = os.path.join(data_path, dataset, "*.npy")
+    ecg_files = glob.glob(ecg_pattern)
+    examples = []
+    for ecg_file in ecg_files:
+        inputs = np.load(ecg_file)
+        label_file = os.path.splitext(ecg_file)[0] + ".pkl"
+        with open(label_file, 'r') as fid:
+            label = pickle.load(fid)
+        examples.append((inputs, label))
+    return examples
 
 if __name__ == "__main__":
+    data_path = "/deep/group/med/irhythm/ecg/extracted_clean_all"
     batch_size = 32
-    ldr = Loader("/deep/group/med/mitdb", batch_size)
-    print("Training set size: {}".format(len(ldr.train)))
-    print("Validation set size: {}".format(len(ldr.valid)))
-    print("Test set size: {}".format(len(ldr.test)))
-    lengths = [w.shape[0] for w, l in ldr.train]
-    print("Input lengths: Mean {:.1f}, Std {:.1f}, Min {}, Max {}".format(
-        np.mean(lengths), np.std(lengths), min(lengths), max(lengths)))
-    for e, (inputs, labels) in enumerate(ldr.batches(ldr.train)):
-        assert len(inputs) == batch_size, "Bad inputs size."
-        assert len(labels) == batch_size, "Bad labels size."
-    assert (e + 1) == int(len(ldr.train) / batch_size), \
-            "Bad number of batches."
+    ldr = Loader(data_path, batch_size)
+    print("Length of training set {}".format(len(ldr.train)))
+    print("Length of validation set {}".format(len(ldr.val)))
+    print("Output dimension {}".format(ldr.output_dim))
+
+    # Run a few sanity checks.
+    count = 0
+    for ecgs, labels in ldr.batches(ldr.train):
+        count += 1
+        assert len(ecgs) == len(labels) == batch_size, \
+                "Invalid number of examples."
+        assert len(ecgs[0].shape) == 1, "ECG array should be 1D"
+    assert count == len(ldr.train) // batch_size, \
+            "Wrong number of batches."
+
+
