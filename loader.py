@@ -7,6 +7,7 @@ import glob
 import numpy as np
 import os
 import random
+from data.irhythm.extract_data import load_all_data
 
 class Loader:
     """
@@ -27,14 +28,17 @@ class Loader:
     normalizing the inputs.
     """
 
-    # TODO, awni, don't hard code this here, didn't want to re-preprocess the data.
-    FILTER_LABELS = ['SVT', 'BIGEMINY', 'TRIGEMINY', 'NOISE']
+    FILTER_LABELS = set(['SVT', 'BIGEMINY', 'TRIGEMINY', 'NOISE'])
 
-    def __init__(self, data_path, batch_size, seed=None):
+    def __init__(self, data_path, batch_size, duration=30,
+                 val_frac=0.1, seed=None):
         """
         :param data_path: path to the training and validation files
         :param batch_size: size of the minibatches to train on
-        :param rng_seed: seed the rng for shuffling data
+        :param duration: length in seconds of an ecg example
+        :param val_frac: fraction of the dataset to use for validation
+                         (held out by record)
+        :param seed: seed the rng for shuffling data
         """
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
@@ -45,24 +49,24 @@ class Loader:
 
         self.batch_size = batch_size
 
-        self._train = _read_dataset(data_path, "train")
-        self._val = _read_dataset(data_path, "val")
+        self._train, self._val = load_all_data(data_path,
+                                   duration, val_frac)
+        def filter_fn(example):
+           return all(l not in Loader.FILTER_LABELS
+                        for l in example[1])
 
-        def filter_fn(dset):
-            return filter(lambda x : x[1] not in Loader.FILTER_LABELS, dset)
-
-        self._train = filter_fn(self._train)
-        self._val = filter_fn(self._val)
+        self._train = filter(filter_fn, self._train)
+        self._val = filter(filter_fn, self._val)
 
         random.shuffle(self._train)
-
         self.compute_mean_std()
         self._train = [(self.normalize(ecg), l) for ecg, l in self._train]
         self._val = [(self.normalize(ecg), l) for ecg, l in self._val]
 
         # Can use this to look at the distribution of classes
         # for each rhythm.
-        label_counter = collections.Counter(l for _, l in self._train)
+        label_counter = collections.Counter(l for _, labels in self._train
+                                                 for l in labels)
 
         classes = [c for c, _ in label_counter.most_common()]
 
@@ -79,7 +83,8 @@ class Loader:
                   for each ecg.
         """
         inputs, labels = zip(*data)
-        labels = [self._class_to_int[c] for c in labels]
+        labels = [[self._class_to_int[c] for c in label]
+                    for label in labels]
         batch_size = self.batch_size
         data_size = len(labels)
         for i in range(0, data_size - batch_size + 1, batch_size):
@@ -118,27 +123,10 @@ class Loader:
         """ Returns the raw validation set. """
         return self._val
 
-def _read_dataset(data_path, dataset):
-    """
-    Reads an irhythm dataset into a list of examples.
-    :param data_path: specifies the top level path of the data.
-    :param dataset: specifies the train / val / test data.
-    :return: A list of examples. Each example is an ecg, label pair.
-             The ecg is a numpy array and the label is a string.
-    """
-    ecg_pattern = os.path.join(data_path, dataset, "*.npy")
-    ecg_files = glob.glob(ecg_pattern)
-    examples = []
-    for ecg_file in ecg_files:
-        inputs = np.load(ecg_file)
-        label_file = os.path.splitext(ecg_file)[0] + ".pkl"
-        with open(label_file, 'r') as fid:
-            label = pickle.load(fid)
-        examples.append((inputs, label))
-    return examples
 
 if __name__ == "__main__":
-    data_path = "/deep/group/med/irhythm/ecg/extracted_clean_all"
+    random.seed(2016)
+    data_path = "/deep/group/med/irhythm/ecg/clean_5min_recs"
     batch_size = 32
     ldr = Loader(data_path, batch_size)
     print("Length of training set {}".format(len(ldr.train)))

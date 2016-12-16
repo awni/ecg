@@ -35,7 +35,6 @@ class RNN(model.Model):
         else:
             acts = _rnn(acts, rnn_dim, cell_type)
 
-        acts = tf.reduce_mean(acts, reduction_indices=1)
         self.logits = tfl.fully_connected(acts, self.output_dim)
 
 def _rnn(acts, input_dim, cell_type, scope=None):
