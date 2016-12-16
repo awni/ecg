@@ -2,7 +2,8 @@
     "seed" : 4337,
 
     "data" : {
-        "path" : "/deep/group/med/irhythm/ecg/extracted_clean_all"
+        "path" : "/deep/group/med/irhythm/ecg/clean_5min_recs",
+        "seed" : 2016
     },
 
     "optimizer" : {
@@ -11,33 +12,30 @@
         "momentum" : 0.95,
         "decay_rate" : 0.9,
         "decay_steps" : 500,
-        "l2_weight" : 1e-5
+        "l2_weight" : 1e-6,
+        "clip_norm" : 4.0
     },
 
     "model" : {
         "model_class" : "RNN",
-        "batch_size" : 32,
+        "batch_size" : 16,
         "conv_layers" : [
             { "kernel_size" : 32,
-              "stride" : 4,
+              "stride" : 20,
               "num_filters" : 32
             },
             { "kernel_size" : 32,
-              "stride" : 4,
-              "num_filters" : 64
-            },
-            { "kernel_size" : 32,
-              "stride" : 4,
-              "num_filters" : 128
+              "stride" : 10,
+              "num_filters" : 32
             }
         ],
         "rnn" : {
             "bidirectional" : false,
-            "dim" : 128
+            "dim" : 64
         }
     },
 
     "io" : {
-        "save_path" : "<fill_in>"
+        "save_path" : "test_model"
     }
 }

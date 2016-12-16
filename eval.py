@@ -52,7 +52,7 @@ def main(argv=None):
 
     corr = 0.0
     total = 0
-    for inputs, labels in data_loader.batches(data_loader.train):
+    for inputs, labels in data_loader.batches(data_loader.val):
         predictions = evaler.predict(inputs)
         corr += np.sum(predictions == np.vstack(labels))
         total += predictions.size
