@@ -35,7 +35,7 @@ class Evaler:
     def predict(self, inputs):
         model = self.model
         logits, = self.session.run([model.logits], model.feed_dict(inputs))
-        return np.argmax(logits, axis=1)
+        return np.argmax(logits, axis=2)
 
 def main(argv=None):
     assert FLAGS.save_path is not None, \
@@ -46,15 +46,16 @@ def main(argv=None):
         config = json.load(fid)
 
     batch_size = 32
-    data_loader = loader.Loader(config['data']['path'], batch_size)
+    data_loader = loader.Loader(config['data']['path'], batch_size,
+                                seed=config['data']['seed'])
     evaler = Evaler(FLAGS.save_path, batch_size=batch_size)
 
     corr = 0.0
     total = 0
-    for inputs, labels in data_loader.batches(data_loader.val):
+    for inputs, labels in data_loader.batches(data_loader.train):
         predictions = evaler.predict(inputs)
-        corr += np.sum(predictions == labels)
-        total += len(labels)
+        corr += np.sum(predictions == np.vstack(labels))
+        total += predictions.size
     print("Number {}, Accuracy {:.2f}".format(total, corr / total))
 
 

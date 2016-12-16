@@ -67,10 +67,7 @@ class Loader:
         # for each rhythm.
         label_counter = collections.Counter(l for _, labels in self._train
                                                  for l in labels)
-
-        classes = [c for c, _ in label_counter.most_common()]
-
-        # TODO, awni, these should be serialized with the loader.
+        classes = sorted([c for c, _ in label_counter.most_common()])
         self._int_to_class = dict(zip(xrange(len(classes)), classes))
         self._class_to_int = {c : i for i, c in self._int_to_class.iteritems()}
 

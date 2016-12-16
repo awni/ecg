@@ -55,7 +55,8 @@ def main(argv=None):
     random.seed(config['seed'])
     epochs = config['optimizer']['epochs']
     data_loader = loader.Loader(config['data']['path'],
-                                config['model']['batch_size'])
+                                config['model']['batch_size'],
+                                seed=config['data']['seed'])
 
     model = getattr(models, config['model']['model_class'])()
 
