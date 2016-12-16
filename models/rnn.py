@@ -65,7 +65,7 @@ def _bi_rnn(acts, input_dim, cell_type):
         acts_bw = tf.reverse(acts, dims=reverse_dims)
         acts_bw = _rnn(acts_bw, input_dim, cell_type,
                        scope=bw_scope)
-        acts_bw = tf.reverse(acts, dims=reverse_dims)
+        acts_bw = tf.reverse(acts_bw, dims=reverse_dims)
 
     # Sum the forward and backward states.
     return tf.add(acts_fw, acts_bw)
