@@ -67,6 +67,8 @@ class Loader:
         # for each rhythm.
         label_counter = collections.Counter(l for _, labels in self._train
                                                  for l in labels)
+        print(label_counter)
+
         classes = sorted([c for c, _ in label_counter.most_common()])
         self._int_to_class = dict(zip(xrange(len(classes)), classes))
         self._class_to_int = {c : i for i, c in self._int_to_class.iteritems()}
@@ -123,7 +125,7 @@ class Loader:
 
 if __name__ == "__main__":
     random.seed(2016)
-    data_path = "/deep/group/med/irhythm/ecg/clean_5min_recs"
+    data_path = "/deep/group/med/irhythm/ecg/"
     batch_size = 32
     ldr = Loader(data_path, batch_size)
     print("Length of training set {}".format(len(ldr.train)))

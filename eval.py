@@ -32,10 +32,14 @@ class Evaler:
             saver = tf.train.Saver(tf.global_variables())
             saver.restore(sess, os.path.join(save_path, "model"))
 
-    def predict(self, inputs):
+    def probs(self, inputs):
         model = self.model
-        logits, = self.session.run([model.logits], model.feed_dict(inputs))
-        return np.argmax(logits, axis=2)
+        probs, = self.session.run([model.probs], model.feed_dict(inputs))
+        return probs
+
+    def predict(self, inputs):
+        probs = self.probs(inputs)
+        return np.argmax(probs, axis=2)
 
 def main(argv=None):
     assert FLAGS.save_path is not None, \

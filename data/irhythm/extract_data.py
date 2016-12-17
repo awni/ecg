@@ -13,7 +13,7 @@ def get_all_records(src):
     """
     Find all the ECG files.
     """
-    pattern = os.path.join(src, "*/*.ecg")
+    pattern = os.path.join(src, "*/*/*.ecg")
     return glob.glob(pattern)
 
 def stratify(records, val_frac):
