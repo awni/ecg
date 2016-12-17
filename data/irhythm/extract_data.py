@@ -8,13 +8,14 @@ import os
 import random
 
 from dataset_tools.db_constants import ECG_SAMP_RATE
+from dataset_tools.db_constants import ECG_EXT, EPI_EXT
+from dataset_tools.extract_episodes import _find_all_files, qa
 
 def get_all_records(src):
     """
     Find all the ECG files.
     """
-    pattern = os.path.join(src, "*/*/*.ecg")
-    return glob.glob(pattern)
+    return list(_find_all_files(src, '', ECG_EXT))
 
 def stratify(records, val_frac):
     """
@@ -37,7 +38,7 @@ def round_to_second(n):
 
 def load_episodes(record):
     base = os.path.splitext(record)[0]
-    ep_json = base + "_post.episodes.json"
+    ep_json = base + qa + EPI_EXT
     with open(ep_json, 'r') as fid:
         episodes = json.load(fid)['episodes']
 
@@ -102,7 +103,7 @@ def load_all_data(data_path, duration, val_frac):
 if __name__ == "__main__":
     random.seed(2016)
 
-    src = "/deep/group/med/irhythm/ecg/clean_5min_recs"
+    src = "/deep/group/med/irhythm/ecg/"
     duration = 30
     val_frac = 0.1
     train, val = load_all_data(src, duration, val_frac)
