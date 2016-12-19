@@ -26,7 +26,7 @@ class RNN(model.Model):
         acts = tf.squeeze(acts, squeeze_dims=[2])
 
         rnn_conf = config.get('rnn', None)
-        if rnn_conf is not None
+        if rnn_conf is not None:
             bidirectional = rnn_conf.get('bidirectional', False)
             rnn_dim = rnn_conf['dim']
             cell_type = rnn_conf.get('cell_type', 'gru')
