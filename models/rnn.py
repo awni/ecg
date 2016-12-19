@@ -25,13 +25,15 @@ class RNN(model.Model):
         # [batch_size, time (subsampled), 1, num_channels]
         acts = tf.squeeze(acts, squeeze_dims=[2])
 
-        bidirectional = config['rnn'].get('bidirectional', False)
-        rnn_dim = config['rnn']['dim']
-        cell_type = config['rnn'].get('cell_type', 'gru')
-        if bidirectional:
-            acts = _bi_rnn(acts, rnn_dim, cell_type)
-        else:
-            acts = _rnn(acts, rnn_dim, cell_type)
+        rnn_conf = config.get('rnn', None)
+        if rnn_conf is not None
+            bidirectional = rnn_conf.get('bidirectional', False)
+            rnn_dim = rnn_conf['dim']
+            cell_type = rnn_conf.get('cell_type', 'gru')
+            if bidirectional:
+                acts = _bi_rnn(acts, rnn_dim, cell_type)
+            else:
+                acts = _rnn(acts, rnn_dim, cell_type)
 
         self.logits = tfl.fully_connected(acts, self.output_dim)
         self.probs = tf.nn.softmax(self.logits)
