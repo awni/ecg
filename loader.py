@@ -67,7 +67,6 @@ class Loader:
         # for each rhythm.
         label_counter = collections.Counter(l for _, labels in self._train
                                                  for l in labels)
-        print(label_counter)
 
         classes = sorted([c for c, _ in label_counter.most_common()])
         self._int_to_class = dict(zip(xrange(len(classes)), classes))
