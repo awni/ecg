@@ -9,6 +9,7 @@ import tensorflow as tf
 
 import loader
 import models
+import decoder
 
 tf.flags.DEFINE_string("save_path", None,
                        "Path to saved model.")
@@ -52,15 +53,20 @@ def main(argv=None):
     batch_size = 32
     data_loader = loader.Loader(config['data']['path'], batch_size,
                                 seed=config['data']['seed'])
+
+    lm = decoder.LM(data_loader, order=2)
     evaler = Evaler(FLAGS.save_path, batch_size=batch_size)
 
     corr = 0.0
     total = 0
     for inputs, labels in data_loader.batches(data_loader.val):
-        predictions = evaler.predict(inputs)
+        probs = evaler.probs(inputs)
+        predictions = [decoder.beam_search(probs[i,...], lm)
+                         for i in range(batch_size)]
+        predictions = np.vstack(predictions)
         corr += np.sum(predictions == np.vstack(labels))
         total += predictions.size
-    print("Number {}, Accuracy {:.2f}".format(total, corr / total))
+    print("Number {}, Accuracy {:.3f}".format(total, corr / total))
 
 
 if __name__ == "__main__":
