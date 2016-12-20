@@ -7,13 +7,11 @@
     },
 
     "optimizer" : {
-        "epochs" : 30,
+        "epochs" : 60,
         "learning_rate" : 1e-2,
         "momentum" : 0.95,
         "decay_rate" : 0.9,
         "decay_steps" : 500,
-        "l2_weight" : 1e-6,
-        "clip_norm" : 4.0
     },
 
     "model" : {
@@ -21,21 +19,29 @@
         "batch_size" : 16,
         "conv_layers" : [
             { "kernel_size" : 32,
-              "stride" : 20,
-              "num_filters" : 32
+              "stride" : 2,
+              "num_filters" : 5
             },
             { "kernel_size" : 32,
-              "stride" : 10,
-              "num_filters" : 32
+              "stride" : 2,
+              "num_filters" : 5
+            },
+            { "kernel_size" : 32,
+              "stride" : 2,
+              "num_filters" : 5
+            },
+            { "kernel_size" : 32,
+              "stride" : 5,
+              "num_filters" : 5
+            },
+            { "kernel_size" : 32,
+              "stride" : 5,
+              "num_filters" : 5
             }
-        ],
-        "rnn" : {
-            "bidirectional" : false,
-            "dim" : 64
-        }
+        ]
     },
 
     "io" : {
-        "save_path" : "test_model"
+        "save_path" : "<fill_me_in>"
     }
 }

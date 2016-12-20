@@ -13,13 +13,18 @@ class RNN(model.Model):
         self.inputs = inputs = tf.placeholder(tf.float32, shape=(batch_size, None))
         acts = tf.reshape(inputs, (batch_size, -1, 1, 1))
 
+        stride_prod = 1
         for layer in config['conv_layers']:
             num_filters = layer['num_filters']
             kernel_size = layer['kernel_size']
             stride = layer['stride']
+            stride_prod *= stride
             acts = tfl.convolution2d(acts, num_outputs=num_filters,
                                      kernel_size=[kernel_size, 1],
                                      stride=stride)
+        # TODO, awni, this is needed to put the input into the
+        # frequency of the output (e.g. 200hz ->1hz)
+        assert stride_prod == 200, "Bad overall subsample factor."
 
         # Activations should emerge from the convolution with shape
         # [batch_size, time (subsampled), 1, num_channels]
