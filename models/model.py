@@ -10,10 +10,10 @@ class Model:
         raise NotImplemented("Your model must implement this function.")
 
     def init_loss(self):
-        self.labels = tf.placeholder(tf.int64, shape=(self.batch_size,))
+        self.labels = tf.placeholder(tf.int64, shape=(self.batch_size, None))
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
                                    self.logits, self.labels))
-        correct = tf.equal(tf.argmax(self.logits, 1), self.labels)
+        correct = tf.equal(tf.argmax(self.logits, 2), self.labels)
         self.acc = tf.reduce_mean(tf.cast(correct, tf.float32))
 
     def init_train(self, config):
@@ -60,19 +60,16 @@ class Model:
     def feed_dict(self, inputs, labels=None):
         """
         Generates a feed dictionary for the model's place-holders.
+        *NB* inputs and labels are assumed to all be of the same
+        lenght.
         Params:
             inputs : List of 1D arrays of wave segments
-            labels (optional) : List of integer labels
+            labels (optional) : List of lists of integer labels
         Returns:
             feed_dict (use with feed_dict kwarg in session.run)
         """
-        seq_lens = [i.shape[0] for i in inputs]
-        batch_size = self.batch_size
-        input_mat = np.zeros((batch_size, max(seq_lens)), dtype=np.float32)
-        for b in range(batch_size):
-            input_mat[b, :seq_lens[b]] = inputs[b]
-        feed_dict = {self.inputs : input_mat}
+        feed_dict = {self.inputs : np.vstack(inputs)}
         if labels is not None:
-            feed_dict[self.labels] = labels
+            feed_dict[self.labels] = np.vstack(labels)
         return feed_dict
 

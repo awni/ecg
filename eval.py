@@ -9,6 +9,7 @@ import tensorflow as tf
 
 import loader
 import models
+import decoder
 
 tf.flags.DEFINE_string("save_path", None,
                        "Path to saved model.")
@@ -32,10 +33,14 @@ class Evaler:
             saver = tf.train.Saver(tf.global_variables())
             saver.restore(sess, os.path.join(save_path, "model"))
 
-    def predict(self, inputs):
+    def probs(self, inputs):
         model = self.model
-        logits, = self.session.run([model.logits], model.feed_dict(inputs))
-        return np.argmax(logits, axis=1)
+        probs, = self.session.run([model.probs], model.feed_dict(inputs))
+        return probs
+
+    def predict(self, inputs):
+        probs = self.probs(inputs)
+        return np.argmax(probs, axis=2)
 
 def main(argv=None):
     assert FLAGS.save_path is not None, \
@@ -46,16 +51,22 @@ def main(argv=None):
         config = json.load(fid)
 
     batch_size = 32
-    data_loader = loader.Loader(config['data']['path'], batch_size)
+    data_loader = loader.Loader(config['data']['path'], batch_size,
+                                seed=config['data']['seed'])
+
+    lm = decoder.LM(data_loader, order=2)
     evaler = Evaler(FLAGS.save_path, batch_size=batch_size)
 
     corr = 0.0
     total = 0
     for inputs, labels in data_loader.batches(data_loader.val):
-        predictions = evaler.predict(inputs)
-        corr += np.sum(predictions == labels)
-        total += len(labels)
-    print("Number {}, Accuracy {:.2f}".format(total, corr / total))
+        probs = evaler.probs(inputs)
+        predictions = [decoder.beam_search(probs[i,...], lm)
+                         for i in range(batch_size)]
+        predictions = np.vstack(predictions)
+        corr += np.sum(predictions == np.vstack(labels))
+        total += predictions.size
+    print("Number {}, Accuracy {:.3f}".format(total, corr / total))
 
 
 if __name__ == "__main__":
