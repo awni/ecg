@@ -28,8 +28,6 @@ class Loader:
     normalizing the inputs.
     """
 
-    FILTER_LABELS = set(['SVT', 'BIGEMINY', 'TRIGEMINY', 'NOISE'])
-
     def __init__(self, data_path, batch_size, duration=30,
                  val_frac=0.1, seed=None):
         """
@@ -51,13 +49,6 @@ class Loader:
 
         self._train, self._val = load_all_data(data_path,
                                    duration, val_frac)
-        def filter_fn(example):
-           return all(l not in Loader.FILTER_LABELS
-                        for l in example[1])
-
-        self._train = filter(filter_fn, self._train)
-        self._val = filter(filter_fn, self._val)
-
         random.shuffle(self._train)
         self.compute_mean_std()
         self._train = [(self.normalize(ecg), l) for ecg, l in self._train]
@@ -67,6 +58,7 @@ class Loader:
         # for each rhythm.
         label_counter = collections.Counter(l for _, labels in self._train
                                                  for l in labels)
+        print(label_counter)
 
         classes = sorted([c for c, _ in label_counter.most_common()])
         self._int_to_class = dict(zip(xrange(len(classes)), classes))
@@ -124,7 +116,7 @@ class Loader:
 
 if __name__ == "__main__":
     random.seed(2016)
-    data_path = "/deep/group/med/irhythm/ecg/"
+    data_path = "/deep/group/med/irhythm/ecg/clean_30sec_recs/batch1"
     batch_size = 32
     ldr = Loader(data_path, batch_size)
     print("Length of training set {}".format(len(ldr.train)))

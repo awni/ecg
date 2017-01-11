@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 
+import collections
 import glob
 import json
 import numpy as np
@@ -19,14 +20,24 @@ def get_all_records(src):
 
 def stratify(records, val_frac):
     """
-    Splits the data by record into train and validation.
+    Splits the data by patient into train and validation.
 
     Returns a tuple of two lists (train, val). Each list contains the
     corresponding records.
     """
-    random.shuffle(records)
-    cut = int(len(records) * val_frac)
-    return records[cut:], records[:cut]
+    def patient_id(record):
+        return os.path.basename(record).split("_")[0]
+
+    patients = collections.defaultdict(list)
+    for record in records:
+        patients[patient_id(record)].append(record)
+    patients = patients.values()
+    random.shuffle(patients)
+    cut = int(len(patients) * val_frac)
+    train, val = patients[cut:], patients[:cut]
+    train = [record for patient in train for record in patient]
+    val = [record for patient in val for record in patient]
+    return train, val
 
 def round_to_second(n):
     rate = int(ECG_SAMP_RATE)
@@ -38,14 +49,14 @@ def round_to_second(n):
 
 def load_episodes(record):
     base = os.path.splitext(record)[0]
-    ep_json = base + qa + EPI_EXT
+    ep_json = base + EPI_EXT
     with open(ep_json, 'r') as fid:
         episodes = json.load(fid)['episodes']
 
     # Round onset and offset samples to the nearest second
     for episode in episodes:
         episode['onset_round'] = round_to_second(episode['onset'])
-        episode['offset_round'] = round_to_second(episode['offset'])
+        episode['offset_round'] = round_to_second(episode['offset']) - 1
 
     # For the last episode, if we rounded up, cut off the last second.
     last_ep = episodes[-1]
@@ -57,7 +68,7 @@ def load_episodes(record):
 def make_labels(episodes, duration):
     labels = []
     for episode in episodes:
-        rhythm_len = episode['offset_round'] - episode['onset_round']
+        rhythm_len = episode['offset_round'] - episode['onset_round'] + 1
         rhythm_secs = int(rhythm_len / ECG_SAMP_RATE)
         rhythm = [episode['rhythm_name']] * rhythm_secs
         labels.extend(rhythm)
@@ -103,10 +114,14 @@ def load_all_data(data_path, duration, val_frac):
 if __name__ == "__main__":
     random.seed(2016)
 
-    src = "/deep/group/med/irhythm/ecg/"
+    src = "/deep/group/med/irhythm/ecg/clean_30sec_recs/batch1"
     duration = 30
     val_frac = 0.1
+
+    import time
+    start = time.time()
     train, val = load_all_data(src, duration, val_frac)
+    print("Load time: {:.3f} (s)".format(time.time() - start))
 
     # Some tests
     for n, m in [(401, 401), (1, 1), (7, 1), (199, 201),
