@@ -32,8 +32,8 @@ class Model:
         self.avg_loss = ema.average(self.loss)
         self.avg_acc = ema.average(self.acc)
 
-        tf.scalar_summary("Loss", self.loss)
-        tf.scalar_summary("Accuracy", self.acc)
+        tf.summary.scalar("Loss", self.loss)
+        tf.summary.scalar("Accuracy", self.acc)
 
         self.it = tf.Variable(0, trainable=False, dtype=tf.int64)
 
