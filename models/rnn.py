@@ -2,7 +2,7 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as tfl
 
-import model
+from . import model
 
 class RNN(model.Model):
 

@@ -26,13 +26,13 @@ Options:
 import os
 import fnmatch
 import pandas as pd
-import cPickle as pickle
+import pickle as pickle
 import json
 from itertools import islice
 from docopt import docopt
 
 
-from db_constants import ECG_SAMP_RATE, EPI_EXT
+from .db_constants import ECG_SAMP_RATE, EPI_EXT
 
 
 qa = '_post'
@@ -157,8 +157,8 @@ if __name__ == '__main__':
     with open(out_file, 'wb') as f:
         pickle.dump(recs_win_info, f)
 
-    print 'Data extraction completed!'
-    print "Episodes' info written in %s." % out_file
+    print('Data extraction completed!')
+    print("Episodes' info written in %s." % out_file)
 
 
 

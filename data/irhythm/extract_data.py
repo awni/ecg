@@ -8,9 +8,9 @@ import numpy as np
 import os
 import random
 
-from dataset_tools.db_constants import ECG_SAMP_RATE
-from dataset_tools.db_constants import ECG_EXT, EPI_EXT
-from dataset_tools.extract_episodes import _find_all_files, qa
+from .dataset_tools.db_constants import ECG_SAMP_RATE
+from .dataset_tools.db_constants import ECG_EXT, EPI_EXT
+from .dataset_tools.extract_episodes import _find_all_files, qa
 
 def get_all_records(src):
     """
@@ -31,7 +31,7 @@ def stratify(records, val_frac):
     patients = collections.defaultdict(list)
     for record in records:
         patients[patient_id(record)].append(record)
-    patients = patients.values()
+    patients = list(patients.values())
     random.shuffle(patients)
     cut = int(len(patients) * val_frac)
     train, val = patients[cut:], patients[:cut]

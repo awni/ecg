@@ -1,7 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 
-import cPickle as pickle
+import pickle as pickle
 import collections
 import glob
 import numpy as np
@@ -61,8 +61,8 @@ class Loader:
         print(label_counter)
 
         classes = sorted([c for c, _ in label_counter.most_common()])
-        self._int_to_class = dict(zip(xrange(len(classes)), classes))
-        self._class_to_int = {c : i for i, c in self._int_to_class.iteritems()}
+        self._int_to_class = dict(zip(range(len(classes)), classes))
+        self._class_to_int = {c : i for i, c in self._int_to_class.items()}
 
     def batches(self, data):
         """

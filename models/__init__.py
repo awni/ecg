@@ -1,2 +1,1 @@
-from cnn import CNN
-from rnn import RNN
+from .rnn import RNN
