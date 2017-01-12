@@ -69,7 +69,7 @@ def _extract_win_from_episode(rhy_epi, win_dur_samples, num_xt, rhy_name, rec):
     # starting indices of windows to be extracted
     # note: extracted windows have a len of win_dur_samples and are separated
     # from each other by a distance of win_dur_samples as well.
-    win_idx = xrange(rhy_epi['onset'], rhy_epi['offset']-win_dur_samples,
+    win_idx = range(rhy_epi['onset'], rhy_epi['offset']-win_dur_samples,
                      win_dur_samples*2)
     win_idx_list = list(islice(win_idx, num_xt))
 
@@ -159,16 +159,3 @@ if __name__ == '__main__':
 
     print('Data extraction completed!')
     print("Episodes' info written in %s." % out_file)
-
-
-
-
-
-
-
-
-
-
-
-
-

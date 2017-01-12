@@ -120,7 +120,7 @@ def pltWithButton(sig, fs=-1, start=0, window=-1, annotation_dict={}, rhy_dict={
 
             def forward(self, event):
                 x1, x2 = ax.get_xlim()
-                x1 = np.min([x1+fs,sig_length-window*fs])
+                x1 = np.min([x1+fs, sig_length-window*fs])
                 x2 = np.min([x1+window*fs, sig_length])
                 y1 = np.min(sig[x1:x2])
                 y2 = np.max(sig[x1:x2])
@@ -130,7 +130,7 @@ def pltWithButton(sig, fs=-1, start=0, window=-1, annotation_dict={}, rhy_dict={
 
             def backward(self, event):
                 x1, x2 = ax.get_xlim()
-                x1 = np.max([x1-fs,0])
+                x1 = np.max([x1-fs, 0])
                 x2 = np.min([x1+window*fs, sig_length])
                 y1 = np.min(sig[x1:x2])
                 y2 = np.max(sig[x1:x2])
@@ -209,9 +209,9 @@ def pltWithButton(sig, fs=-1, start=0, window=-1, annotation_dict={}, rhy_dict={
         rhy_prev_handles = {}
         for rhy_ind, rhy_key in enumerate(rhy_dict):
             if rhythm_code2name[rhy_key] != 'NSR':
-                axprev = plt.axes([0.1+(rhy_ind%3)*0.2, 0.2-0.1*(rhy_ind//3),
+                axprev = plt.axes([0.1+(rhy_ind % 3)*0.2, 0.2-0.1*(rhy_ind//3),
                                    0.09, main_plt_bottom/8.])
-                axnext = plt.axes([0.2+(rhy_ind%3)*0.2, 0.2-0.1*(rhy_ind//3),
+                axnext = plt.axes([0.2+(rhy_ind % 3)*0.2, 0.2-0.1*(rhy_ind//3),
                                    0.09, main_plt_bottom/8.])
                 rhy_prev_handles[rhy_key] = \
                     ButtonProcessor(axprev, rhythm_code2name[rhy_key]+'_P')
@@ -221,4 +221,4 @@ def pltWithButton(sig, fs=-1, start=0, window=-1, annotation_dict={}, rhy_dict={
     plt.show()
 
     return fig, ax, bforward, bbackward, rhy_prev_handles, \
-           rhy_next_handles, check, slider
+        rhy_next_handles, check, slider

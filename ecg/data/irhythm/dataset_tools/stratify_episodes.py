@@ -3,7 +3,7 @@
 Creates train/test/(val) set splits for a given ECG dataset.
 
 Usage:
- startify_episodes.py  <db_file> --rng=<rng_seed> --train=<train_frac> --test=<test_frac>
+ stratify_episodes.py  <db_file> --rng=<rng_seed> --train=<train_frac> --test=<test_frac>
                        [--method=<strat_method>] [--exclude=<rhy_names>]
 
 Arguments:
@@ -21,7 +21,7 @@ Options:
 """
 
 import numpy as np
-import cPickle as pickle
+import pickle as pickle
 from docopt import docopt
 
 
@@ -47,7 +47,7 @@ def _strat_over_subject_rhythms(db_info, train_frac, test_frac,
             n_records = len(records)
 
             if n_records < 4:
-                print 'Warning: only %d record(s) contain %s' % (n_records, rhy_name)
+                print('Warning: only %d record(s) contain %s' % (n_records, rhy_name))
 
             n_train = int(train_frac * n_records)
             n_test = int(test_frac * n_records)
@@ -81,8 +81,9 @@ if __name__ == '__main__':
         exclude_list = [rhy_name.strip().upper() for
                         rhy_name in exclude_list]
 
-    assert train_frac + test_frac <= 1, 'The sum of train and test fractions ' \
-                                        'must be <= 1'
+    assert(
+        train_frac + test_frac <= 1,
+        'The sum of train and test fractions must be <= 1')
 
     # set random seed
     np.random.seed(rng_seed)
@@ -100,8 +101,5 @@ if __name__ == '__main__':
     with open(db_file, 'wb') as f:
         pickle.dump(db_info, f)
 
-    print 'Stratification completed!'
-    print 'Input pkl file is updated to include stratification info.'
-
-
-
+    print('Stratification completed!')
+    print('Input pkl file is updated to include stratification info.')
