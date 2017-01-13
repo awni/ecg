@@ -34,6 +34,9 @@ class Loader(object):
         self._postprocess(use_one_hot_labels)
 
     def _postprocess(self, use_one_hot):
+        self.x_train = np.array(self.x_train)
+        self.x_test = np.array(self.x_test)
+
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
         pprint(label_counter)
