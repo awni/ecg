@@ -5,8 +5,10 @@ wget https://bootstrap.pypa.io/get-pip.py
 python3 get-pip.py --user
 $HOME/.local/bin/pip3 install virtualenv --user
 
+## *NB* if you are on AFS you may not have enough space in your home directory for the environment. I recommend putting it in scratch or somewhere where you have a few GB of space.
 $HOME/.local/bin/virtualenv ecg_env
 source ecg_env/bin/activate # add to .bashrc.user
+
 
 pip install -r path_to/requirements.txt
 
