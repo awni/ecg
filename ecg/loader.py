@@ -1,10 +1,10 @@
+import argparse
 import collections
 import numpy as np
 import os
 import random
 import joblib
 from pprint import pprint
-import argparse
 
 from data.irhythm.extract_data import load_all_data
 
@@ -14,8 +14,11 @@ class Loader(object):
     Loader class for feeding data to the network.
     """
 
-    def __init__(self, data_path, batch_size, duration=30,
-                 val_frac=0.1, seed=None, use_cached_if_available=True):
+    def __init__(
+            self, data_path, batch_size, duration=30,
+            val_frac=0.1, seed=None, use_one_hot_labels=False,
+            use_cached_if_available=True):
+
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
             raise ValueError(msg)
@@ -26,22 +29,32 @@ class Loader(object):
         self.batch_size = batch_size
         self.duration = duration
         self.val_frac = val_frac
-        self._load(data_path, use_cached_if_available)
-        self._postprocess()
 
-    def _postprocess(self):
+        self._load(data_path, use_cached_if_available)
+        self._postprocess(use_one_hot_labels)
+
+    def _postprocess(self, use_one_hot):
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
         pprint(label_counter)
         classes = sorted([c for c, _ in label_counter.most_common()])
+
         self._int_to_class = dict(zip(range(len(classes)), classes))
         self._class_to_int = {c: i for i, c in self._int_to_class.items()}
 
-        self.y_train = self.transform_to_int_label(self.y_train)
-        self.y_test = self.transform_to_int_label(self.y_test)
+        self.y_train = self.transform_to_int_label(self.y_train, use_one_hot)
+        self.y_test = self.transform_to_int_label(self.y_test, use_one_hot)
 
-    def transform_to_int_label(self, y_split):
-        return [[self._class_to_int[c] for c in label] for label in y_split]
+    def transform_to_int_label(self, y_split, use_one_hot):
+        labels_mod = []
+        for label in y_split:
+            label_mod = np.array([self._class_to_int[c] for c in label])
+            if use_one_hot is True:
+                tmp = np.zeros((len(label_mod), len(self._int_to_class)))
+                tmp[np.arange(len(label_mod)), label_mod] = 1
+                label_mod = tmp
+            labels_mod.append(label_mod)
+        return np.array(labels_mod)
 
     def _load_internal(self, data_folder):
         def normalize(example, mean, std):
@@ -139,7 +152,7 @@ if __name__ == "__main__":
     ldr = Loader(
         args.data_path,
         batch_size,
-        use_cached_if_available= not args.refresh)
+        use_cached_if_available=not args.refresh)
     print("Length of training set {}".format(len(ldr.x_train)))
     print("Length of validation set {}".format(len(ldr.x_test)))
     print("Output dimension {}".format(ldr.output_dim))
