@@ -11,34 +11,11 @@ from data.irhythm.extract_data import load_all_data
 
 class Loader(object):
     """
-    Loader class for feeding data to the network. This class loads the training
-    and validation data sets. Once the datasets are loaded, they can be batched
-    and fed to the network. Example usage:
-
-        ```
-        data_path = <path_to_data>
-        batch_size = 32
-        ldr = Loader(data_path, batch_size)
-        for batch in ldr.batches(ldr.train):
-            run_sgd_on(batch)
-        ```
-
-    At the moment we expect the location where the data is stored to have
-    train/ and val/ directories.  This class is also responsible for
-    normalizing the inputs.
+    Loader class for feeding data to the network.
     """
 
     def __init__(self, data_path, batch_size, duration=30,
                  val_frac=0.1, seed=None, use_cached_if_available=True):
-        """
-        :param data_path: path to the training and validation files
-        :param batch_size: size of the minibatches to train on
-        :param duration: length in seconds of an ecg example
-        :param val_frac: fraction of the dataset to use for validation
-                         (held out by record)
-        :param seed: seed the rng for shuffling data
-        :param use_cached_if_available: whether to use cache
-        """
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
             raise ValueError(msg)
@@ -50,7 +27,9 @@ class Loader(object):
         self.duration = duration
         self.val_frac = val_frac
         self._load(data_path, use_cached_if_available)
-        
+        self._postprocess()
+
+    def _postprocess(self):
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
         pprint(label_counter)
@@ -82,12 +61,15 @@ class Loader(object):
             std = np.std(all_dat)
             return mean, std
 
-        train_x_y_pairs, val_x_y_pairs = load_all_data(data_folder, self.duration, self.val_frac)
+        train_x_y_pairs, val_x_y_pairs = load_all_data(
+            data_folder, self.duration, self.val_frac)
         random.shuffle(train_x_y_pairs)
         mean, std = compute_mean_std(train_x_y_pairs)
-        train_x_y_pairs = [(normalize(ecg, mean, std), l) for ecg, l in train_x_y_pairs]
-        val_x_y_pairs = [(normalize(ecg, mean, std), l) for ecg, l in val_x_y_pairs]
-        
+        train_x_y_pairs = [(
+            normalize(ecg, mean, std), l) for ecg, l in train_x_y_pairs]
+        val_x_y_pairs = [(
+            normalize(ecg, mean, std), l) for ecg, l in val_x_y_pairs]
+
         x_train, y_train = zip(*train_x_y_pairs)
         x_test, y_test = zip(*val_x_y_pairs)
 
@@ -115,7 +97,7 @@ class Loader(object):
         else:
             print("Loading dataset (not stored in cache)...")
             loaded = self._load_internal(data_folder)
-            print("Saving to cache... (this may take some time)")
+            print("Saving to cache (this may take some time)...")
             save_loaded(loaded)
 
         (self.x_train, self.x_test, self.y_train, self.y_test) = loaded
@@ -150,10 +132,14 @@ class Loader(object):
 if __name__ == "__main__":
     random.seed(2016)
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="path to the training and validation files")
+    parser.add_argument("data_path", help="path to files")
+    parser.add_argument("--refresh", help="whether to refresh cache")
     args = parser.parse_args()
     batch_size = 32
-    ldr = Loader(args.data_path, batch_size, use_cached_if_available=True)
+    ldr = Loader(
+        args.data_path,
+        batch_size,
+        use_cached_if_available= not args.refresh)
     print("Length of training set {}".format(len(ldr.x_train)))
     print("Length of validation set {}".format(len(ldr.x_test)))
     print("Output dimension {}".format(ldr.output_dim))
@@ -163,7 +149,6 @@ if __name__ == "__main__":
     for ecgs, labels in ldr.train_generator():
         count += 1
         assert len(ecgs) == len(labels) == batch_size, \
-                "Invalid number of examples."
+            "Invalid number of examples."
         assert len(ecgs[0].shape) == 1, "ECG array should be 1D"
-    assert count == len(ldr.x_train) // batch_size, \
-            "Wrong number of batches."
+    assert count == len(ldr.x_train) // batch_size, "Wrong number of batches."
