@@ -3,7 +3,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, CheckButtons, Slider
 
-from db_constants import rhythm_code2name, rhythm_name2code
+from .db_constants import rhythm_code2name, rhythm_name2code
 
 
 # Color codes (same as those used in the qa-tool)
