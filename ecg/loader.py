@@ -58,17 +58,9 @@ class Loader(object):
 
     def _load_internal(self, data_folder):
         def normalize(example, mean, std):
-            """
-            Normalizes a given example by the training mean and std.
-            :param: example: 1D numpy array
-            :return: normalized example
-            """
             return (example - mean) / std
 
         def compute_mean_std(data_pairs):
-            """
-            Estimates the mean and std over the training set.
-            """
             all_dat = np.hstack(w for w, _ in data_pairs)
             mean = np.mean(all_dat)
             std = np.std(all_dat)
@@ -122,13 +114,6 @@ class Loader(object):
         return self._batch_generate(self.x_test, self.y_test)
 
     def _batch_generate(self, inputs, labels):
-        """
-        :param data: the raw dataset from e.g. `loader.train`
-        :returns: Iterator to the minibatches. Each minibatch consists
-                  of an (ecgs, labels) pair. The ecgs is a list of 1D
-                  numpy arrays, the labels is a list of integer labels
-                  for each ecg.
-        """
         batch_size = self.batch_size
         data_size = len(labels)
         for i in range(0, data_size - batch_size + 1, batch_size):
