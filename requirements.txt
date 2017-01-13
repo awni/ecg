@@ -1,14 +1,17 @@
 docopt==0.6.2
 joblib==0.10.3
+Keras==1.2.0
 numpy==1.11.3
 pandas==0.19.2
 pprint==0.1
 protobuf==3.1.0.post1
 python-dateutil==2.6.0
 pytz==2016.10
+PyYAML==3.12
 scikit-learn==0.18.1
 scipy==0.18.1
 six==1.10.0
 sklearn==0.0
 tensorflow==0.12.1
+Theano==0.8.2
 tqdm==4.11.0
