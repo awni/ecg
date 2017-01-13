@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import random
 
 from loader import Loader
 
@@ -9,23 +10,33 @@ def create_model(input_shape, num_categories):
     from keras.layers.recurrent import LSTM
     from keras.layers.convolutional import Convolution1D
     from keras.layers.wrappers import TimeDistributed
+    from keras.layers.pooling import MaxPooling1D
 
     model = Sequential()
     model.add(Convolution1D(
-        10, 100,
-        border_mode='same', subsample_length=200, input_shape=input_shape))
+        500, 300, # number of filters should be high, filter_length should at least be subsample length
+        border_mode='same', 
+        subsample_length=200,
+        input_shape=input_shape,
+        activation='relu',
+        init='he_normal'
+    )) 
+    """
     model.add(
         LSTM(
-            32,
+            64,
             return_sequences=True
         )
     )
+    """
+    model.add(TimeDistributed(Dense(100, activation='relu', init='he_normal'))) # high number of hidden is important
     model.add(TimeDistributed(Dense(num_categories)))
     model.add(Activation('softmax'))
     return model
 
 
 if __name__ == '__main__':
+    random.seed(20)
     from keras.utils.visualize_util import plot
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
@@ -45,11 +56,10 @@ if __name__ == '__main__':
     y_val = dl.y_test
     print("Validation size: " + str(len(x_val)) + " examples.")
 
-    print(x_train[0].shape, y_train.shape, y_train[0].shape)
     model = create_model(x_train[0].shape, dl.output_dim)
     plot(model, to_file='model.png', show_shapes=True)
     model.compile(loss='categorical_crossentropy',
-              optimizer='rmsprop',
+              optimizer='adam',
               metrics=['accuracy'])
-    model.fit(x_train, y_train, nb_epoch=5,
+    model.fit(x_train, y_train, nb_epoch=10,
           validation_data=(x_val, y_val))
