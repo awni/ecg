@@ -14,22 +14,47 @@ def create_model(input_shape, num_categories):
 
     model = Sequential()
     model.add(Convolution1D(
-        500, 300, # number of filters should be high, filter_length should at least be subsample length
+        32, 32, # number of filters should be high, filter_length should at least be subsample length
         border_mode='same', 
-        subsample_length=200,
+        subsample_length=2,
         input_shape=input_shape,
         activation='relu',
-        init='he_normal'
-    )) 
-    """
+        init='he_normal'))
+    model.add(Convolution1D(
+        32, 32, # number of filters should be high, filter_length should at least be subsample length
+        border_mode='same', 
+        subsample_length=2,
+        input_shape=input_shape,
+        activation='relu',
+        init='he_normal'))
+    model.add(Convolution1D(
+        32, 32, # number of filters should be high, filter_length should at least be subsample length
+        border_mode='same', 
+        subsample_length=2,
+        input_shape=input_shape,
+        activation='relu',
+        init='he_normal'))
+    model.add(Convolution1D(
+        32, 32, # number of filters should be high, filter_length should at least be subsample length
+        border_mode='same', 
+        subsample_length=5,
+        input_shape=input_shape,
+        activation='relu',
+        init='he_normal'))
+    model.add(Convolution1D(
+        32, 32, # number of filters should be high, filter_length should at least be subsample length
+        border_mode='same', 
+        subsample_length=5,
+        input_shape=input_shape,
+        activation='relu',
+        init='he_normal'))
     model.add(
         LSTM(
-            64,
+            100,
             return_sequences=True
         )
     )
-    """
-    model.add(TimeDistributed(Dense(100, activation='relu', init='he_normal'))) # high number of hidden is important
+    # model.add(TimeDistributed(Dense(100, activation='relu', init='he_normal')))
     model.add(TimeDistributed(Dense(num_categories)))
     model.add(Activation('softmax'))
     return model
@@ -59,7 +84,7 @@ if __name__ == '__main__':
     model = create_model(x_train[0].shape, dl.output_dim)
     plot(model, to_file='model.png', show_shapes=True)
     model.compile(loss='categorical_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
+                  optimizer='adam',
+                  metrics=['accuracy'])
     model.fit(x_train, y_train, nb_epoch=10,
-          validation_data=(x_val, y_val))
+              validation_data=(x_val, y_val))
