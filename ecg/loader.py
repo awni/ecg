@@ -1,15 +1,15 @@
-from __future__ import division
-from __future__ import print_function
-
-import pickle as pickle
 import collections
-import glob
 import numpy as np
 import os
 import random
+import joblib
+from pprint import pprint
+import argparse
+
 from data.irhythm.extract_data import load_all_data
 
-class Loader:
+
+class Loader(object):
     """
     Loader class for feeding data to the network. This class loads the training
     and validation data sets. Once the datasets are loaded, they can be batched
@@ -29,7 +29,7 @@ class Loader:
     """
 
     def __init__(self, data_path, batch_size, duration=30,
-                 val_frac=0.1, seed=None):
+                 val_frac=0.1, seed=None, use_cached_if_available=True):
         """
         :param data_path: path to the training and validation files
         :param batch_size: size of the minibatches to train on
@@ -37,6 +37,7 @@ class Loader:
         :param val_frac: fraction of the dataset to use for validation
                          (held out by record)
         :param seed: seed the rng for shuffling data
+        :param use_cached_if_available: whether to use cache
         """
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
@@ -46,25 +47,86 @@ class Loader:
             random.seed(seed)
 
         self.batch_size = batch_size
-
-        self._train, self._val = load_all_data(data_path,
-                                   duration, val_frac)
-        random.shuffle(self._train)
-        self.compute_mean_std()
-        self._train = [(self.normalize(ecg), l) for ecg, l in self._train]
-        self._val = [(self.normalize(ecg), l) for ecg, l in self._val]
-
-        # Can use this to look at the distribution of classes
-        # for each rhythm.
-        label_counter = collections.Counter(l for _, labels in self._train
-                                                 for l in labels)
-        print(label_counter)
-
+        self.duration = duration
+        self.val_frac = val_frac
+        self._load(data_path, use_cached_if_available)
+        
+        label_counter = collections.Counter(l for labels in self.y_train
+                                            for l in labels)
+        pprint(label_counter)
         classes = sorted([c for c, _ in label_counter.most_common()])
         self._int_to_class = dict(zip(range(len(classes)), classes))
-        self._class_to_int = {c : i for i, c in self._int_to_class.items()}
+        self._class_to_int = {c: i for i, c in self._int_to_class.items()}
 
-    def batches(self, data):
+        self.y_train = self.transform_to_int_label(self.y_train)
+        self.y_test = self.transform_to_int_label(self.y_test)
+
+    def transform_to_int_label(self, y_split):
+        return [[self._class_to_int[c] for c in label] for label in y_split]
+
+    def _load_internal(self, data_folder):
+        def normalize(example, mean, std):
+            """
+            Normalizes a given example by the training mean and std.
+            :param: example: 1D numpy array
+            :return: normalized example
+            """
+            return (example - mean) / std
+
+        def compute_mean_std(data_pairs):
+            """
+            Estimates the mean and std over the training set.
+            """
+            all_dat = np.hstack(w for w, _ in data_pairs)
+            mean = np.mean(all_dat)
+            std = np.std(all_dat)
+            return mean, std
+
+        train_x_y_pairs, val_x_y_pairs = load_all_data(data_folder, self.duration, self.val_frac)
+        random.shuffle(train_x_y_pairs)
+        mean, std = compute_mean_std(train_x_y_pairs)
+        train_x_y_pairs = [(normalize(ecg, mean, std), l) for ecg, l in train_x_y_pairs]
+        val_x_y_pairs = [(normalize(ecg, mean, std), l) for ecg, l in val_x_y_pairs]
+        
+        x_train, y_train = zip(*train_x_y_pairs)
+        x_test, y_test = zip(*val_x_y_pairs)
+
+        return (x_train, x_test, y_train, y_test)
+
+    def _load(self, data_folder, use_cached_if_available):
+        """Run the pipeline to load the dataset.
+
+        Returns the dataset with a train test split.
+        """
+        cached_filename = data_folder + '/cached'
+
+        def check_cached_copy():
+            return os.path.isfile(cached_filename)
+
+        def load_cached():
+            return joblib.load(cached_filename)
+
+        def save_loaded(loaded):
+            joblib.dump(loaded, cached_filename)
+
+        if use_cached_if_available and check_cached_copy():
+            print("Using cached copy of dataset...")
+            loaded = load_cached()
+        else:
+            print("Loading dataset (not stored in cache)...")
+            loaded = self._load_internal(data_folder)
+            print("Saving to cache... (this may take some time)")
+            save_loaded(loaded)
+
+        (self.x_train, self.x_test, self.y_train, self.y_test) = loaded
+
+    def train_generator(self):
+        return self._batch_generate(self.x_train, self.y_train)
+
+    def test_generator(self):
+        return self._batch_generate(self.x_test, self.y_test)
+
+    def _batch_generate(self, inputs, labels):
         """
         :param data: the raw dataset from e.g. `loader.train`
         :returns: Iterator to the minibatches. Each minibatch consists
@@ -72,9 +134,6 @@ class Loader:
                   numpy arrays, the labels is a list of integer labels
                   for each ecg.
         """
-        inputs, labels = zip(*data)
-        labels = [[self._class_to_int[c] for c in label]
-                    for label in labels]
         batch_size = self.batch_size
         data_size = len(labels)
         for i in range(0, data_size - batch_size + 1, batch_size):
@@ -82,55 +141,29 @@ class Loader:
             batch_labels = labels[i:i + batch_size]
             yield (batch_data, batch_labels)
 
-    def normalize(self, example):
-        """
-        Normalizes a given example by the training mean and std.
-        :param: example: 1D numpy array
-        :return: normalized example
-        """
-        return (example - self.mean) / self.std
-
-    def compute_mean_std(self):
-        """
-        Estimates the mean and std over the training set.
-        """
-        all_dat = np.hstack(w for w, _ in self._train)
-        self.mean = np.mean(all_dat)
-        self.std = np.std(all_dat)
-
     @property
     def output_dim(self):
         """ Returns number of output classes. """
         return len(self._int_to_class)
 
-    @property
-    def train(self):
-        """ Returns the raw training set. """
-        return self._train
-
-    @property
-    def val(self):
-        """ Returns the raw validation set. """
-        return self._val
-
 
 if __name__ == "__main__":
     random.seed(2016)
-    data_path = "/deep/group/med/irhythm/ecg/clean_30sec_recs/batch1"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="path to the training and validation files")
+    args = parser.parse_args()
     batch_size = 32
-    ldr = Loader(data_path, batch_size)
-    print("Length of training set {}".format(len(ldr.train)))
-    print("Length of validation set {}".format(len(ldr.val)))
+    ldr = Loader(args.data_path, batch_size, use_cached_if_available=True)
+    print("Length of training set {}".format(len(ldr.x_train)))
+    print("Length of validation set {}".format(len(ldr.x_test)))
     print("Output dimension {}".format(ldr.output_dim))
 
     # Run a few sanity checks.
     count = 0
-    for ecgs, labels in ldr.batches(ldr.train):
+    for ecgs, labels in ldr.train_generator():
         count += 1
         assert len(ecgs) == len(labels) == batch_size, \
                 "Invalid number of examples."
         assert len(ecgs[0].shape) == 1, "ECG array should be 1D"
-    assert count == len(ldr.train) // batch_size, \
+    assert count == len(ldr.x_train) // batch_size, \
             "Wrong number of batches."
-
-

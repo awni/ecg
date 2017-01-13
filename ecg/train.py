@@ -20,7 +20,7 @@ FLAGS = tf.flags.FLAGS
 def run_epoch(model, data_loader, session, summarizer):
     summary_op = tf.summary.merge_all()
 
-    for batch in data_loader.batches(data_loader.train):
+    for batch in data_loader.train_generator():
         ops = [model.train_op, model.avg_loss,
                model.avg_acc, model.it, summary_op]
         res = session.run(ops, feed_dict=model.feed_dict(*batch))
@@ -35,7 +35,7 @@ def run_epoch(model, data_loader, session, summarizer):
 def run_validation(model, data_loader, session, summarizer):
     it = model.it.eval(session)
     results = []
-    for batch in data_loader.batches(data_loader.val):
+    for batch in data_loader.test_generator():
         ops = [model.acc, model.loss]
         res = session.run(ops, feed_dict=model.feed_dict(*batch))
         results.append(res)
