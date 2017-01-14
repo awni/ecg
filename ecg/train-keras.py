@@ -12,6 +12,7 @@ def create_model(input_shape, num_categories):
     from keras.layers.normalization import BatchNormalization
     from keras.layers.advanced_activations import PReLU
     from keras.layers.wrappers import TimeDistributed
+    from keras.layers import Dropout
     subsample_lengths = [2, 2, 2, 5, 5]
     model = Sequential()
     for subsample_length in subsample_lengths:
@@ -20,16 +21,20 @@ def create_model(input_shape, num_categories):
             border_mode='same', 
             subsample_length=subsample_length,
             input_shape=input_shape,
-            init='he_normal'))
-        model.add(BatchNormalization())
-        model.add(PReLU())
-    model.add(
-        LSTM(
-            100,
-            return_sequences=True
+            init='he_normal',
+            activation='relu'))
+        # model.add(BatchNormalization())
+        # model.add(PReLU())
+        # model.add(Dropout(0.3))
+    for i in range(2):
+        model.add(
+            LSTM(
+                32,
+                return_sequences=True
+            )
         )
-    )
     model.add(TimeDistributed(Dense(100, activation='relu', init='he_normal')))
+    # model.add(Dropout(0.3))
     model.add(TimeDistributed(Dense(num_categories)))
     model.add(Activation('softmax'))
     return model
