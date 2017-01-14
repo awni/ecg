@@ -5,6 +5,8 @@ numpy==1.11.3
 pandas==0.19.2
 pprint==0.1
 protobuf==3.1.0.post1
+pydot-ng==1.0.0
+pyparsing==2.1.10
 python-dateutil==2.6.0
 pytz==2016.10
 PyYAML==3.12
