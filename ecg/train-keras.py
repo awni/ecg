@@ -10,7 +10,6 @@ def create_model(input_shape, num_categories):
     from keras.layers.recurrent import LSTM
     from keras.layers.convolutional import Convolution1D
     from keras.layers.wrappers import TimeDistributed
-    from keras.layers.pooling import MaxPooling1D
 
     model = Sequential()
     model.add(Convolution1D(
@@ -54,7 +53,7 @@ def create_model(input_shape, num_categories):
             return_sequences=True
         )
     )
-    # model.add(TimeDistributed(Dense(100, activation='relu', init='he_normal')))
+    model.add(TimeDistributed(Dense(100, activation='relu', init='he_normal')))
     model.add(TimeDistributed(Dense(num_categories)))
     model.add(Activation('softmax'))
     return model
