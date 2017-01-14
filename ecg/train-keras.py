@@ -7,7 +7,7 @@ from loader import Loader
 def create_model(input_shape, num_categories):
     from keras.layers.core import Activation, Dense
     from keras.models import Sequential
-    from keras.layers.recurrent import LSTM
+    from keras.layers.recurrent import LSTM, GRU
     from keras.layers.convolutional import Convolution1D
     from keras.layers.normalization import BatchNormalization
     from keras.layers.advanced_activations import PReLU
@@ -26,10 +26,10 @@ def create_model(input_shape, num_categories):
         # model.add(BatchNormalization())
         # model.add(PReLU())
         # model.add(Dropout(0.3))
-    for i in range(2):
+    for i in range(3):
         model.add(
-            LSTM(
-                32,
+            GRU(
+                100,
                 return_sequences=True
             )
         )
