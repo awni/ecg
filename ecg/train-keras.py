@@ -62,7 +62,6 @@ def create_model(input_shape, num_categories):
 
 if __name__ == '__main__':
     random.seed(20)
-    from keras.utils.visualize_util import plot
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
     parser.add_argument("--refresh", help="whether to refresh cache")
@@ -82,7 +81,13 @@ if __name__ == '__main__':
     print("Validation size: " + str(len(x_val)) + " examples.")
 
     model = create_model(x_train[0].shape, dl.output_dim)
-    plot(model, to_file='model.png', show_shapes=True)
+
+    try:
+        from keras.utils.visualize_util import plot
+        plot(model, to_file='model.png', show_shapes=True)
+    except:
+        pass
+
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
                   metrics=['accuracy'])
