@@ -106,7 +106,10 @@ class Loader(object):
             print("Loading dataset (not stored in cache)...")
             loaded = self._load_internal(data_folder)
             print("Saving to cache (this may take some time)...")
-            save_loaded(loaded)
+            try:
+                save_loaded(loaded)
+            except:
+                print("Couldn't save cache...")
 
         (self.x_train, self.x_test, self.y_train, self.y_test) = loaded
 
