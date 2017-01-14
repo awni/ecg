@@ -9,44 +9,20 @@ def create_model(input_shape, num_categories):
     from keras.models import Sequential
     from keras.layers.recurrent import LSTM
     from keras.layers.convolutional import Convolution1D
+    from keras.layers.normalization import BatchNormalization
+    from keras.layers.advanced_activations import PReLU
     from keras.layers.wrappers import TimeDistributed
-
+    subsample_lengths = [2, 2, 2, 5, 5]
     model = Sequential()
-    model.add(Convolution1D(
-        32, 32, # number of filters should be high, filter_length should at least be subsample length
-        border_mode='same', 
-        subsample_length=2,
-        input_shape=input_shape,
-        activation='relu',
-        init='he_normal'))
-    model.add(Convolution1D(
-        32, 32, # number of filters should be high, filter_length should at least be subsample length
-        border_mode='same', 
-        subsample_length=2,
-        input_shape=input_shape,
-        activation='relu',
-        init='he_normal'))
-    model.add(Convolution1D(
-        32, 32, # number of filters should be high, filter_length should at least be subsample length
-        border_mode='same', 
-        subsample_length=2,
-        input_shape=input_shape,
-        activation='relu',
-        init='he_normal'))
-    model.add(Convolution1D(
-        32, 32, # number of filters should be high, filter_length should at least be subsample length
-        border_mode='same', 
-        subsample_length=5,
-        input_shape=input_shape,
-        activation='relu',
-        init='he_normal'))
-    model.add(Convolution1D(
-        32, 32, # number of filters should be high, filter_length should at least be subsample length
-        border_mode='same', 
-        subsample_length=5,
-        input_shape=input_shape,
-        activation='relu',
-        init='he_normal'))
+    for subsample_length in subsample_lengths:
+        model.add(Convolution1D(
+            32, 32, # number of filters should be high, filter_length should at least be subsample length
+            border_mode='same', 
+            subsample_length=subsample_length,
+            input_shape=input_shape,
+            init='he_normal'))
+        model.add(BatchNormalization())
+        model.add(PReLU())
     model.add(
         LSTM(
             100,
@@ -90,5 +66,5 @@ if __name__ == '__main__':
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
                   metrics=['accuracy'])
-    model.fit(x_train, y_train, nb_epoch=10,
+    model.fit(x_train, y_train, nb_epoch=20,
               validation_data=(x_val, y_val))
