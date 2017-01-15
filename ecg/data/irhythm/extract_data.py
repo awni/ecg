@@ -53,15 +53,17 @@ def load_episodes(record):
     with open(ep_json, 'r') as fid:
         episodes = json.load(fid)['episodes']
 
-    # Round onset and offset samples to the nearest second
+    # Round onset samples to the nearest second
     for episode in episodes:
         episode['onset_round'] = round_to_second(episode['onset'])
-        episode['offset_round'] = round_to_second(episode['offset']) - 1
 
-    # For the last episode, if we rounded up, cut off the last second.
-    last_ep = episodes[-1]
-    if last_ep['offset_round'] > last_ep['offset']:
-        last_ep['offset_round'] -= int(ECG_SAMP_RATE)
+    # Set offset to onset - 1
+    for e, episode in enumerate(episodes):
+        # For the last episode set to the end
+        if e == len(episodes) - 1:
+            episode['offset_round'] = episode['offset']
+        else:
+            episode['offset_round'] = episodes[e+1]['onset_round'] - 1
 
     return episodes
 
@@ -123,6 +125,8 @@ if __name__ == "__main__":
     import time
     start = time.time()
     train, val = load_all_data(src, duration, val_frac)
+    print("Training examples: {}".format(len(train)))
+    print("Validation examples: {}".format(len(val)))
     print("Load time: {:.3f} (s)".format(time.time() - start))
 
     # Some tests

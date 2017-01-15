@@ -11,32 +11,32 @@
         "learning_rate" : 1e-2,
         "momentum" : 0.95,
         "decay_rate" : 0.9,
-        "decay_steps" : 500
+        "decay_steps" : 1000
     },
 
     "model" : {
         "model_class" : "RNN",
-        "batch_size" : 16,
+        "batch_size" : 32,
         "conv_layers" : [
             { "kernel_size" : 32,
               "stride" : 2,
-              "num_filters" : 16
+              "num_filters" : 32
             },
             { "kernel_size" : 32,
               "stride" : 2,
-              "num_filters" : 16
+              "num_filters" : 32
             },
             { "kernel_size" : 32,
               "stride" : 2,
-              "num_filters" : 16
+              "num_filters" : 32
             },
             { "kernel_size" : 32,
               "stride" : 5,
-              "num_filters" : 16
+              "num_filters" : 32
             },
             { "kernel_size" : 32,
               "stride" : 5,
-              "num_filters" : 16
+              "num_filters" : 32
             }
         ]
     },
