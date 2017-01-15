@@ -15,8 +15,13 @@ class Loader(object):
     """
 
     def __init__(
-            self, data_path, batch_size, duration=30,
-            val_frac=0.1, seed=None, use_one_hot_labels=False,
+            self,
+            data_path,
+            batch_size=32,
+            duration=30,
+            val_frac=0.1,
+            seed=None,
+            use_one_hot_labels=False,
             use_cached_if_available=True):
 
         if not os.path.exists(data_path):
