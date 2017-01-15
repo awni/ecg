@@ -1,55 +1,56 @@
 import argparse
 import numpy as np
-import random
+import json
+import os
+import time
 
 from loader import Loader
+from keras_models import model
 
-def create_model(input_shape, num_categories):
-    from keras.layers.core import Activation, Dense
-    from keras.models import Sequential
-    from keras.layers.recurrent import LSTM, GRU
-    from keras.layers.convolutional import Convolution1D
-    from keras.layers.normalization import BatchNormalization
-    from keras.layers.advanced_activations import PReLU
-    from keras.layers.wrappers import TimeDistributed
-    from keras.layers import Dropout
-    subsample_lengths = [2, 2, 2, 5, 5]
-    model = Sequential()
-    for subsample_length in subsample_lengths:
-        model.add(Convolution1D(
-            32, 32, # number of filters should be high, filter_length should at least be subsample length
-            border_mode='same', 
-            subsample_length=subsample_length,
-            input_shape=input_shape,
-            init='he_normal',
-            activation='relu'))
-        # model.add(BatchNormalization())
-        # model.add(PReLU())
-        # model.add(Dropout(0.3))
-    for i in range(3):
-        model.add(
-            GRU(
-                100,
-                return_sequences=True
-            )
-        )
-    model.add(TimeDistributed(Dense(100, activation='relu', init='he_normal')))
-    # model.add(Dropout(0.3))
-    model.add(TimeDistributed(Dense(num_categories)))
-    model.add(Activation('softmax'))
-    return model
+np.random.seed(20)
+
+NUMBER_EPOCHS = 200
+VERBOSE_LEVEL = 1
+FOLDER_TO_SAVE = "./saved/"
+
+
+def get_folder_name(start_time, net_type):
+    folder_name = FOLDER_TO_SAVE + net_type + '/' + start_time
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    return folder_name
+
+
+def get_filename_for_saving(start_time, net_type):
+    saved_filename = get_folder_name(start_time, net_type) + "/{epoch:002d}-{val_loss:.2f}.hdf5"
+    return saved_filename
+
+
+def plot_model(model, start_time, net_type):
+    from keras.utils.visualize_util import plot
+    plot(
+        model,
+        to_file=get_folder_name(start_time, net_type) + '/model.png',
+        show_shapes=True,
+        show_layer_names=False)
+
+
+def save_params(params, start_time, net_type):
+    saving_filename = get_folder_name(start_time, net_type) + "/params.json"
+    with open(saving_filename, 'w') as outfile:
+        json.dump(params, outfile)
 
 
 if __name__ == '__main__':
-    random.seed(20)
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
     parser.add_argument("--refresh", help="whether to refresh cache")
     args = parser.parse_args()
-    batch_size = 32
+    net_type = 'conv'
+
     dl = Loader(
         args.data_path,
-        batch_size, use_one_hot_labels=True,
+        use_one_hot_labels=True,
         use_cached_if_available=not args.refresh)
 
     x_train = dl.x_train[:, :, np.newaxis]
@@ -60,16 +61,41 @@ if __name__ == '__main__':
     y_val = dl.y_test
     print("Validation size: " + str(len(x_val)) + " examples.")
 
-    model = create_model(x_train[0].shape, dl.output_dim)
+    start_time = str(int(time.time()))
+    params = {
+        "subsample_lengths": [2, 2, 2, 5, 5],
+        "filter_length": 32,
+        "num_filters": 32,
+        "dropout": 0.3,
+        "recurrent_layers": 1,
+        "recurrent_hidden": 64,
+        "dense_layers": 1,
+        "dense_hidden": 64,
+    }
+
+    save_params(params, start_time, net_type)
+
+    params.update({
+        "input_shape": x_train[0].shape,
+        "num_categories": dl.output_dim
+    })
+
+    network = model.build_network(**params)
 
     try:
-        from keras.utils.visualize_util import plot
-        plot(model, to_file='model.png', show_shapes=True)
+        plot_model(network, start_time, net_type)
     except:
-        pass
+        print("Skipping plot")
 
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
-                  metrics=['accuracy'])
-    model.fit(x_train, y_train, nb_epoch=20,
-              validation_data=(x_val, y_val))
+    from keras.callbacks import ModelCheckpoint
+    checkpointer = ModelCheckpoint(
+        filepath=get_filename_for_saving(start_time, net_type),
+        verbose=2,
+        save_best_only=True)
+
+    network.fit(
+        x_train, y_train,
+        validation_data=(x_val, y_val),
+        nb_epoch=NUMBER_EPOCHS,
+        callbacks=[checkpointer],
+        verbose=VERBOSE_LEVEL)
