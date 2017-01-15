@@ -22,7 +22,8 @@ def get_folder_name(start_time, net_type):
 
 
 def get_filename_for_saving(start_time, net_type):
-    saved_filename = get_folder_name(start_time, net_type) + "/{epoch:002d}-{val_loss:.2f}.hdf5"
+    saved_filename = get_folder_name(start_time, net_type) + \
+        "/{epoch:002d}-{val_loss:.2f}.hdf5"
     return saved_filename
 
 
@@ -71,6 +72,7 @@ if __name__ == '__main__':
         "recurrent_hidden": 64,
         "dense_layers": 1,
         "dense_hidden": 64,
+        "version": 1
     }
 
     save_params(params, start_time, net_type)
