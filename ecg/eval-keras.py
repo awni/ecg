@@ -1,13 +1,14 @@
 import argparse
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
+from tabulate import tabulate
 
 from loader import Loader
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
-    parser.add_argument("model_path", help="path to model")
+    parser.add_argument("prediction_path", help="path to prediction pickle")
     parser.add_argument("--refresh", help="whether to refresh cache")
     args = parser.parse_args()
 
@@ -20,13 +21,19 @@ if __name__ == '__main__':
     y_val = dl.y_test
     print("Validation size: " + str(len(x_val)) + " examples.")
 
-    from keras.models import load_model
-    model = load_model(args.model_path)
-    predictions = model.predict(x_val)
+    predictions = np.load(open(args.prediction_path, 'rb'))
 
     y_val_flat = np.argmax(y_val, axis=-1).flatten().tolist()
     y_val_flat.extend(range(len(dl.classes)))
     predictions_flat = np.argmax(predictions, axis=-1).flatten().tolist()
     predictions_flat.extend(range(len(dl.classes)))
 
-    print(classification_report(y_val_flat, predictions_flat, target_names=dl.classes))
+    print(classification_report(
+        y_val_flat, predictions_flat,
+        target_names=dl.classes))
+
+    cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
+    for i, row in enumerate(cnf_matrix):
+        row.insert(0, dl.classes[i])
+
+    print(tabulate(cnf_matrix, headers=[c[:1] for c in dl.classes]))
