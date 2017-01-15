@@ -44,14 +44,14 @@ class Loader(object):
 
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
-        pprint(label_counter)
-        classes = sorted([c for c, _ in label_counter.most_common()])
+        self.classes = sorted([c for c, _ in label_counter.most_common()]) # FIXME: remove 'sorted'
 
-        self._int_to_class = dict(zip(range(len(classes)), classes))
+        self._int_to_class = dict(zip(range(len(self.classes)), self.classes))
         self._class_to_int = {c: i for i, c in self._int_to_class.items()}
 
         self.y_train = self.transform_to_int_label(self.y_train, use_one_hot)
         self.y_test = self.transform_to_int_label(self.y_test, use_one_hot)
+
 
     def transform_to_int_label(self, y_split, use_one_hot):
         labels_mod = []
