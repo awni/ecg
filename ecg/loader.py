@@ -4,7 +4,6 @@ import numpy as np
 import os
 import random
 import joblib
-from pprint import pprint
 
 from data.irhythm.extract_data import load_all_data
 
@@ -139,7 +138,6 @@ class Loader(object):
 
 
 if __name__ == "__main__":
-    random.seed(2016)
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
     parser.add_argument("--refresh", help="whether to refresh cache")

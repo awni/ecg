@@ -15,6 +15,7 @@ if __name__ == '__main__':
     dl = Loader(
         args.data_path,
         use_one_hot_labels=True,
+        seed=2016,
         use_cached_if_available=not args.refresh)
 
     x_val = dl.x_test[:, :, np.newaxis]

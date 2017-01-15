@@ -116,8 +116,6 @@ def load_all_data(data_path, duration, val_frac):
     return train, val
 
 if __name__ == "__main__":
-    random.seed(2016)
-
     src = "/deep/group/med/irhythm/ecg/clean_30sec_recs/batch1"
     duration = 30
     val_frac = 0.1
