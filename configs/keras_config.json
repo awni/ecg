@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "net_type": "conv",
+    "subsample_lengths": [2, 2, 2, 5, 5],
+    "filter_length": 32,
+    "num_filters": 32,
+    "dropout": 0.3,
+    "recurrent_layers": 1,
+    "recurrent_hidden": 64,
+    "dense_layers": 1,
+    "dense_hidden": 64,
+
+    "FOLDER_TO_SAVE": "./saved/"
+}

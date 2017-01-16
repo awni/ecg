@@ -7,11 +7,8 @@ import time
 from loader import Loader
 from keras_models import model
 
-np.random.seed(20)
-
 NUMBER_EPOCHS = 200
 VERBOSE_LEVEL = 1
-FOLDER_TO_SAVE = "./saved/"
 
 
 def get_folder_name(start_time, net_type):
@@ -44,14 +41,15 @@ def save_params(params, start_time, net_type):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="path to files")
+    parser.add_argument("data_path", help="path to data files")
+    parser.add_argument("config_file", help="path to confile file")
     parser.add_argument("--refresh", help="whether to refresh cache")
     args = parser.parse_args()
-    net_type = 'conv'
 
     dl = Loader(
         args.data_path,
         use_one_hot_labels=True,
+        seed=2016,
         use_cached_if_available=not args.refresh)
 
     x_train = dl.x_train[:, :, np.newaxis]
@@ -63,18 +61,11 @@ if __name__ == '__main__':
     print("Validation size: " + str(len(x_val)) + " examples.")
 
     start_time = str(int(time.time()))
-    params = {
-        "subsample_lengths": [2, 2, 2, 5, 5],
-        "filter_length": 32,
-        "num_filters": 32,
-        "dropout": 0.3,
-        "recurrent_layers": 1,
-        "recurrent_hidden": 64,
-        "dense_layers": 1,
-        "dense_hidden": 64,
-        "version": 1
-    }
 
+    params = json.load(open(args.config_file, 'r'))
+    FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
+
+    net_type = params["net_type"]
     save_params(params, start_time, net_type)
 
     params.update({
