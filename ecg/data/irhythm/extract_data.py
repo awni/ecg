@@ -31,7 +31,7 @@ def stratify(records, val_frac):
     patients = collections.defaultdict(list)
     for record in tqdm(records):
         patients[patient_id(record)].append(record)
-    patients = list(patients.values())
+    patients = sorted(list(patients.values()))
     random.shuffle(patients)
     cut = int(len(patients) * val_frac)
     train, val = patients[cut:], patients[:cut]
