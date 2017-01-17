@@ -20,7 +20,7 @@ def get_folder_name(start_time, net_type):
 
 def get_filename_for_saving(start_time, net_type):
     saved_filename = get_folder_name(start_time, net_type) + \
-        "/{epoch:002d}-{val_loss:.2f}.hdf5"
+        "/{val_loss:.3f}-{val_acc.3f}-{epoch:002d}-{loss.3f}-{acc.3f}.hdf5"
     return saved_filename
 
 
