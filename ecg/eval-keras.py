@@ -25,13 +25,14 @@ if __name__ == '__main__':
     predictions = np.load(open(args.prediction_path, 'rb'))
 
     y_val_flat = np.argmax(y_val, axis=-1).flatten().tolist()
-    y_val_flat.extend(range(len(dl.classes)))
     predictions_flat = np.argmax(predictions, axis=-1).flatten().tolist()
-    predictions_flat.extend(range(len(dl.classes)))
 
     print(classification_report(
         y_val_flat, predictions_flat,
         target_names=dl.classes))
+
+    y_val_flat.extend(range(len(dl.classes)))
+    predictions_flat.extend(range(len(dl.classes)))
 
     cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
     for i, row in enumerate(cnf_matrix):
