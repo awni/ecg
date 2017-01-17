@@ -17,7 +17,7 @@ def get_params_table(path, max_models=5):
     first = True
     visited_dirs = {}
     for loss, _, dirpath in get_best_models(path):
-        if visited_dirs == max_models:
+        if len(visited_dirs) == max_models:
             break
         if dirpath in visited_dirs:
             continue
