@@ -1,3 +1,6 @@
+clean_30sec_recs/
+saved/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
