@@ -1,10 +1,14 @@
 cycler==0.10.0
 docopt==0.6.2
+funcsigs==1.0.2
+future==0.16.0
 h5py==2.6.0
 joblib==0.10.3
 Keras==1.2.0
+mock==2.0.0
 numpy==1.11.3
 pandas==0.19.2
+pbr==1.10.0
 pprint==0.1
 protobuf==3.1.0.post1
 pydot-ng==1.0.0
@@ -17,6 +21,6 @@ scipy==0.18.1
 six==1.10.0
 sklearn==0.0
 tabulate==0.7.7
-tensorflow==0.12.1
+tensorflow-gpu==0.12.1
 Theano==0.8.2
 tqdm==4.11.0

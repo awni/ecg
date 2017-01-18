@@ -1,9 +1,18 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+from builtins import zip
+from builtins import open
+from builtins import str
+from future import standard_library
+standard_library.install_aliases()
 import argparse
 import csv
 import json
 import os
 from tabulate import tabulate
-from io import StringIO
+from io import BytesIO
 
 
 def get_params_table(path, max_models=5):
@@ -13,7 +22,7 @@ def get_params_table(path, max_models=5):
             del parameters["FOLDER_TO_SAVE"]
         return parameters
 
-    output = StringIO()
+    output = BytesIO()
     first = True
     visited_dirs = {}
     for loss, _, dirpath in get_best_models(path):

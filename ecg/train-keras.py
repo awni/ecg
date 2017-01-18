@@ -1,3 +1,13 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from builtins import int
+from builtins import str
+from future import standard_library
+standard_library.install_aliases()
+
 import argparse
 import numpy as np
 import json
@@ -36,7 +46,7 @@ def plot_model(model, start_time, net_type):
 def save_params(params, start_time, net_type):
     saving_filename = get_folder_name(start_time, net_type) + "/params.json"
     with open(saving_filename, 'w') as outfile:
-        json.dump(params, outfile)
+        outfile.write(unicode(json.dumps(params, ensure_ascii=False)))
 
 
 if __name__ == '__main__':
