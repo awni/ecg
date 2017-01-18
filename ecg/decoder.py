@@ -1,13 +1,20 @@
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
+from builtins import range
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import numpy as np
 import math
 import collections
 
-class LM:
 
-    def __init__(self, data_loader, order):
+class LM(object):
+
+    def __init__(self, y_train, vocab_size, order):
         """
         A "language-model" for label n-grams. Currently does not support any
         type of smoothing.
@@ -17,20 +24,19 @@ class LM:
                       (e.g. n of n-gram).
         """
         self.order = order
-        vocab_size = data_loader.output_dim
-
         counts = [collections.Counter() for _ in range(vocab_size)]
-        for _, labels in data_loader.train:
-            labels = [data_loader._class_to_int[l] for l in labels]
-            for i in xrange(order, len(labels) + 1):
-                ngram = tuple(labels[i-order:i])
-                counts[labels[i - 1]][ngram] += 1
+        labels = np.argmax(y_train, axis=-1)
+
+        for label in labels:
+            for i in range(order, len(label) + 1):
+                ngram = tuple(label[i - order:i])
+                counts[label[i - 1]][ngram] += 1
 
         ngrams = []
         for counter in counts:
             log_tot = math.log(sum(t for _, t in counter.most_common()))
-            scores = {ngram : math.log(t) - log_tot
-                        for ngram, t in counter.most_common()}
+            scores = {ngram: math.log(t) - log_tot
+                      for ngram, t in counter.most_common()}
             ngrams.append(scores)
 
         self.ngrams = ngrams
@@ -45,6 +51,7 @@ class LM:
         ngram = tuple(ngram)
         scores = self.ngrams[ngram[-1]]
         return scores.get(ngram, self.default)
+
 
 def beam_search(probs, lm, beam_size=4, lm_weight=2.0):
     """
@@ -61,11 +68,11 @@ def beam_search(probs, lm, beam_size=4, lm_weight=2.0):
     probs = np.log(probs.squeeze())
     (T, S) = probs.shape
     beam = [([], 0.0)]
-    for t in xrange(T):
+    for t in range(T):
         new_beam = []
         for candidate, score in beam:
-            for c in xrange(S):
-                new_cand = list(candidate) # copy
+            for c in range(S):
+                new_cand = list(candidate)  # copy
                 new_cand.append(c)
                 new_score = score + probs[t, c]
                 if lm_weight is not None and len(new_cand) >= lm.order:
@@ -74,8 +81,7 @@ def beam_search(probs, lm, beam_size=4, lm_weight=2.0):
                 new_beam.append((new_cand, new_score))
 
         # Sort and trim the beam
-        beam = sorted(new_beam, key=lambda x : x[1], reverse=True)
+        beam = sorted(new_beam, key=lambda x: x[1], reverse=True)
         beam = beam[:beam_size]
 
     return beam[0][0]
-

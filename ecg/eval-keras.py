@@ -11,13 +11,16 @@ import argparse
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from tabulate import tabulate
+from tqdm import tqdm
 
 from loader import Loader
+import decoder
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
     parser.add_argument("prediction_path", help="path to prediction pickle")
+    parser.add_argument('--decode', action='store_true')
     parser.add_argument("--refresh", help="whether to refresh cache")
     args = parser.parse_args()
 
@@ -33,8 +36,14 @@ if __name__ == '__main__':
 
     predictions = np.load(open(args.prediction_path, 'rb'))
 
+    if args.decode is True:
+        language_model = decoder.LM(dl.y_train, dl.output_dim, order=2)
+        predictions = np.array([decoder.beam_search(prediction, language_model) for prediction in tqdm(predictions)])
+    else:
+        predictions = np.argmax(predictions, axis=-1)
+
     y_val_flat = np.argmax(y_val, axis=-1).flatten().tolist()
-    predictions_flat = np.argmax(predictions, axis=-1).flatten().tolist()
+    predictions_flat = predictions.flatten().tolist()
 
     cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
     for i, row in enumerate(cnf_matrix):
