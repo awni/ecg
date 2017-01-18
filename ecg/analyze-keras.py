@@ -65,4 +65,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("saved_path", help="path to saved files")
     args = parser.parse_args()
+    print('Best model path: ', get_best_model(args.saved_path))
     print(get_params_table(args.saved_path))
