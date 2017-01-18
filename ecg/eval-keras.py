@@ -27,15 +27,15 @@ if __name__ == '__main__':
     y_val_flat = np.argmax(y_val, axis=-1).flatten().tolist()
     predictions_flat = np.argmax(predictions, axis=-1).flatten().tolist()
 
-    print(classification_report(
-        y_val_flat, predictions_flat,
-        target_names=dl.classes))
+    cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
+    for i, row in enumerate(cnf_matrix):
+        row.insert(0, dl.classes[i])
 
     y_val_flat.extend(range(len(dl.classes)))
     predictions_flat.extend(range(len(dl.classes)))
 
-    cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
-    for i, row in enumerate(cnf_matrix):
-        row.insert(0, dl.classes[i])
+    print(classification_report(
+        y_val_flat, predictions_flat,
+        target_names=dl.classes))
 
     print(tabulate(cnf_matrix, headers=[c[:1] for c in dl.classes]))
