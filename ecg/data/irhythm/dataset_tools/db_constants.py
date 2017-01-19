@@ -26,4 +26,3 @@ rhythm_name2code = {
     'PAUSE': 500, 'AFIB': 600, 'VT': 700, 'BIGEMINY': 800, 'TRIGEMINY': 900,
     'VF': 1000, 'PACING': 1100, 'WENCKEBACH': 1999, 'NOISE': 9999
 }
-

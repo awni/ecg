@@ -96,9 +96,4 @@ if __name__ == '__main__':
         ecg_sig, label = _extract(epi_info)
         _save(ecg_sig, label, out_dir, idx)
 
-    print 'Data export completed!'
-
-
-
-
-
+    print('Data export completed!')

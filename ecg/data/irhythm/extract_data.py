@@ -1,22 +1,29 @@
 from __future__ import print_function
 from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
+from builtins import zip
+from builtins import int
+from builtins import range
+from future import standard_library
+standard_library.install_aliases()
 import collections
-import glob
 import json
 import numpy as np
 import os
 import random
+from tqdm import tqdm
 
-from dataset_tools.db_constants import ECG_SAMP_RATE
-from dataset_tools.db_constants import ECG_EXT, EPI_EXT
-from dataset_tools.extract_episodes import _find_all_files, qa
+from .dataset_tools.db_constants import ECG_SAMP_RATE
+from .dataset_tools.db_constants import ECG_EXT, EPI_EXT
+from .dataset_tools.extract_episodes import _find_all_files, qa
 
 def get_all_records(src):
     """
     Find all the ECG files.
     """
-    return list(_find_all_files(src, '', ECG_EXT))
+    return _find_all_files(src, '', ECG_EXT)
 
 def stratify(records, val_frac):
     """
@@ -29,9 +36,9 @@ def stratify(records, val_frac):
         return os.path.basename(record).split("_")[0]
 
     patients = collections.defaultdict(list)
-    for record in records:
+    for record in tqdm(records):
         patients[patient_id(record)].append(record)
-    patients = patients.values()
+    patients = sorted(list(patients.values()))
     random.shuffle(patients)
     cut = int(len(patients) * val_frac)
     train, val = patients[cut:], patients[:cut]
@@ -99,7 +106,7 @@ def construct_dataset(records, duration):
     List of ecg records, duration to segment them into.
     """
     data = []
-    for record in records:
+    for record in tqdm(records):
         episodes = load_episodes(record)
         labels = make_labels(episodes, duration)
         segments = load_ecg(record, duration)
@@ -107,15 +114,15 @@ def construct_dataset(records, duration):
     return data
 
 def load_all_data(data_path, duration, val_frac):
-    all_records = get_all_records(data_path)
-    train, val = stratify(all_records, val_frac=val_frac)
+    print('Stratifying records...')
+    train, val = stratify(get_all_records(data_path), val_frac=val_frac)
+    print('Constructing Training Set...')
     train = construct_dataset(train, duration)
+    print('Constructing Validation Set...')
     val = construct_dataset(val, duration)
     return train, val
 
 if __name__ == "__main__":
-    random.seed(2016)
-
     src = "/deep/group/med/irhythm/ecg/clean_30sec_recs/batch1"
     duration = 30
     val_frac = 0.1
