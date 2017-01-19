@@ -2,7 +2,7 @@
     "version": 1,
     "net_type": "conv",
     "subsample_lengths": [2, 2, 2, 5, 5],
-    "filter_length": 32,
+    "filter_length": 16,
     "num_filters": 32,
     "dropout": 0.3,
     "recurrent_layers": 1,
