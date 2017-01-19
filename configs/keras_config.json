@@ -3,14 +3,14 @@
     "net_type": "conv",
     "subsample_lengths": [2, 2, 2, 5, 5],
     "filter_length": 16,
-    "num_filters": 32,
-    "dropout": 0.3,
+    "num_filters": 64,
+    "dropout": 0.1,
     "recurrent_layers": 1,
-    "recurrent_hidden": 64,
+    "recurrent_hidden": 128,
     "dense_layers": 1,
-    "dense_hidden": 64,
+    "dense_hidden": 128,
 
-    "learning_rate": 0.002,
+    "learning_rate": 0.001,
 
     "FOLDER_TO_SAVE": "./saved/"
 }

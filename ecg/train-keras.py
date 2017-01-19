@@ -17,7 +17,7 @@ import time
 from loader import Loader
 from keras_models import model
 
-NUMBER_EPOCHS = 200
+NUMBER_EPOCHS = 1000
 VERBOSE_LEVEL = 1
 
 
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     reduce_lr = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.5,
-        patience=2,
+        patience=3,
         min_lr=0.0001,
         verbose=VERBOSE_LEVEL)
 
