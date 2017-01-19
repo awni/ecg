@@ -90,15 +90,28 @@ if __name__ == '__main__':
     except:
         print("Skipping plot")
 
-    from keras.callbacks import ModelCheckpoint
+    from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+
+    stopping = EarlyStopping(
+        monitor='val_loss',
+        patience=10,
+        verbose=VERBOSE_LEVEL) 
+
+    reduce_lr = ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.5,
+        patience=5,
+        min_lr=0.0001,
+        verbose=VERBOSE_LEVEL)
+
     checkpointer = ModelCheckpoint(
         filepath=get_filename_for_saving(start_time, net_type),
-        verbose=2,
-        save_best_only=True)
+        save_best_only=True,
+        verbose=VERBOSE_LEVEL)
 
     network.fit(
         x_train, y_train,
         validation_data=(x_val, y_val),
         nb_epoch=NUMBER_EPOCHS,
-        callbacks=[checkpointer],
+        callbacks=[checkpointer, reduce_lr, stopping],
         verbose=VERBOSE_LEVEL)

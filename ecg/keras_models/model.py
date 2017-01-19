@@ -40,7 +40,10 @@ def build_network(**params):
     model.add(TimeDistributed(Dense(params["num_categories"])))
     model.add(Activation('softmax'))
 
+    from keras.optimizers import Adam
+    optimizer = Adam(lr=0.01)
+
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=optimizer,
                   metrics=['accuracy'])
     return model
