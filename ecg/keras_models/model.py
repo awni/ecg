@@ -6,6 +6,7 @@ def build_network(**params):
     from keras.layers.convolutional import Convolution1D
     from keras.layers.wrappers import TimeDistributed
     from keras.layers import Dropout
+    from keras.layers.wrappers import Bidirectional
 
     subsample_lengths = params["subsample_lengths"]
     model = Sequential()
@@ -23,10 +24,10 @@ def build_network(**params):
 
     for i in range(params["recurrent_layers"]):
         model.add(
-            GRU(
+            Bidirectional(GRU(
                 params["recurrent_hidden"],
                 return_sequences=True
-            )
+            ))
         )
 
     for i in range(params["dense_layers"]):
@@ -41,7 +42,7 @@ def build_network(**params):
     model.add(Activation('softmax'))
 
     from keras.optimizers import Adam
-    optimizer = Adam(lr=0.01)
+    optimizer = Adam(lr=params["learning_rate"])
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,

@@ -102,7 +102,7 @@ if __name__ == '__main__':
     reduce_lr = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.5,
-        patience=5,
+        patience=2,
         min_lr=0.0001,
         verbose=VERBOSE_LEVEL)
 
