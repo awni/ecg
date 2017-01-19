@@ -45,8 +45,10 @@ def plot_model(model, start_time, net_type):
 
 def save_params(params, start_time, net_type):
     saving_filename = get_folder_name(start_time, net_type) + "/params.json"
+    save_str = json.dumps(params, ensure_ascii=False)
+    save_str = save_str if isinstance(save_str, str) else save_str.decode('utf-8')
     with open(saving_filename, 'w') as outfile:
-        outfile.write(unicode(json.dumps(params, ensure_ascii=False)))
+        outfile.write(save_str)
 
 
 if __name__ == '__main__':
