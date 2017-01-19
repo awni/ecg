@@ -53,7 +53,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
-    parser.add_argument("--refresh", help="whether to refresh cache")
+    parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
     args = parser.parse_args()
 
     dl = Loader(

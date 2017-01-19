@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument("data_path", help="path to files")
     parser.add_argument("prediction_path", help="path to prediction pickle")
     parser.add_argument('--decode', action='store_true')
-    parser.add_argument("--refresh", help="whether to refresh cache")
+    parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
     args = parser.parse_args()
 
     dl = Loader(
@@ -38,7 +38,8 @@ if __name__ == '__main__':
 
     if args.decode is True:
         language_model = decoder.LM(dl.y_train, dl.output_dim, order=2)
-        predictions = np.array([decoder.beam_search(prediction, language_model) for prediction in tqdm(predictions)])
+        predictions = np.array([decoder.beam_search(prediction, language_model)
+                                for prediction in tqdm(predictions)])
     else:
         predictions = np.argmax(predictions, axis=-1)
 

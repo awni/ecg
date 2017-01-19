@@ -149,7 +149,7 @@ class Loader(object):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
-    parser.add_argument("--refresh", help="whether to refresh cache")
+    parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
     args = parser.parse_args()
     batch_size = 32
     ldr = Loader(
