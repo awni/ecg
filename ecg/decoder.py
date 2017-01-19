@@ -23,6 +23,7 @@ class LM(object):
         :param order: Order of the language model to build
                       (e.g. n of n-gram).
         """
+        SOME_LARGE_NEGATIVE_NUMBER = -1000
         self.order = order
         counts = [collections.Counter() for _ in range(vocab_size)]
         labels = np.argmax(y_train, axis=-1)
@@ -40,7 +41,7 @@ class LM(object):
             ngrams.append(scores)
 
         self.ngrams = ngrams
-        self.default = -float("inf")
+        self.default = SOME_LARGE_NEGATIVE_NUMBER
 
     def score_ngram(self, ngram):
         """
