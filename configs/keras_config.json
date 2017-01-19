@@ -1,15 +1,25 @@
 {
-    "version": 1,
-    "net_type": "conv",
-    "subsample_lengths": [2, 2, 2, 5, 5],
-    "filter_length": 16,
-    "num_filters": 64,
-    "dropout": 0.1,
-    "recurrent_layers": 1,
-    "recurrent_hidden": 128,
-    "dense_layers": 1,
-    "dense_hidden": 128,
+    "version": 2,
 
+    "conv_subsample_lengths": [2, 2, 2, 5, 5],
+    "conv_activation": "relu",
+    "conv_filter_length": 16,
+    "conv_num_filters": 64,
+    "conv_init": "he_normal",
+    "conv_activation": "relu",
+
+    "recurrent_layers": 1,
+    "recurrent_hidden": 64,
+    "recurrent_type": "LSTM",
+    "recurrent_activation": "relu",
+    "recurrent_is_bidirectional": true,
+
+    "dense_layers": 1,
+    "dense_hidden": 64,
+    "dense_activation": "relu",
+    "dense_init": "he_normal",
+
+    "dropout": 0,
     "learning_rate": 0.001,
 
     "FOLDER_TO_SAVE": "./saved/"

@@ -77,7 +77,7 @@ if __name__ == '__main__':
     params = json.load(open(args.config_file, 'r'))
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
 
-    net_type = params["net_type"]
+    net_type = str(params["version"])
     save_params(params, start_time, net_type)
 
     params.update({
