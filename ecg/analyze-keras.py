@@ -58,9 +58,9 @@ def get_best_models(path, version=DEFAULT_VERSION):
             if filename.endswith('.hdf5'):
                 name_split = filename.split('.hdf5')[0].split('-')
                 if version == 1:
-                    loss = float(name_split[0])
-                elif version == 2:
                     loss = float(name_split[1])
+                elif version == 2:
+                    loss = float(name_split[0])
                 else:
                     raise ValueError('Version not defined')
                 models.append((loss, filename, dirpath))
