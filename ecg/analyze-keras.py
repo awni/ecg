@@ -17,7 +17,7 @@ from io import BytesIO
 
 DEFAULT_VERSION=2
 
-def get_params_table(path, max_models=5, version=DEFAULT_VERSION):
+def get_params_table(path, max_models=5, version=DEFAULT_VERSION, metric="val_loss"):
     def process_params(parameters):
         for key in parameters:
             if isinstance(parameters[key], list):
@@ -29,7 +29,7 @@ def get_params_table(path, max_models=5, version=DEFAULT_VERSION):
     output = BytesIO()
     first = True
     visited_dirs = {}
-    for loss, _, dirpath in get_best_models(path, version):
+    for loss, _, dirpath in get_best_models(path, version, metric):
         if len(visited_dirs) == max_models:
             break
         if dirpath in visited_dirs:
@@ -58,6 +58,7 @@ def get_best_models(path, version=DEFAULT_VERSION, metric='val_loss'):
             if filename.endswith('.hdf5'):
                 name_split = filename.split('.hdf5')[0].split('-')
                 if version == 1:
+                    assert(metric == 'val_loss')
                     loss = float(name_split[1])
                 elif version == 2:
                     if metric == 'val_loss':
@@ -89,7 +90,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("saved_path", help="path to saved files")
     parser.add_argument("--version", help="version of saved files", default=DEFAULT_VERSION, type=int)
+    parser.add_argument("--metric", help="metric to use", default='val_loss', choices=['val_loss', 'loss'])
     args = parser.parse_args()
-    print('Best model path (val_loss): ', get_best_model(args.saved_path, version=args.version, metric="val_loss"))
-    print('Best model path (train_loss): ', get_best_model(args.saved_path, version=args.version, metric="loss"))
-    print(get_params_table(args.saved_path, version=args.version))
+    print('Best model path', args.metric, ':', get_best_model(args.saved_path, version=args.version, metric=args.metric))
+    print(get_params_table(args.saved_path, version=args.version, metric=args.metric))
