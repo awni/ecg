@@ -18,7 +18,6 @@ from loader import Loader
 from keras_models import model
 
 NUMBER_EPOCHS = 1000
-VERBOSE_LEVEL = 1
 
 
 def get_folder_name(start_time, net_type):
@@ -30,7 +29,7 @@ def get_folder_name(start_time, net_type):
 
 def get_filename_for_saving(start_time, net_type):
     saved_filename = get_folder_name(start_time, net_type) + \
-        "/{val_loss:.3f}-{val_acc:.3f}-{epoch:002d}-{loss:.3f}-{acc:.3f}.hdf5"
+        "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
     return saved_filename
 
 
@@ -56,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
     parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
+    parser.add_argument("--verbose", "-v", help="verbosity level", default=2)
     args = parser.parse_args()
 
     dl = Loader(
@@ -97,23 +97,23 @@ if __name__ == '__main__':
     stopping = EarlyStopping(
         monitor='val_loss',
         patience=10,
-        verbose=VERBOSE_LEVEL) 
+        verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.5,
         patience=3,
         min_lr=0.0001,
-        verbose=VERBOSE_LEVEL)
+        verbose=args.verbose)
 
     checkpointer = ModelCheckpoint(
         filepath=get_filename_for_saving(start_time, net_type),
         save_best_only=True,
-        verbose=VERBOSE_LEVEL)
+        verbose=args.verbose)
 
     network.fit(
         x_train, y_train,
         validation_data=(x_val, y_val),
         nb_epoch=NUMBER_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
-        verbose=VERBOSE_LEVEL)
+        verbose=args.verbose)
