@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     print("Size: " + str(len(x_val)) + " examples.")
 
-    predictions = np.load(open(args.prediction_path, 'rb'))
+    predictions = np.load(open(args.model_path + '-pred-' + args.split + '.pkl', 'rb'))
 
     if args.decode is True:
         language_model = decoder.LM(dl.y_train, dl.output_dim, order=2)
