@@ -17,7 +17,7 @@ from io import BytesIO
 
 def get_params_table(path, max_models=5):
     def process_params(parameters):
-        parameters['subsample_lengths'] = ','.join(str(x) for x in parameters['subsample_lengths'])
+        parameters['conv_subsample_lengths'] = ','.join(str(x) for x in parameters['conv_subsample_lengths'])
         if 'FOLDER_TO_SAVE' in parameters:
             del parameters["FOLDER_TO_SAVE"]
         return parameters
