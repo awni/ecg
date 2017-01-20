@@ -1,16 +1,8 @@
-
-def build_network(**params):
-    from keras.layers.core import Activation, Dense
-    from keras.models import Sequential
-    from keras.layers.recurrent import LSTM, GRU
+def add_conv_layers(model, **params):
     from keras.layers.convolutional import Convolution1D
-    from keras.layers.wrappers import TimeDistributed
-    from keras.layers import Dropout
-    from keras.layers.wrappers import Bidirectional
     from keras.regularizers import l2
-
+    from keras.layers import Dropout
     subsample_lengths = params["conv_subsample_lengths"]
-    model = Sequential()
     for subsample_length in subsample_lengths:
         model.add(Convolution1D(
             nb_filter=params["conv_num_filters"],
@@ -24,6 +16,10 @@ def build_network(**params):
         if "conv_dropout" in params and params["conv_dropout"] > 0:
             model.add(Dropout(params["conv_dropout"]))
 
+
+def add_recurrent_layers(model, **params):
+    from keras.layers.recurrent import LSTM, GRU
+    from keras.layers.wrappers import Bidirectional
     for i in range(params["recurrent_layers"]):
         rt = params["recurrent_type"]
         if rt == 'GRU':
@@ -32,12 +28,21 @@ def build_network(**params):
             Recurrent = LSTM
         rec_layer = Recurrent(
                     params["recurrent_hidden"],
+                    consume_less="gpu",
+                    dropout_W=params["recurrent_dropout"],
+                    dropout_U=params["recurrent_dropout"],
                     return_sequences=True)
         if params["recurrent_is_bidirectional"] is True:
             model.add(Bidirectional(rec_layer))
         else:
             model.add(rec_layer)
 
+
+def add_dense_layers(model, **params):
+    from keras.layers.core import Dense
+    from keras.layers.wrappers import TimeDistributed
+    from keras.layers import Dropout
+    from keras.regularizers import l2
     for i in range(params["dense_layers"]):
         model.add(TimeDistributed(Dense(
             params["dense_hidden"],
@@ -47,13 +52,29 @@ def build_network(**params):
         if "dense_dropout" in params and params["dense_dropout"] > 0:
             model.add(Dropout(params["dense_dropout"]))
 
+
+def add_output_layer(model, **params):
+    from keras.layers.core import Dense, Activation
+    from keras.layers.wrappers import TimeDistributed
     model.add(TimeDistributed(Dense(params["num_categories"])))
     model.add(Activation('softmax'))
 
+
+def add_compile(model, **params):
     from keras.optimizers import Adam
     optimizer = Adam(lr=params["learning_rate"])
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
                   metrics=['accuracy'])
+
+
+def build_network(**params):
+    from keras.models import Sequential
+    model = Sequential()
+    add_conv_layers(model, **params)
+    add_recurrent_layers(model, **params)
+    add_dense_layers(model, **params)
+    add_output_layer(model, **params)
+    add_compile(model, **params)
     return model
