@@ -19,7 +19,8 @@ import decoder
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
-    parser.add_argument("prediction_path", help="path to prediction pickle")
+    parser.add_argument("model_path", help="path to model, assuming prediction script generated")
+    parser.add_argument("split", help="train/val", choices=['train', 'test'])
     parser.add_argument('--decode', action='store_true')
     parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
     args = parser.parse_args()
@@ -30,9 +31,14 @@ if __name__ == '__main__':
         seed=2016,
         use_cached_if_available=not args.refresh)
 
-    x_val = dl.x_test[:, :, np.newaxis]
-    y_val = dl.y_test
-    print("Validation size: " + str(len(x_val)) + " examples.")
+    if args.split == 'train':
+        x_val = dl.x_train[:, :, np.newaxis]
+        y_val = dl.y_train
+    else:
+        x_val = dl.x_test[:, :, np.newaxis]
+        y_val = dl.y_test
+
+    print("Size: " + str(len(x_val)) + " examples.")
 
     predictions = np.load(open(args.prediction_path, 'rb'))
 
