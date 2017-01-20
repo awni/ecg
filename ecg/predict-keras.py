@@ -25,11 +25,9 @@ if __name__ == '__main__':
         seed=2016,
         use_cached_if_available=not args.refresh)
 
-    x_val = dl.x_test[:, :, np.newaxis]
-    y_val = dl.y_test
-    print("Validation size: " + str(len(x_val)) + " examples.")
-
     model = load_model(args.model_path)
-    predictions = model.predict(x_val)
-    with open(args.model_path + '-preds.pkl', 'wb') as outfile:
-        np.save(outfile, predictions)
+    for x, name in [(dl.x_train, 'train'), (dl.x_test, 'test')]:
+        x = x[:, :, np.newaxis]
+        predictions = model.predict(x)
+        with open(args.model_path + '-pred-' + name + '.pkl', 'wb') as outfile:
+            np.save(outfile, predictions)
