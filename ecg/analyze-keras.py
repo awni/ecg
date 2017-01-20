@@ -51,7 +51,7 @@ def get_params_table(path, max_models=5, version=DEFAULT_VERSION):
     return tabulate(list(zip(*csv.reader(output))))
 
 
-def get_best_models(path, version=DEFAULT_VERSION):
+def get_best_models(path, version=DEFAULT_VERSION, metric='val_loss'):
     models = []
     for (dirpath, dirnames, filenames) in os.walk(args.saved_path):
         for filename in filenames:
@@ -60,7 +60,12 @@ def get_best_models(path, version=DEFAULT_VERSION):
                 if version == 1:
                     loss = float(name_split[1])
                 elif version == 2:
-                    loss = float(name_split[0])
+                    if metric == 'val_loss':
+                        loss = float(name_split[0])
+                    elif metric == 'loss':  # train loss
+                        loss = float(name_split[-2])
+                    else:
+                        raise ValueError('Metric not defined')
                 else:
                     raise ValueError('Version not defined')
                 models.append((loss, filename, dirpath))
@@ -68,8 +73,8 @@ def get_best_models(path, version=DEFAULT_VERSION):
     return models
 
 
-def get_best_model(path, get_structure=False, version=DEFAULT_VERSION):
-    models = get_best_models(path, version)
+def get_best_model(path, get_structure=False, version=DEFAULT_VERSION, metric='val_loss'):
+    models = get_best_models(path, version, metric)
     best_model = models[0]
     dirpath = best_model[2]
     filename = best_model[1]
@@ -85,5 +90,6 @@ if __name__ == '__main__':
     parser.add_argument("saved_path", help="path to saved files")
     parser.add_argument("--version", help="version of saved files", default=DEFAULT_VERSION, type=int)
     args = parser.parse_args()
-    print('Best model path: ', get_best_model(args.saved_path, version=args.version))
+    print('Best model path (val_loss): ', get_best_model(args.saved_path, version=args.version, metric="val_loss"))
+    print('Best model path (train_loss): ', get_best_model(args.saved_path, version=args.version, metric="loss"))
     print(get_params_table(args.saved_path, version=args.version))
