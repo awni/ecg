@@ -7,6 +7,7 @@ def build_network(**params):
     from keras.layers.wrappers import TimeDistributed
     from keras.layers import Dropout
     from keras.layers.wrappers import Bidirectional
+    from keras.regularizers import l2
 
     subsample_lengths = params["conv_subsample_lengths"]
     model = Sequential()
@@ -18,9 +19,10 @@ def build_network(**params):
             subsample_length=subsample_length,
             input_shape=params["input_shape"],
             init=params["conv_init"],
-            activation=params["conv_activation"]))
-        if "dropout" in params and params["dropout"] > 0:
-            model.add(Dropout(params["dropout"]))
+            activation=params["conv_activation"],
+            W_regularizer=l2(params["conv_l2_penalty"])))
+        if "conv_dropout" in params and params["conv_dropout"] > 0:
+            model.add(Dropout(params["conv_dropout"]))
 
     for i in range(params["recurrent_layers"]):
         rt = params["recurrent_type"]
@@ -31,7 +33,7 @@ def build_network(**params):
         rec_layer = Recurrent(
                     params["recurrent_hidden"],
                     return_sequences=True)
-        if params["recurrent_is_bidirectional"] == True:
+        if params["recurrent_is_bidirectional"] is True:
             model.add(Bidirectional(rec_layer))
         else:
             model.add(rec_layer)
@@ -40,9 +42,10 @@ def build_network(**params):
         model.add(TimeDistributed(Dense(
             params["dense_hidden"],
             activation=params["dense_activation"],
-            init=params["dense_init"])))
-        if "dropout" in params and params["dropout"] > 0:
-            model.add(Dropout(params["dropout"]))
+            init=params["dense_init"],
+            W_regularizer=l2(params["dense_l2_penalty"]))))
+        if "dense_dropout" in params and params["dense_dropout"] > 0:
+            model.add(Dropout(params["dense_dropout"]))
 
     model.add(TimeDistributed(Dense(params["num_categories"])))
     model.add(Activation('softmax'))
