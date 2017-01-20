@@ -9,7 +9,6 @@ def add_conv_layers(model, **params):
             filter_length=params["conv_filter_length"],
             border_mode='same',
             subsample_length=subsample_length,
-            input_shape=params["input_shape"],
             init=params["conv_init"],
             activation=params["conv_activation"],
             W_regularizer=l2(params["conv_l2_penalty"])))
@@ -71,7 +70,11 @@ def add_compile(model, **params):
 
 def build_network(**params):
     from keras.models import Sequential
+    from keras.layers import Reshape
     model = Sequential()
+    model.add(Reshape(
+        params["input_shape"],
+        input_shape=params["input_shape"]))
     add_conv_layers(model, **params)
     add_recurrent_layers(model, **params)
     add_dense_layers(model, **params)
