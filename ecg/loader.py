@@ -14,6 +14,7 @@ import os
 import random
 import joblib
 
+import feature
 from data.irhythm.extract_data import load_all_data
 
 
@@ -50,6 +51,11 @@ class Loader(object):
         self.x_train = np.array(self.x_train)
         self.x_test = np.array(self.x_test)
 
+        transformer = feature.Normalizer()
+        transformer.fit(self.x_train)
+        self.x_train = transformer.transform(self.x_train)
+        self.x_test = transformer.transform(self.x_test)
+
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
         self.classes = sorted([c for c, _ in label_counter.most_common()]) # FIXME: remove 'sorted'
@@ -73,23 +79,9 @@ class Loader(object):
         return np.array(labels_mod)
 
     def _load_internal(self, data_folder):
-        def normalize(example, mean, std):
-            return (example - mean) / std
-
-        def compute_mean_std(data_pairs):
-            all_dat = np.hstack(w for w, _ in data_pairs)
-            mean = np.mean(all_dat)
-            std = np.std(all_dat)
-            return mean, std
-
         train_x_y_pairs, val_x_y_pairs = load_all_data(
             data_folder, self.duration, self.val_frac)
         random.shuffle(train_x_y_pairs)
-        mean, std = compute_mean_std(train_x_y_pairs)
-        train_x_y_pairs = [(
-            normalize(ecg, mean, std), l) for ecg, l in train_x_y_pairs]
-        val_x_y_pairs = [(
-            normalize(ecg, mean, std), l) for ecg, l in val_x_y_pairs]
 
         x_train, y_train = zip(*train_x_y_pairs)
         x_test, y_test = zip(*val_x_y_pairs)
