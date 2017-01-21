@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     checkpointer = ModelCheckpoint(
         filepath=get_filename_for_saving(start_time, net_type),
-        save_best_only=True,
+        save_best_only=False,
         verbose=args.verbose)
 
     network.fit(
