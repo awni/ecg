@@ -19,11 +19,13 @@ from .dataset_tools.db_constants import ECG_SAMP_RATE
 from .dataset_tools.db_constants import ECG_EXT, EPI_EXT
 from .dataset_tools.extract_episodes import _find_all_files, qa
 
+
 def get_all_records(src):
     """
     Find all the ECG files.
     """
     return _find_all_files(src, '', ECG_EXT)
+
 
 def stratify(records, val_frac):
     """
@@ -46,6 +48,7 @@ def stratify(records, val_frac):
     val = [record for patient in val for record in patient]
     return train, val
 
+
 def round_to_second(n):
     rate = int(ECG_SAMP_RATE)
     diff = (n - 1) % rate
@@ -53,6 +56,7 @@ def round_to_second(n):
         return n - diff
     else:
         return n + (rate - diff)
+
 
 def load_episodes(record):
     base = os.path.splitext(record)[0]
@@ -74,6 +78,7 @@ def load_episodes(record):
 
     return episodes
 
+
 def make_labels(episodes, duration):
     labels = []
     for episode in episodes:
@@ -82,8 +87,9 @@ def make_labels(episodes, duration):
         rhythm = [episode['rhythm_name']] * rhythm_secs
         labels.extend(rhythm)
     labels = [labels[i:i+duration]
-               for i in range(0, len(labels) - duration + 1, duration)]
+              for i in range(0, len(labels) - duration + 1, duration)]
     return labels
+
 
 def load_ecg(record, duration):
     with open(record, 'r') as fid:
@@ -98,8 +104,9 @@ def load_ecg(record, duration):
     ecg = ecg.reshape((-1, n_per_win))
     n_segments = ecg.shape[0]
     segments = [arr.squeeze()
-                 for arr in np.vsplit(ecg, range(1, n_segments))]
+                for arr in np.vsplit(ecg, range(1, n_segments))]
     return segments
+
 
 def construct_dataset(records, duration):
     """
@@ -112,6 +119,7 @@ def construct_dataset(records, duration):
         segments = load_ecg(record, duration)
         data.extend(zip(segments, labels))
     return data
+
 
 def load_all_data(data_path, duration, val_frac):
     print('Stratifying records...')
@@ -137,7 +145,7 @@ if __name__ == "__main__":
     # Some tests
     for n, m in [(401, 401), (1, 1), (7, 1), (199, 201),
                  (200, 201), (101, 201), (100, 1)]:
-        msg  = "Bad round: {} didn't round to {} ."
+        msg = "Bad round: {} didn't round to {} ."
         assert round_to_second(n) == m, msg.format(n, m)
 
     print("Tests passed!")
