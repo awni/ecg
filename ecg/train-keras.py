@@ -64,11 +64,11 @@ if __name__ == '__main__':
         seed=2016,
         use_cached_if_available=not args.refresh)
 
-    x_train = dl.x_train[:, :, np.newaxis]
+    x_train = dl.x_train
     y_train = dl.y_train
     print("Training size: " + str(len(x_train)) + " examples.")
 
-    x_val = dl.x_test[:, :, np.newaxis]
+    x_val = dl.x_test
     y_val = dl.y_test
     print("Validation size: " + str(len(x_val)) + " examples.")
 

@@ -27,7 +27,7 @@ def add_recurrent_layers(model, **params):
             Recurrent = LSTM
         rec_layer = Recurrent(
                     params["recurrent_hidden"],
-                    consume_less="gpu",
+                    consume_less="mem",
                     dropout_W=params["recurrent_dropout"],
                     dropout_U=params["recurrent_dropout"],
                     return_sequences=True)

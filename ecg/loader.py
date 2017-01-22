@@ -51,10 +51,11 @@ class Loader(object):
         self.x_train = np.array(self.x_train)
         self.x_test = np.array(self.x_test)
 
-        transformer = feature.Normalizer()
-        transformer.fit(self.x_train)
-        self.x_train = transformer.transform(self.x_train)
-        self.x_test = transformer.transform(self.x_test)
+        for transformer_fn in [feature.WaveletTransformer, feature.Normalizer]:
+            transformer = transformer_fn()
+            transformer.fit(self.x_train)
+            self.x_train = transformer.transform(self.x_train)
+            self.x_test = transformer.transform(self.x_test)
 
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
@@ -158,5 +159,4 @@ if __name__ == "__main__":
         count += 1
         assert len(ecgs) == len(labels) == batch_size, \
             "Invalid number of examples."
-        assert len(ecgs[0].shape) == 1, "ECG array should be 1D"
     assert count == len(ldr.x_train) // batch_size, "Wrong number of batches."
