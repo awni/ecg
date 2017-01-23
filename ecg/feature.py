@@ -2,6 +2,7 @@ from sklearn import preprocessing
 import pywt
 import numpy as np
 from builtins import zip
+from tqdm import tqdm
 
 
 class Normalizer(object):
@@ -28,12 +29,22 @@ class Normalizer(object):
 
 
 class WaveletTransformer(object):
-    def __init__(self, wavelet_type='db1'):
-        self.wavelet_type = wavelet_type
+    def __init__(self, wavelet_families=['haar', 'db']):
+        self.transforms = []
+        for family in wavelet_families:
+            self.transforms.extend(pywt.wavelist(family))
 
     def fit(self, x):
         pass
 
     def transform(self, x):
-        x_new = np.array([np.array(pywt.dwt(x_indiv, self.wavelet_type)).T for x_indiv in x])
+        print('Applying Wavelet Transformations...')
+        x_new = []
+        for x_indiv in tqdm(x):
+            x_indiv_trans = []
+            for wavefn in self.transforms:
+                transform = np.array(pywt.dwt(x_indiv, wavefn, mode='constant'))[:,:3000]
+                x_indiv_trans.extend(transform)
+            x_new.append(np.array(x_indiv_trans).T)
+        x_new = np.array(x_new)
         return x_new
