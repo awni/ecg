@@ -1,7 +1,6 @@
 from sklearn import preprocessing
 import pywt
 import numpy as np
-from builtins import zip
 from tqdm import tqdm
 import warnings
 
@@ -22,6 +21,7 @@ class Normalizer(object):
         self.scaler = preprocessing.StandardScaler().fit(x)
 
     def transform(self, x):
+        print('Applying Normalization...')
         x = self._dim_fix(x)
         original_shape = x.shape
         new_shape = (x.shape[0]*x.shape[1], x.shape[2])
@@ -31,15 +31,10 @@ class Normalizer(object):
 
 EXPECTED_TRANSFORMED_LENGTH = 3000
 
+
 class WaveletTransformer(object):
-
-    def __init__(self, wavelet_families=['haar']):
-        self.transforms = []
-        for family in wavelet_families:
-            self.transforms.extend(pywt.wavelist(family))
-
-    def fit(self, x):
-        pass
+    def __init__(self, wavelet_fns):
+        self.transforms = wavelet_fns
 
     def transform(self, x):
         print('Applying Wavelet Transformations...')

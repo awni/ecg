@@ -66,11 +66,15 @@ if __name__ == '__main__':
         action="store_true")
     args = parser.parse_args()
 
+    params = json.load(open(args.config_file, 'r'))
+
     dl = Loader(
         args.data_path,
         use_one_hot_labels=True,
         seed=2016,
-        use_cached_if_available=not args.refresh)
+        use_cached_if_available=not args.refresh,
+        normalize=params["normalize"] if "normalize" in params else False,
+        wavelet_fns=params["wavelet_fns"])
 
     x_train = dl.x_train
     y_train = dl.y_train
@@ -82,7 +86,6 @@ if __name__ == '__main__':
 
     start_time = str(int(time.time()))
 
-    params = json.load(open(args.config_file, 'r'))
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
 
     net_type = str(params["version"])

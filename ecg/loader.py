@@ -31,7 +31,9 @@ class Loader(object):
             val_frac=0.1,
             seed=None,
             use_one_hot_labels=False,
-            use_cached_if_available=True):
+            use_cached_if_available=True,
+            normalize=True,
+            wavelet_fns=['haar']):
 
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
@@ -45,28 +47,32 @@ class Loader(object):
         self.val_frac = val_frac
 
         self._load(data_path, use_cached_if_available)
-        self._postprocess(use_one_hot_labels)
+        self._postprocess(use_one_hot_labels, normalize, wavelet_fns)
 
-    def _postprocess(self, use_one_hot):
+    def _postprocess(self, use_one_hot, normalize, wavelet_fns):
         self.x_train = np.array(self.x_train)
         self.x_test = np.array(self.x_test)
 
-        for transformer_fn in [feature.WaveletTransformer, feature.Normalizer]:
-            transformer = transformer_fn()
-            transformer.fit(self.x_train)
-            self.x_train = transformer.transform(self.x_train)
-            self.x_test = transformer.transform(self.x_test)
+        wavelet_transformer = feature.WaveletTransformer(wavelet_fns)
+        self.x_train = wavelet_transformer.transform(self.x_train)
+        self.x_test = wavelet_transformer.transform(self.x_test)
+
+        if normalize is True:
+            n = feature.Normalizer()
+            n.fit(self.x_train)
+            self.x_train = n.transform(self.x_train)
+            self.x_test = n.transform(self.x_test)
 
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
-        self.classes = sorted([c for c, _ in label_counter.most_common()]) # FIXME: remove 'sorted'
+        self.classes = sorted(
+            [c for c, _ in label_counter.most_common()])  # FIXME: rm 'sorted'
 
         self._int_to_class = dict(zip(range(len(self.classes)), self.classes))
         self._class_to_int = {c: i for i, c in self._int_to_class.items()}
 
         self.y_train = self.transform_to_int_label(self.y_train, use_one_hot)
         self.y_test = self.transform_to_int_label(self.y_test, use_one_hot)
-
 
     def transform_to_int_label(self, y_split, use_one_hot):
         labels_mod = []
@@ -142,7 +148,10 @@ class Loader(object):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
-    parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
+    parser.add_argument(
+        "--refresh",
+        help="whether to refresh cache",
+        action="store_true")
     args = parser.parse_args()
     batch_size = 32
     ldr = Loader(
