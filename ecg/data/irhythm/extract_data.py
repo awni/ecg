@@ -49,8 +49,8 @@ def stratify(records, val_frac):
     return train, val
 
 
-def round_to_second(n):
-    rate = int(ECG_SAMP_RATE)
+def round_to_step(n, step):
+    rate = (int(ECG_SAMP_RATE) * step)
     diff = (n - 1) % rate
     if diff < (rate / 2):
         return n - diff
@@ -58,15 +58,15 @@ def round_to_second(n):
         return n + (rate - diff)
 
 
-def load_episodes(record):
+def load_episodes(record, step):
     base = os.path.splitext(record)[0]
     ep_json = base + EPI_EXT
     with open(ep_json, 'r') as fid:
         episodes = json.load(fid)['episodes']
 
-    # Round onset samples to the nearest second
+    # Round onset samples to the nearest step
     for episode in episodes:
-        episode['onset_round'] = round_to_second(episode['onset'])
+        episode['onset_round'] = round_to_step(episode['onset'], step)
 
     # Set offset to onset - 1
     for e, episode in enumerate(episodes):
@@ -79,15 +79,18 @@ def load_episodes(record):
     return episodes
 
 
-def make_labels(episodes, duration):
+def make_labels(episodes, duration, step):
     labels = []
+    step_n = ECG_SAMP_RATE * step
     for episode in episodes:
         rhythm_len = episode['offset_round'] - episode['onset_round'] + 1
-        rhythm_secs = int(rhythm_len / ECG_SAMP_RATE)
-        rhythm = [episode['rhythm_name']] * rhythm_secs
+        rhythm_labels = int(rhythm_len / step_n)
+        rhythm = [episode['rhythm_name']] * rhythm_labels
         labels.extend(rhythm)
-    labels = [labels[i:i+duration]
-              for i in range(0, len(labels) - duration + 1, duration)]
+
+    dur_labels = int(duration / step)
+    labels = [labels[i:i+dur_labels]
+              for i in range(0, len(labels) - dur_labels + 1, dur_labels)]
     return labels
 
 
@@ -108,14 +111,17 @@ def load_ecg(record, duration):
     return segments
 
 
-def construct_dataset(records, duration):
+def construct_dataset(records, duration, step=0.5):
     """
     List of ecg records, duration to segment them into.
+    :param duration: The length of examples in seconds.
+    :param step: The frequency with which to extract label in seconds
+                 (e.g. step=1 means new label every second).
     """
     data = []
     for record in tqdm(records):
-        episodes = load_episodes(record)
-        labels = make_labels(episodes, duration)
+        episodes = load_episodes(record, step)
+        labels = make_labels(episodes, duration, step)
         segments = load_ecg(record, duration)
         data.extend(zip(segments, labels))
     return data
@@ -138,6 +144,8 @@ if __name__ == "__main__":
     import time
     start = time.time()
     train, val = load_all_data(src, duration, val_frac)
+    import pdb
+    pdb.set_trace()
     print("Training examples: {}".format(len(train)))
     print("Validation examples: {}".format(len(val)))
     print("Load time: {:.3f} (s)".format(time.time() - start))
@@ -146,6 +154,6 @@ if __name__ == "__main__":
     for n, m in [(401, 401), (1, 1), (7, 1), (199, 201),
                  (200, 201), (101, 201), (100, 1)]:
         msg = "Bad round: {} didn't round to {} ."
-        assert round_to_second(n) == m, msg.format(n, m)
+        assert round_to_step(n, 1) == m, msg.format(n, m)
 
     print("Tests passed!")
