@@ -68,6 +68,13 @@ if __name__ == '__main__':
 
     params = json.load(open(args.config_file, 'r'))
 
+    # if overfit, remove all dropout
+    if args.overfit is True:
+        params["overfit"] = True
+        for key in params:
+            if "dropout" in key:
+                params[key] = 0
+
     dl = Loader(
         args.data_path,
         use_one_hot_labels=True,
@@ -90,12 +97,6 @@ if __name__ == '__main__':
 
     net_type = str(params["version"])
 
-    # if overfit, remove all dropout
-    if "overfit" in params and params["overfit"] is True:
-        for key in params:
-            if "dropout" in key:
-                params[key] = 0
-
     save_params(params, start_time, net_type)
 
     params.update({
@@ -113,7 +114,7 @@ if __name__ == '__main__':
     from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
     from keras.callbacks import EarlyStopping
 
-    if "overfit" in params and params["overfit"] is True:
+    if args.overfit is True:
         monitor_metric = 'loss'
     else:
         monitor_metric = 'val_loss'
