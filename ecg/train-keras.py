@@ -45,7 +45,8 @@ def plot_model(model, start_time, net_type):
 def save_params(params, start_time, net_type):
     saving_filename = get_folder_name(start_time, net_type) + "/params.json"
     save_str = json.dumps(params, ensure_ascii=False)
-    save_str = save_str if isinstance(save_str, str) else save_str.decode('utf-8')
+    save_str = save_str if isinstance(save_str, str) \
+        else save_str.decode('utf-8')
     with open(saving_filename, 'w') as outfile:
         outfile.write(save_str)
 
@@ -54,8 +55,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
-    parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
-    parser.add_argument("--verbose", "-v", help="verbosity level", default=2)
+    parser.add_argument(
+        "--refresh",
+        help="whether to refresh cache",
+        action="store_true")
+    parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
+    parser.add_argument(
+        "--overfit",
+        help="whether to overfit training set",
+        action="store_true")
     args = parser.parse_args()
 
     dl = Loader(
@@ -78,6 +86,13 @@ if __name__ == '__main__':
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
 
     net_type = str(params["version"])
+
+    # if overfit, remove all dropout
+    if "overfit" in params and params["overfit"] is True:
+        for key in params:
+            if "dropout" in key:
+                params[key] = 0
+
     save_params(params, start_time, net_type)
 
     params.update({
@@ -92,18 +107,24 @@ if __name__ == '__main__':
     except:
         print("Skipping plot")
 
-    from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+    from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+    from keras.callbacks import EarlyStopping
+
+    if "overfit" in params and params["overfit"] is True:
+        monitor_metric = 'loss'
+    else:
+        monitor_metric = 'val_loss'
 
     stopping = EarlyStopping(
-        monitor='val_loss',
+        monitor=monitor_metric,
         patience=10,
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
-        monitor='val_loss',
+        monitor=monitor_metric,
         factor=0.5,
         patience=3,
-        min_lr=0.0001,
+        min_lr=0.00005,
         verbose=args.verbose)
 
     checkpointer = ModelCheckpoint(
