@@ -111,7 +111,7 @@ def load_ecg(record, duration):
     return segments
 
 
-def construct_dataset(records, duration, step=0.5):
+def construct_dataset(records, duration, step=1):
     """
     List of ecg records, duration to segment them into.
     :param duration: The length of examples in seconds.
