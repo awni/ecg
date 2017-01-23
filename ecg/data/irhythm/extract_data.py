@@ -127,13 +127,13 @@ def construct_dataset(records, duration, step=1):
     return data
 
 
-def load_all_data(data_path, duration, val_frac):
+def load_all_data(data_path, duration, val_frac, step=1):
     print('Stratifying records...')
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
     print('Constructing Training Set...')
-    train = construct_dataset(train, duration)
+    train = construct_dataset(train, duration, step=step)
     print('Constructing Validation Set...')
-    val = construct_dataset(val, duration)
+    val = construct_dataset(val, duration, step=step)
     return train, val
 
 if __name__ == "__main__":
