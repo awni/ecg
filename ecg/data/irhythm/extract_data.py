@@ -144,8 +144,6 @@ if __name__ == "__main__":
     import time
     start = time.time()
     train, val = load_all_data(src, duration, val_frac)
-    import pdb
-    pdb.set_trace()
     print("Training examples: {}".format(len(train)))
     print("Validation examples: {}".format(len(val)))
     print("Load time: {:.3f} (s)".format(time.time() - start))
