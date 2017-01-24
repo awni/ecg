@@ -39,11 +39,12 @@ class Loader(object):
         self.val_frac = val_frac
         self.wavelet_fns = wavelet_fns
         self.normalize = normalize
+        self.use_one_hot_labels = use_one_hot_labels
 
         self._load(data_path, use_cached_if_available)
-        self._postprocess(use_one_hot_labels)
+        self._postprocess()
 
-    def _postprocess(self, use_one_hot):
+    def _postprocess(self):
         self.x_train = np.array(self.x_train)
         self.x_test = np.array(self.x_test)
 
@@ -67,14 +68,14 @@ class Loader(object):
         self._int_to_class = dict(zip(range(len(self.classes)), self.classes))
         self._class_to_int = {c: i for i, c in self._int_to_class.items()}
 
-        self.y_train = self.transform_to_int_label(self.y_train, use_one_hot)
-        self.y_test = self.transform_to_int_label(self.y_test, use_one_hot)
+        self.y_train = self.transform_to_int_label(self.y_train)
+        self.y_test = self.transform_to_int_label(self.y_test)
 
-    def transform_to_int_label(self, y_split, use_one_hot):
+    def transform_to_int_label(self, y_split):
         labels_mod = []
         for label in y_split:
             label_mod = np.array([self._class_to_int[c] for c in label])
-            if use_one_hot is True:
+            if self.use_one_hot_labels is True:
                 tmp = np.zeros((len(label_mod), len(self._int_to_class)))
                 tmp[np.arange(len(label_mod)), label_mod] = 1
                 label_mod = tmp
