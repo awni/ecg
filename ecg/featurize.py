@@ -17,13 +17,18 @@ class Normalizer(object):
         return x
 
     def fit(self, x):
-        print('Fitting Normalization...')
+        print('Fitting Normalization: ' + self.strategy)
         x = self._dim_fix(x)
         x = x.reshape((x.shape[0]*x.shape[1], x.shape[2]))
-        if self.strategy == 'z_score':
+        if self.strategy == 'standard_scale':
             self.scaler = preprocessing.StandardScaler().fit(x)
         elif self.strategy == 'min_max':
-            self.scaler = preprocessing.MinMaxScaler().fit(x)
+            self.scaler = preprocessing.MinMaxScaler(
+                feature_range=(-1, 1)).fit(x)
+        elif self.strategy == 'robust_scale':
+            self.scaler = preprocessing.RobustScaler().fit(x)
+        else:
+            raise ValueError("Strategy not found!")
 
     def transform(self, x):
         print('Applying Normalization...')

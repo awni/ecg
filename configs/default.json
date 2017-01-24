@@ -1,8 +1,8 @@
 {
     "version": 3,
 
-    "wavelet_fns": ["haar", "db1"],
-    "normalizer": "z_score",
+    "wavelet_fns": [],
+    "normalizer": "robust_scale",
     "seed": 2016,
 
     "conv_subsample_lengths": [1, 2, 2, 5, 5],
