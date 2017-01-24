@@ -3,6 +3,7 @@
 
     "wavelet_fns": ["haar", "db1"],
     "normalize": true,
+    "seed": 2016,
 
     "conv_subsample_lengths": [1, 2, 2, 5, 5],
     "conv_activation": "relu",

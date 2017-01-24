@@ -5,17 +5,13 @@ from __future__ import absolute_import
 from builtins import open
 from builtins import int
 from builtins import str
-from future import standard_library
-standard_library.install_aliases()
-
 import argparse
-import numpy as np
 import json
 import os
 import time
 
-from loader import Loader
-from keras_models import model
+import load
+from models import nn
 
 NUMBER_EPOCHS = 1000
 
@@ -75,13 +71,7 @@ if __name__ == '__main__':
             if "dropout" in key:
                 params[key] = 0
 
-    dl = Loader(
-        args.data_path,
-        use_one_hot_labels=True,
-        seed=2016,
-        use_cached_if_available=not args.refresh,
-        normalize=params["normalize"] if "normalize" in params else False,
-        wavelet_fns=params["wavelet_fns"])
+    dl = load.load(args, params)
 
     x_train = dl.x_train
     y_train = dl.y_train
@@ -104,10 +94,10 @@ if __name__ == '__main__':
         "num_categories": dl.output_dim
     })
 
-    network = model.build_network(**params)
+    model = nn.build_network(**params)
 
     try:
-        plot_model(network, start_time, net_type)
+        plot_model(model, start_time, net_type)
     except:
         print("Skipping plot")
 
@@ -136,7 +126,7 @@ if __name__ == '__main__':
         save_best_only=False,
         verbose=args.verbose)
 
-    network.fit(
+    model.fit(
         x_train, y_train,
         validation_data=(x_val, y_val),
         nb_epoch=NUMBER_EPOCHS,

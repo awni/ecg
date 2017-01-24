@@ -1,12 +1,8 @@
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
 from builtins import dict
 from builtins import zip
 from builtins import range
-from future import standard_library
-standard_library.install_aliases()
 import argparse
 import collections
 import numpy as np
@@ -14,15 +10,11 @@ import os
 import random
 import joblib
 
-import feature
+import featurize
 from data.irhythm.extract_data import load_all_data
 
 
 class Loader(object):
-    """
-    Loader class for feeding data to the network.
-    """
-
     def __init__(
             self,
             data_path,
@@ -33,7 +25,7 @@ class Loader(object):
             use_one_hot_labels=False,
             use_cached_if_available=True,
             normalize=True,
-            wavelet_fns=['haar']):
+            wavelet_fns=[]):
 
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
@@ -45,20 +37,24 @@ class Loader(object):
         self.batch_size = batch_size
         self.duration = duration
         self.val_frac = val_frac
+        self.wavelet_fns = wavelet_fns
+        self.normalize = normalize
 
         self._load(data_path, use_cached_if_available)
-        self._postprocess(use_one_hot_labels, normalize, wavelet_fns)
+        self._postprocess(use_one_hot_labels)
 
-    def _postprocess(self, use_one_hot, normalize, wavelet_fns):
+    def _postprocess(self, use_one_hot):
         self.x_train = np.array(self.x_train)
         self.x_test = np.array(self.x_test)
 
-        wavelet_transformer = feature.WaveletTransformer(wavelet_fns)
-        self.x_train = wavelet_transformer.transform(self.x_train)
-        self.x_test = wavelet_transformer.transform(self.x_test)
+        if len(self.wavelet_fns) != 0:
+            wavelet_transformer = \
+                featurize.WaveletTransformer(self.wavelet_fns)
+            self.x_train = wavelet_transformer.transform(self.x_train)
+            self.x_test = wavelet_transformer.transform(self.x_test)
 
-        if normalize is True:
-            n = feature.Normalizer()
+        if self.normalize is True:
+            n = featurize.Normalizer()
             n.fit(self.x_train)
             self.x_train = n.transform(self.x_train)
             self.x_test = n.transform(self.x_test)
@@ -141,8 +137,18 @@ class Loader(object):
 
     @property
     def output_dim(self):
-        """ Returns number of output classes. """
         return len(self._int_to_class)
+
+
+def load(args, params):
+    dl = Loader(
+        args.data_path,
+        use_one_hot_labels=True,
+        seed=params["seed"] if "seed" in params else 2016,
+        use_cached_if_available=not args.refresh,
+        normalize=params["normalize"] if "normalize" in params else False,
+        wavelet_fns=params["wavelet_fns"] if "wavelet_fns" in params else [])
+    return dl
 
 
 if __name__ == "__main__":
@@ -162,7 +168,7 @@ if __name__ == "__main__":
     print("Length of validation set {}".format(len(ldr.x_test)))
     print("Output dimension {}".format(ldr.output_dim))
 
-    # Run a few sanity checks.
+    # Sanity checks.
     count = 0
     for ecgs, labels in ldr.train_generator():
         count += 1

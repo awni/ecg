@@ -1,12 +1,7 @@
 from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
 from builtins import zip
 from builtins import open
 from builtins import str
-from future import standard_library
-standard_library.install_aliases()
 import argparse
 import csv
 import json
@@ -14,10 +9,12 @@ import os
 from tabulate import tabulate
 from io import BytesIO
 
+DEFAULT_VERSION = 2
 
-DEFAULT_VERSION=2
 
-def get_params_table(path, max_models=5, version=DEFAULT_VERSION, metric="val_loss"):
+def get_params_table(path, max_models=5, version=DEFAULT_VERSION,
+                     metric="val_loss"):
+
     def process_params(parameters):
         for key in parameters:
             if isinstance(parameters[key], list):
@@ -74,7 +71,8 @@ def get_best_models(path, version=DEFAULT_VERSION, metric='val_loss'):
     return models
 
 
-def get_best_model(path, get_structure=False, version=DEFAULT_VERSION, metric='val_loss'):
+def get_best_model(path, get_structure=False, version=DEFAULT_VERSION,
+                   metric='val_loss'):
     models = get_best_models(path, version, metric)
     best_model = models[0]
     dirpath = best_model[2]
@@ -89,8 +87,18 @@ def get_best_model(path, get_structure=False, version=DEFAULT_VERSION, metric='v
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("saved_path", help="path to saved files")
-    parser.add_argument("--version", help="version of saved files", default=DEFAULT_VERSION, type=int)
-    parser.add_argument("--metric", help="metric to use", default='val_loss', choices=['val_loss', 'loss'])
+    parser.add_argument(
+        "--version",
+        help="version of saved files",
+        default=DEFAULT_VERSION,
+        type=int)
+    parser.add_argument(
+        "--metric",
+        help="metric to use",
+        default='val_loss',
+        choices=['val_loss', 'loss'])
     args = parser.parse_args()
-    print('Best model path', args.metric, ':', get_best_model(args.saved_path, version=args.version, metric=args.metric))
-    print(get_params_table(args.saved_path, version=args.version, metric=args.metric))
+    print('Best model path', args.metric, ':', get_best_model(
+            args.saved_path, version=args.version, metric=args.metric))
+    print(get_params_table(
+        args.saved_path, version=args.version, metric=args.metric))

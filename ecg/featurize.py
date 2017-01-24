@@ -16,6 +16,7 @@ class Normalizer(object):
         return x
 
     def fit(self, x):
+        print('Fitting Normalization...')
         x = self._dim_fix(x)
         x = x.reshape((x.shape[0]*x.shape[1], x.shape[2]))
         self.scaler = preprocessing.StandardScaler().fit(x)
