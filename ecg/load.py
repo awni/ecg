@@ -8,6 +8,7 @@ import collections
 import numpy as np
 import os
 import random
+import json
 import joblib
 
 import featurize
@@ -22,7 +23,7 @@ class Loader(object):
             duration=30,
             val_frac=0.1,
             seed=None,
-            use_one_hot_labels=False,
+            use_one_hot_labels=True,
             use_cached_if_available=True,
             normalize=True,
             wavelet_fns=[]):
@@ -144,7 +145,6 @@ class Loader(object):
 def load(args, params):
     dl = Loader(
         args.data_path,
-        use_one_hot_labels=True,
         seed=params["seed"] if "seed" in params else 2016,
         use_cached_if_available=not args.refresh,
         normalize=params["normalize"] if "normalize" in params else False,
@@ -155,24 +155,16 @@ def load(args, params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
+    parser.add_argument("config_file", help="path to config file")
     parser.add_argument(
         "--refresh",
         help="whether to refresh cache",
         action="store_true")
     args = parser.parse_args()
-    batch_size = 32
-    ldr = Loader(
-        args.data_path,
-        batch_size,
-        use_cached_if_available=not args.refresh)
-    print("Length of training set {}".format(len(ldr.x_train)))
-    print("Length of validation set {}".format(len(ldr.x_test)))
-    print("Output dimension {}".format(ldr.output_dim))
 
-    # Sanity checks.
-    count = 0
-    for ecgs, labels in ldr.train_generator():
-        count += 1
-        assert len(ecgs) == len(labels) == batch_size, \
-            "Invalid number of examples."
-    assert count == len(ldr.x_train) // batch_size, "Wrong number of batches."
+    params = json.load(open(args.config_file, 'r'))
+
+    dl = load(args, params)
+    print("Length of training set {}".format(len(dl.x_train)))
+    print("Length of validation set {}".format(len(dl.x_test)))
+    print("Output dimension {}".format(dl.output_dim))
