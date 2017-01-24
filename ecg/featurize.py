@@ -6,8 +6,9 @@ import warnings
 
 
 class Normalizer(object):
-    def __init__(self):
+    def __init__(self, strategy):
         self.scaler = None
+        self.strategy = strategy
 
     def _dim_fix(self, x):
         if (len(x.shape) == 2):
@@ -19,7 +20,10 @@ class Normalizer(object):
         print('Fitting Normalization...')
         x = self._dim_fix(x)
         x = x.reshape((x.shape[0]*x.shape[1], x.shape[2]))
-        self.scaler = preprocessing.StandardScaler().fit(x)
+        if self.strategy == 'z_score':
+            self.scaler = preprocessing.StandardScaler().fit(x)
+        elif self.strategy == 'min_max':
+            self.scaler = preprocessing.MinMaxScaler().fit(x)
 
     def transform(self, x):
         print('Applying Normalization...')

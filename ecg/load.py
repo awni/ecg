@@ -25,7 +25,7 @@ class Loader(object):
             seed=None,
             use_one_hot_labels=True,
             use_cached_if_available=True,
-            normalize=True,
+            normalizer='min_max',
             wavelet_fns=[]):
 
         if not os.path.exists(data_path):
@@ -39,7 +39,7 @@ class Loader(object):
         self.duration = duration
         self.val_frac = val_frac
         self.wavelet_fns = wavelet_fns
-        self.normalize = normalize
+        self.normalizer = normalizer
         self.use_one_hot_labels = use_one_hot_labels
 
         self._load(data_path, use_cached_if_available)
@@ -55,8 +55,8 @@ class Loader(object):
             self.x_train = wavelet_transformer.transform(self.x_train)
             self.x_test = wavelet_transformer.transform(self.x_test)
 
-        if self.normalize is True:
-            n = featurize.Normalizer()
+        if self.normalizer == 'min_max' or self.normalizer == 'z_score':
+            n = featurize.Normalizer(self.normalizer)
             n.fit(self.x_train)
             self.x_train = n.transform(self.x_train)
             self.x_test = n.transform(self.x_test)
@@ -147,7 +147,7 @@ def load(args, params):
         args.data_path,
         seed=params["seed"] if "seed" in params else 2016,
         use_cached_if_available=not args.refresh,
-        normalize=params["normalize"] if "normalize" in params else False,
+        normalizer=params["normalizer"] if "normalizer" in params else False,
         wavelet_fns=params["wavelet_fns"] if "wavelet_fns" in params else [])
     return dl
 

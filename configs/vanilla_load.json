@@ -1,4 +1,4 @@
 {
     "wavelet_fns": [],
-    "normalize": false
+    "normalizer": "z_score"
 }

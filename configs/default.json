@@ -2,7 +2,7 @@
     "version": 3,
 
     "wavelet_fns": ["haar", "db1"],
-    "normalize": true,
+    "normalizer": "z_score",
     "seed": 2016,
 
     "conv_subsample_lengths": [1, 2, 2, 5, 5],
