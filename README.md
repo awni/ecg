@@ -1,42 +1,44 @@
-Install dependencies for running on the deep cluster with Python 3 and GPU enabled Tensorflow
+# ECG - Arrhythmia Detection
 
-```
-wget https://bootstrap.pypa.io/get-pip.py
-python3 get-pip.py --user
-$HOME/.local/bin/pip3 install virtualenv --user
-
-# *NB* if you are on AFS you may not have enough space in your home directory
-# for the environment. I recommend putting it in scratch or somewhere where 
-# you have a few GB of space.
-$HOME/.local/bin/virtualenv ecg_env
-source ecg_env/bin/activate # add to .bashrc.user
-
-
-pip install -r path_to/requirements.txt
-
-# install tensorflow for GPU
-export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-0.12.1-cp34-cp34m-linux_x86_64.whl
-pip install --upgrade $TF_BINARY_URL
-
-
-## Add below to .bashrc.user
-# for cuda 
-export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib:/usr/local/cuda-8.0/lib64
-
-# for cuda nvcc
-export PATH=$PATH:/usr/local/cuda-8.0/bin:
+#### Before you begin
+Here are some commands that setup directory conventions used by later commands.
+```bash
+# create symlink to data directory
+ln -s <path_to_data> data
+# create a folder to save models (match with FOLDER_TO_SAVE in configs/)
+mkdir saved/
 ```
 
-Run with
-```
-gpu=0
-config=mitdb_config.json
-env CUDA_VISIBLE_DEVICES=$gpu python ecg/train.py --config=$config
+#### Training
+```bash
+# Normal
+python ecg/train.py data configs/<choice_of_configs>
+# To overfit the training set
+python ecg/train.py data configs/<choice_of_configs> --overfit
 ```
 
-To view results run:
+#### Prediction
+```bash
+python ecg/predict.py data <path_to_saved_model_hdf5>
 ```
-port=8888
-log_dir=<directory_of_saved_models>
-tensorboard --port $port --log_dir $log_dir
+
+#### Evaluation
+Before running evaluation on a model, run the prediction script
+to generate neccessary prediction files for evaluation.
+```bash
+## Without decoding (default behavior)
+python ecg/evaluate.py data <path_to_saved_model_hdf5> <train/test>
+## With decoding
+python ecg/evaluate.py data <path_to_saved_model_hdf5> <train/test> --decode
+```
+
+#### Analyze
+Side by side comparison of model parameters and performance.
+Models are automatically grouped by their version number, which is to be changed
+when the API of the model is not compatible with previous models.
+```bash
+# Sort results by increasing validation loss (default)
+python ecg/analyze.py saved/<version_folder> --version <version_number>
+# Sort results by increasing training loss (default)
+python ecg/analyze.py saved/<version_folder> --version <version_number> --metric=loss
 ```

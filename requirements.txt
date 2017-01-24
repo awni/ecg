@@ -15,6 +15,7 @@ pydot-ng==1.0.0
 pyparsing==2.1.10
 python-dateutil==2.6.0
 pytz==2016.10
+PyWavelets==0.5.1
 PyYAML==3.12
 scikit-learn==0.18.1
 scipy==0.18.1

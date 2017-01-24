@@ -1,87 +1,134 @@
-from __future__ import absolute_import
-from __future__ import division
 from __future__ import print_function
-
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from builtins import int
+from builtins import str
+import argparse
 import json
-import numpy as np
 import os
-import random
-import tensorflow as tf
 import time
 
-import loader
-import models
-import utils
+import load
+from models import nn
 
-tf.flags.DEFINE_string("config", "configs/irhythm_config.json",
-                       "Configuration file for training.")
-FLAGS = tf.flags.FLAGS
+NUMBER_EPOCHS = 1000
 
-def run_epoch(model, data_loader, session, summarizer):
-    summary_op = tf.summary.merge_all()
 
-    for batch in data_loader.train_generator():
-        ops = [model.train_op, model.avg_loss,
-               model.avg_acc, model.it, summary_op]
-        res = session.run(ops, feed_dict=model.feed_dict(*batch))
-        _, loss, acc, it, summary = res
-        summarizer.add_summary(summary, global_step=it)
-        if it == 50:
-            model.set_momentum(session)
-        if it % 100 == 0:
-            msg = "Iter {}: AvgLoss {:.3f}, AvgAcc {:.3f}"
-            print(msg.format(it, loss, acc))
+def get_folder_name(start_time, net_type):
+    folder_name = FOLDER_TO_SAVE + net_type + '/' + start_time
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    return folder_name
 
-def run_validation(model, data_loader, session, summarizer):
-    it = model.it.eval(session)
-    results = []
-    for batch in data_loader.test_generator():
-        ops = [model.acc, model.loss]
-        res = session.run(ops, feed_dict=model.feed_dict(*batch))
-        results.append(res)
-    acc, loss = np.mean(list(zip(*results)), axis=1)
-    summary = utils.make_summary("Dev Accuracy", float(acc))
-    summarizer.add_summary(summary, global_step=it)
-    summary = utils.make_summary("Dev Loss", float(loss))
-    summarizer.add_summary(summary, global_step=it)
-    msg = "Validation: Loss {:.3f}, Acc {:.3f}"
-    print(msg.format(loss, acc))
 
-def main(argv=None):
+def get_filename_for_saving(start_time, net_type):
+    saved_filename = get_folder_name(start_time, net_type) + \
+        "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
+    return saved_filename
 
-    with open(FLAGS.config) as fid:
-        config = json.load(fid)
 
-    random.seed(config['seed'])
-    epochs = config['optimizer']['epochs']
-    data_loader = loader.Loader(config['data']['path'],
-                                config['model']['batch_size'],
-                                seed=config['data']['seed'])
+def plot_model(model, start_time, net_type):
+    from keras.utils.visualize_util import plot
+    plot(
+        model,
+        to_file=get_folder_name(start_time, net_type) + '/model.png',
+        show_shapes=True,
+        show_layer_names=False)
 
-    model = getattr(models, config['model']['model_class'])()
 
-    save_path = config['io']['save_path']
-    if not os.path.exists(save_path):
-        os.mkdir(save_path)
+def save_params(params, start_time, net_type):
+    saving_filename = get_folder_name(start_time, net_type) + "/params.json"
+    save_str = json.dumps(params, ensure_ascii=False)
+    save_str = save_str if isinstance(save_str, str) \
+        else save_str.decode('utf-8')
+    with open(saving_filename, 'w') as outfile:
+        outfile.write(save_str)
 
-    config['model']['output_dim'] = data_loader.output_dim
-    with open(os.path.join(save_path, "config.json"), 'w') as fid:
-        json.dump(config, fid)
-
-    with tf.Graph().as_default(), tf.Session() as sess:
-        tf.set_random_seed(config['seed'])
-        model.init_inference(config['model'])
-        model.init_loss()
-        model.init_train(config['optimizer'])
-        tf.global_variables_initializer().run()
-        saver = tf.train.Saver(tf.global_variables())
-        summarizer = tf.summary.FileWriter(save_path, sess.graph)
-        for e in range(epochs):
-            start = time.time()
-            run_epoch(model, data_loader, sess, summarizer)
-            saver.save(sess, os.path.join(save_path, "model"))
-            print("Epoch {} time {:.1f} (s)".format(e, time.time() - start))
-            run_validation(model, data_loader, sess, summarizer)
 
 if __name__ == '__main__':
-    tf.app.run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="path to data files")
+    parser.add_argument("config_file", help="path to confile file")
+    parser.add_argument(
+        "--refresh",
+        help="whether to refresh cache",
+        action="store_true")
+    parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
+    parser.add_argument(
+        "--overfit",
+        help="whether to overfit training set",
+        action="store_true")
+    args = parser.parse_args()
+
+    params = json.load(open(args.config_file, 'r'))
+
+    # if overfit, remove all dropout
+    if args.overfit is True:
+        params["overfit"] = True
+        for key in params:
+            if "dropout" in key:
+                params[key] = 0
+
+    dl = load.load(args, params)
+
+    x_train = dl.x_train
+    y_train = dl.y_train
+    print("Training size: " + str(len(x_train)) + " examples.")
+
+    x_val = dl.x_test
+    y_val = dl.y_test
+    print("Validation size: " + str(len(x_val)) + " examples.")
+
+    start_time = str(int(time.time()))
+
+    FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
+
+    net_type = str(params["version"])
+
+    save_params(params, start_time, net_type)
+
+    params.update({
+        "input_shape": x_train[0].shape,
+        "num_categories": dl.output_dim
+    })
+
+    model = nn.build_network(**params)
+
+    try:
+        plot_model(model, start_time, net_type)
+    except:
+        print("Skipping plot")
+
+    from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+    from keras.callbacks import EarlyStopping
+
+    if args.overfit is True:
+        monitor_metric = 'loss'
+    else:
+        monitor_metric = 'val_loss'
+
+    stopping = EarlyStopping(
+        monitor=monitor_metric,
+        patience=10,
+        verbose=args.verbose)
+
+    reduce_lr = ReduceLROnPlateau(
+        monitor=monitor_metric,
+        factor=0.5,
+        patience=3,
+        min_lr=0.00005,
+        verbose=args.verbose)
+
+    checkpointer = ModelCheckpoint(
+        filepath=get_filename_for_saving(start_time, net_type),
+        save_best_only=False,
+        verbose=args.verbose)
+
+    model.fit(
+        x_train, y_train,
+        validation_data=(x_val, y_val),
+        nb_epoch=NUMBER_EPOCHS,
+        callbacks=[checkpointer, reduce_lr, stopping],
+        verbose=args.verbose)

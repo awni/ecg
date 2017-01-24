@@ -1,0 +1,34 @@
+{
+    "version": 3,
+
+    "wavelet_fns": ["haar", "db1"],
+    "normalize": true,
+    "seed": 2016,
+
+    "conv_subsample_lengths": [1, 2, 2, 5, 5],
+    "conv_activation": "relu",
+    "conv_filter_length": 16,
+    "conv_num_filters": 64,
+    "conv_init": "he_normal",
+    "conv_activation": "relu",
+    "conv_l2_penalty": 0.000,
+    "conv_dropout": 0.2,
+
+    "recurrent_layers": 1,
+    "recurrent_hidden": 64,
+    "recurrent_type": "LSTM",
+    "recurrent_activation": "relu",
+    "recurrent_is_bidirectional": true,
+    "recurrent_dropout": 0.2,
+
+    "dense_layers": 1,
+    "dense_hidden": 64,
+    "dense_activation": "relu",
+    "dense_init": "he_normal",
+    "dense_l2_penalty": 0.000,
+    "dense_dropout": 0.2,
+
+    "learning_rate": 0.001,
+
+    "FOLDER_TO_SAVE": "./saved/"
+}

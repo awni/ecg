@@ -19,11 +19,13 @@ from .dataset_tools.db_constants import ECG_SAMP_RATE
 from .dataset_tools.db_constants import ECG_EXT, EPI_EXT
 from .dataset_tools.extract_episodes import _find_all_files, qa
 
+
 def get_all_records(src):
     """
     Find all the ECG files.
     """
     return _find_all_files(src, '', ECG_EXT)
+
 
 def stratify(records, val_frac):
     """
@@ -46,23 +48,24 @@ def stratify(records, val_frac):
     val = [record for patient in val for record in patient]
     return train, val
 
-def round_to_second(n):
-    rate = int(ECG_SAMP_RATE)
-    diff = (n - 1) % rate
-    if diff < (rate / 2):
+
+def round_to_step(n, step):
+    diff = (n - 1) % step
+    if diff < (step / 2):
         return n - diff
     else:
-        return n + (rate - diff)
+        return n + (step - diff)
 
-def load_episodes(record):
+
+def load_episodes(record, step):
     base = os.path.splitext(record)[0]
     ep_json = base + EPI_EXT
     with open(ep_json, 'r') as fid:
         episodes = json.load(fid)['episodes']
 
-    # Round onset samples to the nearest second
+    # Round onset samples to the nearest step
     for episode in episodes:
-        episode['onset_round'] = round_to_second(episode['onset'])
+        episode['onset_round'] = round_to_step(episode['onset'], step)
 
     # Set offset to onset - 1
     for e, episode in enumerate(episodes):
@@ -74,22 +77,26 @@ def load_episodes(record):
 
     return episodes
 
-def make_labels(episodes, duration):
+
+def make_labels(episodes, duration, step):
     labels = []
     for episode in episodes:
         rhythm_len = episode['offset_round'] - episode['onset_round'] + 1
-        rhythm_secs = int(rhythm_len / ECG_SAMP_RATE)
-        rhythm = [episode['rhythm_name']] * rhythm_secs
+        rhythm_labels = int(rhythm_len / step)
+        rhythm = [episode['rhythm_name']] * rhythm_labels
         labels.extend(rhythm)
-    labels = [labels[i:i+duration]
-               for i in range(0, len(labels) - duration + 1, duration)]
+
+    dur_labels = int(duration * ECG_SAMP_RATE / step)
+    labels = [labels[i:i+dur_labels]
+              for i in range(0, len(labels) - dur_labels + 1, dur_labels)]
     return labels
 
-def load_ecg(record, duration):
+
+def load_ecg(record, duration, step):
     with open(record, 'r') as fid:
         ecg = np.fromfile(fid, dtype=np.int16)
 
-    n_per_win = int(duration * ECG_SAMP_RATE)
+    n_per_win = int(duration * ECG_SAMP_RATE / step) * step
 
     # Truncate to a multiple of the duration
     ecg = ecg[:n_per_win * int(len(ecg) / n_per_win)]
@@ -98,28 +105,33 @@ def load_ecg(record, duration):
     ecg = ecg.reshape((-1, n_per_win))
     n_segments = ecg.shape[0]
     segments = [arr.squeeze()
-                 for arr in np.vsplit(ecg, range(1, n_segments))]
+                for arr in np.vsplit(ecg, range(1, n_segments))]
     return segments
 
-def construct_dataset(records, duration):
+
+def construct_dataset(records, duration, step=ECG_SAMP_RATE):
     """
     List of ecg records, duration to segment them into.
+    :param duration: The length of examples in seconds.
+    :param step: Number of samples to step the label by.
+                 (e.g. step=200 means new label every second).
     """
     data = []
     for record in tqdm(records):
-        episodes = load_episodes(record)
-        labels = make_labels(episodes, duration)
-        segments = load_ecg(record, duration)
+        episodes = load_episodes(record, step)
+        labels = make_labels(episodes, duration, step)
+        segments = load_ecg(record, duration, step)
         data.extend(zip(segments, labels))
     return data
 
-def load_all_data(data_path, duration, val_frac):
+
+def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE):
     print('Stratifying records...')
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
     print('Constructing Training Set...')
-    train = construct_dataset(train, duration)
+    train = construct_dataset(train, duration, step=step)
     print('Constructing Validation Set...')
-    val = construct_dataset(val, duration)
+    val = construct_dataset(val, duration, step=step)
     return train, val
 
 if __name__ == "__main__":
@@ -137,7 +149,7 @@ if __name__ == "__main__":
     # Some tests
     for n, m in [(401, 401), (1, 1), (7, 1), (199, 201),
                  (200, 201), (101, 201), (100, 1)]:
-        msg  = "Bad round: {} didn't round to {} ."
-        assert round_to_second(n) == m, msg.format(n, m)
+        msg = "Bad round: {} didn't round to {} ."
+        assert round_to_step(n, 200) == m, msg.format(n, m)
 
     print("Tests passed!")

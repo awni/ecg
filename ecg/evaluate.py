@@ -1,44 +1,52 @@
 from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
 from builtins import range
 from builtins import open
 from builtins import str
-from future import standard_library
-standard_library.install_aliases()
 import argparse
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from tabulate import tabulate
 from tqdm import tqdm
+import json
+import os
 
-from loader import Loader
-import decoder
+import load
+import decode
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
-    parser.add_argument("prediction_path", help="path to prediction pickle")
+    parser.add_argument(
+        "model_path",
+        help="path to model, assuming prediction script generated")
+    parser.add_argument("split", help="train/val", choices=['train', 'test'])
     parser.add_argument('--decode', action='store_true')
-    parser.add_argument("--refresh", help="whether to refresh cache", action="store_true")
+    parser.add_argument(
+        "--refresh",
+        help="whether to refresh cache",
+        action="store_true")
     args = parser.parse_args()
 
-    dl = Loader(
-        args.data_path,
-        use_one_hot_labels=True,
-        seed=2016,
-        use_cached_if_available=not args.refresh)
+    params = json.load(open(
+        os.path.dirname(args.model_path) + '/params.json', 'r'))
 
-    x_val = dl.x_test[:, :, np.newaxis]
-    y_val = dl.y_test
-    print("Validation size: " + str(len(x_val)) + " examples.")
+    dl = load.load(args, params)
 
-    predictions = np.load(open(args.prediction_path, 'rb'))
+    if args.split == 'train':
+        x_val = dl.x_train[:, :, np.newaxis]
+        y_val = dl.y_train
+    else:
+        x_val = dl.x_test[:, :, np.newaxis]
+        y_val = dl.y_test
+
+    print("Size: " + str(len(x_val)) + " examples.")
+
+    predictions = np.load(open(
+        args.model_path + '-pred-' + args.split + '.pkl', 'rb'))  # todo: param
 
     if args.decode is True:
-        language_model = decoder.LM(dl.y_train, dl.output_dim, order=2)
-        predictions = np.array([decoder.beam_search(prediction, language_model)
+        language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
+        predictions = np.array([decode.beam_search(prediction, language_model)
                                 for prediction in tqdm(predictions)])
     else:
         predictions = np.argmax(predictions, axis=-1)
