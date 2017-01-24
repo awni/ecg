@@ -50,12 +50,11 @@ def stratify(records, val_frac):
 
 
 def round_to_step(n, step):
-    rate = (int(ECG_SAMP_RATE) * step)
-    diff = (n - 1) % rate
-    if diff < (rate / 2):
+    diff = (n - 1) % step
+    if diff < (step / 2):
         return n - diff
     else:
-        return n + (rate - diff)
+        return n + (step - diff)
 
 
 def load_episodes(record, step):
@@ -81,24 +80,23 @@ def load_episodes(record, step):
 
 def make_labels(episodes, duration, step):
     labels = []
-    step_n = ECG_SAMP_RATE * step
     for episode in episodes:
         rhythm_len = episode['offset_round'] - episode['onset_round'] + 1
-        rhythm_labels = int(rhythm_len / step_n)
+        rhythm_labels = int(rhythm_len / step)
         rhythm = [episode['rhythm_name']] * rhythm_labels
         labels.extend(rhythm)
 
-    dur_labels = int(duration / step)
+    dur_labels = int(duration * ECG_SAMP_RATE / step)
     labels = [labels[i:i+dur_labels]
               for i in range(0, len(labels) - dur_labels + 1, dur_labels)]
     return labels
 
 
-def load_ecg(record, duration):
+def load_ecg(record, duration, step):
     with open(record, 'r') as fid:
         ecg = np.fromfile(fid, dtype=np.int16)
 
-    n_per_win = int(duration * ECG_SAMP_RATE)
+    n_per_win = int(duration * ECG_SAMP_RATE / step) * step
 
     # Truncate to a multiple of the duration
     ecg = ecg[:n_per_win * int(len(ecg) / n_per_win)]
@@ -111,23 +109,23 @@ def load_ecg(record, duration):
     return segments
 
 
-def construct_dataset(records, duration, step=1):
+def construct_dataset(records, duration, step=ECG_SAMP_RATE):
     """
     List of ecg records, duration to segment them into.
     :param duration: The length of examples in seconds.
-    :param step: The frequency with which to extract label in seconds
-                 (e.g. step=1 means new label every second).
+    :param step: Number of samples to step the label by.
+                 (e.g. step=200 means new label every second).
     """
     data = []
     for record in tqdm(records):
         episodes = load_episodes(record, step)
         labels = make_labels(episodes, duration, step)
-        segments = load_ecg(record, duration)
+        segments = load_ecg(record, duration, step)
         data.extend(zip(segments, labels))
     return data
 
 
-def load_all_data(data_path, duration, val_frac, step=1):
+def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE):
     print('Stratifying records...')
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
     print('Constructing Training Set...')
@@ -152,6 +150,6 @@ if __name__ == "__main__":
     for n, m in [(401, 401), (1, 1), (7, 1), (199, 201),
                  (200, 201), (101, 201), (100, 1)]:
         msg = "Bad round: {} didn't round to {} ."
-        assert round_to_step(n, 1) == m, msg.format(n, m)
+        assert round_to_step(n, 200) == m, msg.format(n, m)
 
     print("Tests passed!")
