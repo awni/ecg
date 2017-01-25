@@ -9,11 +9,8 @@ import os
 from tabulate import tabulate
 from io import BytesIO
 
-DEFAULT_VERSION = 2
 
-
-def get_params_table(path, max_models=5, version=DEFAULT_VERSION,
-                     metric="val_loss"):
+def get_params_table(path, max_models=5, metric="val_loss"):
 
     def process_params(parameters):
         for key in parameters:
@@ -26,7 +23,7 @@ def get_params_table(path, max_models=5, version=DEFAULT_VERSION,
     output = BytesIO()
     first = True
     visited_dirs = {}
-    for loss, _, dirpath in get_best_models(path, version, metric):
+    for val, _, dirpath in get_best_models(path, metric):
         if len(visited_dirs) == max_models:
             break
         if dirpath in visited_dirs:
@@ -34,7 +31,7 @@ def get_params_table(path, max_models=5, version=DEFAULT_VERSION,
         visited_dirs[dirpath] = True
         parameters = json.load(open(os.path.join(dirpath, 'params.json'), 'r'))
         parameters = process_params(parameters)
-        parameters.update({"_loss": loss})
+        parameters.update({"_val": val})
         if first is True:
             fieldnames = sorted(parameters.keys())
             writer = csv.DictWriter(
@@ -48,32 +45,29 @@ def get_params_table(path, max_models=5, version=DEFAULT_VERSION,
     return tabulate(list(zip(*csv.reader(output))))
 
 
-def get_best_models(path, version=DEFAULT_VERSION, metric='val_loss'):
+def get_best_models(path, metric='val_loss'):
     models = []
     for (dirpath, dirnames, filenames) in os.walk(args.saved_path):
         for filename in filenames:
             if filename.endswith('.hdf5'):
                 name_split = filename.split('.hdf5')[0].split('-')
-                if version == 1:
-                    assert(metric == 'val_loss')
-                    loss = float(name_split[1])
-                elif version == 2:
-                    if metric == 'val_loss':
-                        loss = float(name_split[0])
-                    elif metric == 'loss':  # train loss
-                        loss = float(name_split[-2])
-                    else:
-                        raise ValueError('Metric not defined')
+                if metric == 'val_loss':
+                    value = float(name_split[0])
+                elif metric == 'val_accuracy':
+                    value = float(name_split[1])
+                elif metric == 'loss':
+                    value = float(name_split[-2])
+                elif metric == 'accuracy':
+                    value = float(name_split[-1])
                 else:
-                    raise ValueError('Version not defined')
-                models.append((loss, filename, dirpath))
-    models.sort()
+                        raise ValueError('Metric not defined')
+                models.append((value, filename, dirpath))
+    models.sort(reverse='accuracy' in metric)
     return models
 
 
-def get_best_model(path, get_structure=False, version=DEFAULT_VERSION,
-                   metric='val_loss'):
-    models = get_best_models(path, version, metric)
+def get_best_model(path, get_structure=False, metric='val_loss'):
+    models = get_best_models(path, metric)
     best_model = models[0]
     dirpath = best_model[2]
     filename = best_model[1]
@@ -88,17 +82,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("saved_path", help="path to saved files")
     parser.add_argument(
-        "--version",
-        help="version of saved files",
-        default=DEFAULT_VERSION,
-        type=int)
-    parser.add_argument(
         "--metric",
         help="metric to use",
         default='val_loss',
-        choices=['val_loss', 'loss'])
+        choices=['val_loss', 'loss', 'accuracy', 'val_accuracy'])
     args = parser.parse_args()
     print('Best model path', args.metric, ':', get_best_model(
-            args.saved_path, version=args.version, metric=args.metric))
+            args.saved_path, metric=args.metric))
     print(get_params_table(
-        args.saved_path, version=args.version, metric=args.metric))
+        args.saved_path, metric=args.metric))
