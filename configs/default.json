@@ -4,8 +4,9 @@
     "wavelet_fns": [],
     "normalizer": "robust_scale",
     "seed": 2016,
+    "step": 128,
 
-    "conv_subsample_lengths": [1, 2, 2, 5, 5],
+    "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",
     "conv_filter_length": 16,
     "conv_num_filters": 64,

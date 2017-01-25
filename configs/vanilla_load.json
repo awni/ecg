@@ -1,4 +1,5 @@
 {
     "wavelet_fns": [],
-    "normalizer": "robust_scale"
+    "step": 128,
+    "normalizer": false
 }

@@ -21,6 +21,7 @@ class Loader(object):
             data_path,
             batch_size=32,
             duration=30,
+            step=200,
             val_frac=0.1,
             seed=None,
             use_one_hot_labels=True,
@@ -41,6 +42,7 @@ class Loader(object):
         self.wavelet_fns = wavelet_fns
         self.normalizer = normalizer
         self.use_one_hot_labels = use_one_hot_labels
+        self.step = step
 
         self._load(data_path, use_cached_if_available)
         self._postprocess()
@@ -85,7 +87,7 @@ class Loader(object):
 
     def _load_internal(self, data_folder):
         train_x_y_pairs, val_x_y_pairs = load_all_data(
-            data_folder, self.duration, self.val_frac)
+            data_folder, self.duration, self.val_frac, step=self.step)
         random.shuffle(train_x_y_pairs)
 
         x_train, y_train = zip(*train_x_y_pairs)
@@ -148,7 +150,8 @@ def load(args, params):
         seed=params["seed"] if "seed" in params else 2016,
         use_cached_if_available=not args.refresh,
         normalizer=params["normalizer"] if "normalizer" in params else False,
-        wavelet_fns=params["wavelet_fns"] if "wavelet_fns" in params else [])
+        wavelet_fns=params["wavelet_fns"] if "wavelet_fns" in params else [],
+        step=params["step"] if "step" else 200)
     return dl
 
 
