@@ -58,6 +58,5 @@ if __name__ == '__main__':
     parser.add_argument("split", help="train/val", choices=['train', 'test'])
     parser.add_argument('--decode', action='store_true')
     args = parser.parse_args()
-    params = json.load(open(
-        os.path.dirname(args.model_path) + '/params.json', 'r'))
+    params = util.get_model_params(args.model_path)
     evaluate(args, params)
