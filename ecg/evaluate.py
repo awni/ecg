@@ -12,22 +12,18 @@ import os
 
 import load
 import decode
+import util
 
 
 def evaluate(args, params):
     dl = load.load(args, params)
-
-    if args.split == 'train':
-        x_val = dl.x_train
-        y_val = dl.y_train
-    else:
-        x_val = dl.x_test
-        y_val = dl.y_test
-
+    split = args.split
+    x_val = dl.x_train if split == 'train' else dl.x_test
+    y_val = dl.y_train if split == 'test' else dl.y_test
     print("Size: " + str(len(x_val)) + " examples.")
 
-    predictions = np.load(open(
-        args.model_path + '-pred-' + args.split + '.pkl', 'rb'))  # todo: param
+    predictions = np.load(open(util.get_prediction_path_for_model(
+                               args.model_path, split), 'rb'))
 
     if args.decode is True:
         language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
