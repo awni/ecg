@@ -25,7 +25,8 @@ class Loader(object):
             val_frac=0.1,
             seed=None,
             use_one_hot_labels=True,
-            use_cached_if_available=True,
+            use_cached_if_available=False,  # todo: find how to cache w step
+            save_cache_if_possible=False,
             normalizer='min_max',
             wavelet_fns=[]):
 
@@ -34,7 +35,7 @@ class Loader(object):
             raise ValueError(msg)
 
         if seed is not None:
-            random.seed(seed)
+            np.random.seed(seed)
 
         self.batch_size = batch_size
         self.duration = duration
@@ -43,8 +44,10 @@ class Loader(object):
         self.normalizer = normalizer
         self.use_one_hot_labels = use_one_hot_labels
         self.step = step
+        self.use_cached_if_available = use_cached_if_available
+        self.save_cache_if_possible = save_cache_if_possible
 
-        self._load(data_path, use_cached_if_available)
+        self._load(data_path)
         self._postprocess()
 
     def _postprocess(self):
@@ -53,7 +56,7 @@ class Loader(object):
 
         if len(self.wavelet_fns) != 0:
             wavelet_transformer = \
-                featurize.WaveletTransformer(self.wavelet_fns)
+                featurize.DiscreteWaveletTransformer(self.wavelet_fns)
             self.x_train = wavelet_transformer.transform(self.x_train)
             self.x_test = wavelet_transformer.transform(self.x_test)
 
@@ -95,12 +98,12 @@ class Loader(object):
 
         return (x_train, x_test, y_train, y_test)
 
-    def _load(self, data_folder, use_cached_if_available):
+    def _load(self, data_folder):
         """Run the pipeline to load the dataset.
 
         Returns the dataset with a train test split.
         """
-        cached_filename = data_folder + '/cached'
+        cached_filename = data_folder + '/cached-' + str(self.step)
 
         def check_cached_copy():
             return os.path.isfile(cached_filename)
@@ -111,17 +114,18 @@ class Loader(object):
         def save_loaded(loaded):
             joblib.dump(loaded, cached_filename)
 
-        if use_cached_if_available and check_cached_copy():
+        if self.use_cached_if_available is True and check_cached_copy():
             print("Using cached copy of dataset...")
             loaded = load_cached()
         else:
-            print("Loading dataset (not stored in cache)...")
+            print("Loading dataset...")
             loaded = self._load_internal(data_folder)
-            print("Saving to cache (this may take some time)...")
-            try:
-                save_loaded(loaded)
-            except:
-                print("Couldn't save cache...")
+            if self.save_cache_if_possible is True:
+                print("Saving to cache (this may take some time)...")
+                try:
+                    save_loaded(loaded)
+                except:
+                    print("Couldn't save cache...")
 
         (self.x_train, self.x_test, self.y_train, self.y_test) = loaded
 
@@ -148,26 +152,18 @@ def load(args, params):
     dl = Loader(
         args.data_path,
         seed=params["seed"] if "seed" in params else 2016,
-        use_cached_if_available=not args.refresh,
         normalizer=params["normalizer"] if "normalizer" in params else False,
         wavelet_fns=params["wavelet_fns"] if "wavelet_fns" in params else [],
-        step=params["step"] if "step" else 200)
+        step=params["step"] if "step" in params else 200)
+    print("Length of training set {}".format(len(dl.x_train)))
+    print("Length of validation set {}".format(len(dl.x_test)))
+    print("Output dimension {}".format(dl.output_dim))
     return dl
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
     parser.add_argument("config_file", help="path to config file")
-    parser.add_argument(
-        "--refresh",
-        help="whether to refresh cache",
-        action="store_true")
     args = parser.parse_args()
-
     params = json.load(open(args.config_file, 'r'))
-
-    dl = load(args, params)
-    print("Length of training set {}".format(len(dl.x_train)))
-    print("Length of validation set {}".format(len(dl.x_test)))
-    print("Output dimension {}".format(dl.output_dim))
+    load(args, params)

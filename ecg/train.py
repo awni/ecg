@@ -47,23 +47,8 @@ def save_params(params, start_time, net_type):
         outfile.write(save_str)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="path to data files")
-    parser.add_argument("config_file", help="path to confile file")
-    parser.add_argument(
-        "--refresh",
-        help="whether to refresh cache",
-        action="store_true")
-    parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
-    parser.add_argument(
-        "--overfit",
-        help="whether to overfit training set",
-        action="store_true")
-    args = parser.parse_args()
-
-    params = json.load(open(args.config_file, 'r'))
-
+def train(args, params):
+    global FOLDER_TO_SAVE
     # if overfit, remove all dropout
     if args.overfit is True:
         params["overfit"] = True
@@ -131,4 +116,18 @@ if __name__ == '__main__':
         validation_data=(x_val, y_val),
         nb_epoch=NUMBER_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
-        verbose=args.verbose)
+        verbose=1)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="path to data files")
+    parser.add_argument("config_file", help="path to confile file")
+    parser.add_argument("--verbose", "-v", help="verbosity level", default=2)
+    parser.add_argument(
+        "--overfit",
+        help="whether to overfit training set",
+        action="store_true")
+    args = parser.parse_args()
+    params = json.load(open(args.config_file, 'r'))
+    train(args, params)

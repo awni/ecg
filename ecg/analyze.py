@@ -78,6 +78,13 @@ def get_best_model(path, get_structure=False, metric='val_loss'):
     return best_model_path
 
 
+def analyze(args):
+    best_model_path = get_best_model(args.saved_path, metric=args.metric)
+    print('Best model path', args.metric, ':', best_model_path)
+    params_table = get_params_table(args.saved_path, metric=args.metric)
+    print(params_table)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("saved_path", help="path to saved files")
@@ -87,7 +94,4 @@ if __name__ == '__main__':
         default='val_loss',
         choices=['val_loss', 'loss', 'accuracy', 'val_accuracy'])
     args = parser.parse_args()
-    print('Best model path', args.metric, ':', get_best_model(
-            args.saved_path, metric=args.metric))
-    print(get_params_table(
-        args.saved_path, metric=args.metric))
+    analyze(args)

@@ -13,30 +13,15 @@ import os
 import load
 import decode
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="path to files")
-    parser.add_argument(
-        "model_path",
-        help="path to model, assuming prediction script generated")
-    parser.add_argument("split", help="train/val", choices=['train', 'test'])
-    parser.add_argument('--decode', action='store_true')
-    parser.add_argument(
-        "--refresh",
-        help="whether to refresh cache",
-        action="store_true")
-    args = parser.parse_args()
 
-    params = json.load(open(
-        os.path.dirname(args.model_path) + '/params.json', 'r'))
-
+def evaluate(args, params):
     dl = load.load(args, params)
 
     if args.split == 'train':
-        x_val = dl.x_train[:, :, np.newaxis]
+        x_val = dl.x_train
         y_val = dl.y_train
     else:
-        x_val = dl.x_test[:, :, np.newaxis]
+        x_val = dl.x_test
         y_val = dl.y_test
 
     print("Size: " + str(len(x_val)) + " examples.")
@@ -66,3 +51,17 @@ if __name__ == '__main__':
         target_names=dl.classes))
 
     print(tabulate(cnf_matrix, headers=[c[:1] for c in dl.classes]))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="path to files")
+    parser.add_argument(
+        "model_path",
+        help="path to model, assuming prediction script generated")
+    parser.add_argument("split", help="train/val", choices=['train', 'test'])
+    parser.add_argument('--decode', action='store_true')
+    args = parser.parse_args()
+    params = json.load(open(
+        os.path.dirname(args.model_path) + '/params.json', 'r'))
+    evaluate(args, params)

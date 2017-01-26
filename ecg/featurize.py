@@ -42,7 +42,7 @@ class Normalizer(object):
 EXPECTED_TRANSFORMED_LENGTH = 3000
 
 
-class WaveletTransformer(object):
+class DiscreteWaveletTransformer(object):
     def __init__(self, wavelet_fns):
         self.transforms = wavelet_fns
 
