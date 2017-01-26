@@ -7,7 +7,6 @@ import argparse
 import collections
 import numpy as np
 import os
-import random
 import json
 import joblib
 
@@ -23,11 +22,11 @@ class Loader(object):
             duration=30,
             step=200,
             val_frac=0.1,
-            seed=None,
+            seed=2016,
             use_one_hot_labels=True,
             use_cached_if_available=False,  # todo: find how to cache w step
             save_cache_if_possible=False,
-            normalizer='min_max',
+            normalizer=False,
             wavelet_fns=[]):
 
         if not os.path.exists(data_path):
@@ -149,12 +148,7 @@ class Loader(object):
 
 
 def load(args, params):
-    dl = Loader(
-        args.data_path,
-        seed=params["seed"] if "seed" in params else 2016,
-        normalizer=params["normalizer"] if "normalizer" in params else False,
-        wavelet_fns=params["wavelet_fns"] if "wavelet_fns" in params else [],
-        step=params["step"] if "step" in params else 200)
+    dl = Loader(args.data_path, **params)
     print("Length of training set {}".format(len(dl.x_train)))
     print("Length of validation set {}".format(len(dl.x_test)))
     print("Output dimension {}".format(dl.output_dim))
