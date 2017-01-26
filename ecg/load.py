@@ -91,7 +91,7 @@ class Loader(object):
     def _load_internal(self, data_folder):
         train_x_y_pairs, val_x_y_pairs = load_all_data(
             data_folder, self.duration, self.val_frac, step=self.step)
-        random.shuffle(train_x_y_pairs)
+        np.random.shuffle(train_x_y_pairs)
 
         x_train, y_train = zip(*train_x_y_pairs)
         x_test, y_test = zip(*val_x_y_pairs)
