@@ -96,7 +96,7 @@ def train(args, params):
 
     stopping = EarlyStopping(
         monitor=monitor_metric,
-        patience=10,
+        patience=20,
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
