@@ -5,6 +5,8 @@
     "normalizer": "robust_scale",
     "seed": 2016,
     "step": 128,
+    "ignore_classes": ["NOISE"],
+    "toy": false,
 
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",

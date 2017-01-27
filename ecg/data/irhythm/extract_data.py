@@ -125,9 +125,14 @@ def construct_dataset(records, duration, step=ECG_SAMP_RATE):
     return data
 
 
-def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE):
+def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
+                  toy=False):
     print('Stratifying records...')
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
+    if toy is True:
+        print('Using toy dataset...')
+        train = train[:1000]
+        val = val[:100]
     print('Constructing Training Set...')
     train = construct_dataset(train, duration, step=step)
     print('Constructing Validation Set...')

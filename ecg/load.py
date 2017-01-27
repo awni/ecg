@@ -27,7 +27,9 @@ class Loader(object):
             use_cached_if_available=False,  # todo: find how to cache w step
             save_cache_if_possible=False,
             normalizer=False,
-            wavelet_fns=[]):
+            ignore_classes=[],
+            wavelet_fns=[],
+            toy=False):
 
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
@@ -43,8 +45,10 @@ class Loader(object):
         self.normalizer = normalizer
         self.use_one_hot_labels = use_one_hot_labels
         self.step = step
+        self.ignore_classes = ignore_classes
         self.use_cached_if_available = use_cached_if_available
         self.save_cache_if_possible = save_cache_if_possible
+        self.toy = toy
 
         self._load(data_path)
         self._postprocess()
@@ -52,6 +56,8 @@ class Loader(object):
     def _postprocess(self):
         self.x_train = np.array(self.x_train)
         self.x_test = np.array(self.x_test)
+        self.y_train = np.array(self.y_train)
+        self.y_test = np.array(self.y_test)
 
         if len(self.wavelet_fns) != 0:
             wavelet_transformer = \
@@ -73,6 +79,16 @@ class Loader(object):
         self._int_to_class = dict(zip(range(len(self.classes)), self.classes))
         self._class_to_int = {c: i for i, c in self._int_to_class.items()}
 
+        if self.ignore_classes is not False:
+            for ignore_class in self.ignore_classes:
+                print("Ignoring class: " + ignore_class)
+                for split in ['_train', '_test']:
+                    indices = np.where(np.sum(getattr(
+                        self, 'y' + split) == ignore_class, axis=1) == 0)[0]
+                    for prop in ['x', 'y']:
+                        setattr(self, prop + split, getattr(
+                            self, prop + split)[indices])
+
         self.y_train = self.transform_to_int_label(self.y_train)
         self.y_test = self.transform_to_int_label(self.y_test)
 
@@ -89,7 +105,11 @@ class Loader(object):
 
     def _load_internal(self, data_folder):
         train_x_y_pairs, val_x_y_pairs = load_all_data(
-            data_folder, self.duration, self.val_frac, step=self.step)
+            data_folder,
+            self.duration,
+            self.val_frac,
+            step=self.step,
+            toy=self.toy)
         np.random.shuffle(train_x_y_pairs)
 
         x_train, y_train = zip(*train_x_y_pairs)
