@@ -19,7 +19,7 @@ def evaluate(args, params):
     dl = load.load(args, params)
     split = args.split
     x_val = dl.x_train if split == 'train' else dl.x_test
-    y_val = dl.y_train if split == 'test' else dl.y_test
+    y_val = dl.y_train if split == 'train' else dl.y_test
     print("Size: " + str(len(x_val)) + " examples.")
 
     predictions = np.load(open(util.get_prediction_path_for_model(

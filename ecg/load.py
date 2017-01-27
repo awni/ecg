@@ -29,7 +29,8 @@ class Loader(object):
             normalizer=False,
             ignore_classes=[],
             wavelet_fns=[],
-            toy=False):
+            toy=False,
+            **kwargs):
 
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
