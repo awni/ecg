@@ -12,7 +12,6 @@ import collections
 import json
 import numpy as np
 import os
-import random
 from tqdm import tqdm
 
 from .dataset_tools.db_constants import ECG_SAMP_RATE
