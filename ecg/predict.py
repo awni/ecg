@@ -6,28 +6,29 @@ import argparse
 import numpy as np
 import json
 import os
-from keras.models import load_model
 
 import load
+import util
+
+
+def predict(args, params):
+    dl = load.load(args, params)
+    from keras.models import load_model
+    model = load_model(args.model_path)
+    split = args.split
+    x_val = dl.x_train if split == 'train' else dl.x_test
+    print("Predicting on:", split)
+    predictions = model.predict(x_val, verbose=1)
+    with open(util.get_prediction_path_for_model(
+              args.model_path, split), 'wb') as outfile:
+        np.save(outfile, predictions)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
     parser.add_argument("model_path", help="path to model")
-    parser.add_argument(
-        "--refresh",
-        help="whether to refresh cache",
-        action="store_true")
+    parser.add_argument("split", help="train/val", choices=['train', 'test'])
     args = parser.parse_args()
-
-    params = json.load(open(
-        os.path.dirname(args.model_path) + '/params.json', 'r'))
-
-    dl = load.load(args, params)
-
-    model = load_model(args.model_path)
-    for x, name in [(dl.x_train, 'train'), (dl.x_test, 'test')]:
-        print("Predicting on:", name)
-        predictions = model.predict(x, verbose=1)
-        with open(args.model_path + '-pred-' + name + '.pkl', 'wb') as outfile:
-            np.save(outfile, predictions)
+    params = util.get_model_params(args.model_path)
+    predict(args, params)

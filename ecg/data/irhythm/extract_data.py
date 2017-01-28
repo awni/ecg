@@ -12,7 +12,6 @@ import collections
 import json
 import numpy as np
 import os
-import random
 from tqdm import tqdm
 
 from .dataset_tools.db_constants import ECG_SAMP_RATE
@@ -41,7 +40,7 @@ def stratify(records, val_frac):
     for record in tqdm(records):
         patients[patient_id(record)].append(record)
     patients = sorted(list(patients.values()))
-    random.shuffle(patients)
+    np.random.shuffle(patients)
     cut = int(len(patients) * val_frac)
     train, val = patients[cut:], patients[:cut]
     train = [record for patient in train for record in patient]
@@ -125,9 +124,14 @@ def construct_dataset(records, duration, step=ECG_SAMP_RATE):
     return data
 
 
-def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE):
+def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
+                  toy=False):
     print('Stratifying records...')
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
+    if toy is True:
+        print('Using toy dataset...')
+        train = train[:1000]
+        val = val[:100]
     print('Constructing Training Set...')
     train = construct_dataset(train, duration, step=step)
     print('Constructing Validation Set...')

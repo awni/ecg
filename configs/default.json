@@ -1,11 +1,14 @@
 {
     "version": 3,
 
-    "wavelet_fns": ["haar", "db1"],
-    "normalize": true,
+    "wavelet_fns": [],
+    "normalizer": "robust_scale",
     "seed": 2016,
+    "step": 128,
+    "ignore_classes": [],
+    "toy": false,
 
-    "conv_subsample_lengths": [1, 2, 2, 5, 5],
+    "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",
     "conv_filter_length": 16,
     "conv_num_filters": 64,
@@ -29,6 +32,7 @@
     "dense_dropout": 0.2,
 
     "learning_rate": 0.001,
+    "clipnorm": 1,
 
     "FOLDER_TO_SAVE": "./saved/"
 }
