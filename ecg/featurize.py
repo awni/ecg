@@ -39,9 +39,6 @@ class Normalizer(object):
             x.reshape(new_shape)).reshape(original_shape)
 
 
-EXPECTED_TRANSFORMED_LENGTH = 3000
-
-
 class DiscreteWaveletTransformer(object):
     def __init__(self, wavelet_fns):
         self.transforms = wavelet_fns
@@ -54,10 +51,32 @@ class DiscreteWaveletTransformer(object):
             for wavefn in self.transforms:
                 transform = np.array(pywt.dwt(
                     x_indiv, wavefn, mode='constant'))
-                if(transform.shape[1] != EXPECTED_TRANSFORMED_LENGTH):
+                if(transform.shape[1] != len(x_indiv)):
                     warnings.warn(
                         "Reshaping to proper length after wavelet transform")
-                    transform = transform[:, :EXPECTED_TRANSFORMED_LENGTH]
+                    transform = transform[:, :len(x_indiv)]
+                x_indiv_trans.extend(transform)
+            x_new.append(np.array(x_indiv_trans).T)
+        x_new = np.array(x_new)
+        return x_new
+
+
+class ContinuousWaveletTransformer(object):
+    def __init__(self, wavelet_fns):
+        self.transforms = wavelet_fns
+        self.widths = np.linspace(1,100, 10)  # TODO: parameterize
+
+    def transform(self, x):
+        print('Applying Wavelet Transformations...')
+        x_new = []
+        for x_indiv in tqdm(x):
+            x_indiv_trans = []
+            for wavefn in self.transforms:
+                transform, _ = pywt.cwt(x_indiv, self.widths, 'mexh')
+                if(transform.shape[1] != len(x_indiv)):
+                    warnings.warn(
+                        "Reshaping to proper length after wavelet transform")
+                    transform = transform[:, :len(x_indiv)]
                 x_indiv_trans.extend(transform)
             x_new.append(np.array(x_indiv_trans).T)
         x_new = np.array(x_new)

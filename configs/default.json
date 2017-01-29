@@ -1,12 +1,13 @@
 {
     "version": 3,
 
-    "wavelet_fns": [],
+    "wavelet_fns": ["mexh"],
     "normalizer": "robust_scale",
     "seed": 2016,
     "step": 128,
     "ignore_classes": [],
     "toy": false,
+    "wavelet_type": "continuous",
 
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",
