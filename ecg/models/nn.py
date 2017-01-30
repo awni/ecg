@@ -1,5 +1,3 @@
-# Might need custom loss for second term https://github.com/fchollet/keras/issues/369
-# Functional API https://keras.io/getting-started/functional-api-guide/
 
 def add_conv_layers(acts, **params):
     from keras.layers.convolutional import Convolution1D
