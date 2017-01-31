@@ -175,6 +175,10 @@ class Loader(object):
     def output_dim(self):
         return len(self._int_to_class)
 
+    @property
+    def class_to_int(self):
+        return self._class_to_int
+
 
 def load(args, params):
     dl = Loader(args.data_path, **params)

@@ -2,6 +2,6 @@
     "wavelet_fns": [],
     "step": 128,
     "normalizer": false,
-    "ignore_classes": ["NOISE", "PAUSE"],
+    "ignore_classes": [],
     "toy": true
 }
