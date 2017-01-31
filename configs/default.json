@@ -1,7 +1,7 @@
 {
-    "version": 3,
+    "version": 4,
 
-    "wavelet_fns": ["db1", "db2"],
+    "wavelet_fns": ["db1", "db2", "db4", "db6", "db8"],
     "wavelet_type": "discrete",
     "wavelet_level": 4,
 
@@ -11,7 +11,7 @@
     "ignore_classes": [],
     "toy": false,
 
-    "conv_subsample_lengths": [2, 2, 2],
+    "conv_subsample_lengths": [1, 1, 1, 1, 2, 2, 2],
     "conv_activation": "relu",
     "conv_filter_length": 16,
     "conv_num_filters": 64,
