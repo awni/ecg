@@ -30,6 +30,7 @@ class Loader(object):
             ignore_classes=[],
             wavelet_fns=[],
             wavelet_type='discrete',
+            wavelet_level=1,
             toy=False,
             **kwargs):
 
@@ -46,6 +47,7 @@ class Loader(object):
         self.wavelet_fns = wavelet_fns
         self.normalizer = normalizer
         self.wavelet_type = wavelet_type
+        self.wavelet_level = wavelet_level
         self.use_one_hot_labels = use_one_hot_labels
         self.step = step
         self.ignore_classes = ignore_classes
@@ -65,7 +67,8 @@ class Loader(object):
         if len(self.wavelet_fns) != 0:
             if (self.wavelet_type == 'discrete'):
                 wavelet_transformer = \
-                    featurize.DiscreteWaveletTransformer(self.wavelet_fns)
+                    featurize.DiscreteWaveletTransformer(
+                        self.wavelet_fns, self.wavelet_level)
             elif (self.wavelet_type == 'continuous'):
                 wavelet_transformer = \
                     featurize.ContinuousWaveletTransformer(self.wavelet_fns)

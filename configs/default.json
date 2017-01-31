@@ -1,15 +1,17 @@
 {
     "version": 3,
 
-    "wavelet_fns": ["mexh"],
+    "wavelet_fns": ["db1", "db2"],
+    "wavelet_type": "discrete",
+    "wavelet_level": 4,
+
     "normalizer": "robust_scale",
     "seed": 2016,
     "step": 128,
     "ignore_classes": [],
     "toy": false,
-    "wavelet_type": "continuous",
 
-    "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2],
+    "conv_subsample_lengths": [2, 2, 2],
     "conv_activation": "relu",
     "conv_filter_length": 16,
     "conv_num_filters": 64,

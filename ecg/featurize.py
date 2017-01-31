@@ -12,6 +12,7 @@ class Normalizer(object):
 
     def _dim_fix(self, x):
         if (len(x.shape) == 2):
+            warnings.warn("Expanding Dimensions...")
             x = np.expand_dims(x, axis=-1)
         assert(len(x.shape) == 3)
         return x
@@ -40,8 +41,9 @@ class Normalizer(object):
 
 
 class DiscreteWaveletTransformer(object):
-    def __init__(self, wavelet_fns):
+    def __init__(self, wavelet_fns, level):
         self.transforms = wavelet_fns
+        self.level = level
 
     def transform(self, x):
         print('Applying Wavelet Transformations...')
@@ -49,12 +51,13 @@ class DiscreteWaveletTransformer(object):
         for x_indiv in tqdm(x):
             x_indiv_trans = []
             for wavefn in self.transforms:
-                transform = np.array(pywt.dwt(
-                    x_indiv, wavefn, mode='constant'))
-                if(transform.shape[1] != len(x_indiv)):
+                transform = np.array(pywt.wavedec(
+                    x_indiv, wavefn, level=self.level)[:2])
+                if(len(x_indiv_trans) > 0 and 
+                        transform.shape[1] != len(x_indiv_trans[0])):
                     warnings.warn(
                         "Reshaping to proper length after wavelet transform")
-                    transform = transform[:, :len(x_indiv)]
+                    transform = transform[:, :len(x_indiv_trans[0])]
                 x_indiv_trans.extend(transform)
             x_new.append(np.array(x_indiv_trans).T)
         x_new = np.array(x_new)
