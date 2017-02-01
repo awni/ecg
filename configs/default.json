@@ -9,8 +9,7 @@
     "seed": 2016,
     "step": 512,
     "ignore_classes": [],
-    "toy": true,
-    "batch_size": 128,
+    "toy": false,
 
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",
