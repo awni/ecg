@@ -19,7 +19,7 @@
     "conv_init": "he_normal",
     "conv_activation": "relu",
     "conv_l2_penalty": 0.000,
-    "conv_dropout": 0.2,
+    "conv_dropout": 0.25,
 
     "recurrent_layers": 0,
     "recurrent_hidden": 64,
