@@ -6,6 +6,7 @@
     "wavelet_level": 4,
 
     "normalizer": "robust_scale",
+    "use_bandpass_filter": true,
     "seed": 2016,
     "step": 512,
     "ignore_classes": [],

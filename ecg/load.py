@@ -31,6 +31,7 @@ class Loader(object):
             wavelet_fns=[],
             wavelet_type='discrete',
             wavelet_level=1,
+            use_bandpass_filter=False,
             toy=False,
             **kwargs):
 
@@ -53,6 +54,7 @@ class Loader(object):
         self.ignore_classes = ignore_classes
         self.use_cached_if_available = use_cached_if_available
         self.save_cache_if_possible = save_cache_if_possible
+        self.use_bandpass_filter = use_bandpass_filter
         self.toy = toy
 
         self._load(data_path)
@@ -63,6 +65,11 @@ class Loader(object):
         self.x_test = np.array(self.x_test)
         self.y_train = np.array(self.y_train)
         self.y_test = np.array(self.y_test)
+
+        if self.use_bandpass_filter is True:
+            bp_filter = featurize.BandPassFilter()
+            self.x_train = bp_filter.transform(self.x_train)
+            self.x_test = bp_filter.transform(self.x_test)
 
         if len(self.wavelet_fns) != 0:
             if (self.wavelet_type == 'discrete'):

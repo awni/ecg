@@ -1,10 +1,7 @@
 from __future__ import print_function
 from __future__ import division
-from __future__ import unicode_literals
 from __future__ import absolute_import
-
 from builtins import zip
-from builtins import int
 from builtins import range
 import collections
 import json
@@ -14,7 +11,7 @@ from tqdm import tqdm
 
 from .dataset_tools.db_constants import ECG_SAMP_RATE
 from .dataset_tools.db_constants import ECG_EXT, EPI_EXT
-from .dataset_tools.extract_episodes import _find_all_files, qa
+from .dataset_tools.extract_episodes import _find_all_files
 
 
 def get_all_records(src):

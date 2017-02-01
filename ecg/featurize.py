@@ -3,6 +3,7 @@ import pywt
 import numpy as np
 from tqdm import tqdm
 import warnings
+import scipy.signal as scs
 
 
 class Normalizer(object):
@@ -40,6 +41,23 @@ class Normalizer(object):
             x.reshape(new_shape)).reshape(original_shape)
 
 
+class BandPassFilter(object):
+    def filt(self, data, lowcut=0.5, highcut=90, fs=200, order=5):
+        """
+        http://scipy.github.io/old-wiki/pages/Cookbook/ButterworthBandpass
+        """
+        nyq = 0.5 * fs
+        low = lowcut / nyq
+        high = highcut / nyq
+        b, a = scs.butter(order, [low, high], btype='bandpass')
+        y = scs.lfilter(b, a, data)
+        return y
+
+    def transform(self, x):
+        print('Applying Butterworth Filter...')
+        return np.array([self.filt(x_indiv) for x_indiv in x])
+
+
 class DiscreteWaveletTransformer(object):
     def __init__(self, wavelet_fns, level):
         self.transforms = wavelet_fns
@@ -53,7 +71,7 @@ class DiscreteWaveletTransformer(object):
             for wavefn in self.transforms:
                 transform = np.array(pywt.wavedec(
                     x_indiv, wavefn, level=self.level)[:2])
-                if(len(x_indiv_trans) > 0 and 
+                if(len(x_indiv_trans) > 0 and
                         transform.shape[1] != len(x_indiv_trans[0])):
                     warnings.warn(
                         "Reshaping to proper length after wavelet transform")
@@ -67,7 +85,7 @@ class DiscreteWaveletTransformer(object):
 class ContinuousWaveletTransformer(object):
     def __init__(self, wavelet_fns):
         self.transforms = wavelet_fns
-        self.widths = np.linspace(1,100, 10)  # TODO: parameterize
+        self.widths = np.linspace(1, 100, 10)  # TODO: parameterize
 
     def transform(self, x):
         print('Applying Wavelet Transformations...')
