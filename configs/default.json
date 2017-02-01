@@ -1,17 +1,18 @@
 {
-    "version": 4,
+    "version": 5,
 
-    "wavelet_fns": ["db1", "db2", "db4", "db6", "db8"],
+    "wavelet_fns": [],
     "wavelet_type": "discrete",
     "wavelet_level": 4,
 
     "normalizer": "robust_scale",
     "seed": 2016,
-    "step": 128,
+    "step": 512,
     "ignore_classes": [],
-    "toy": false,
+    "toy": true,
+    "batch_size": 128,
 
-    "conv_subsample_lengths": [1, 1, 1, 1, 2, 2, 2],
+    "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",
     "conv_filter_length": 16,
     "conv_num_filters": 64,
@@ -20,14 +21,14 @@
     "conv_l2_penalty": 0.000,
     "conv_dropout": 0.2,
 
-    "recurrent_layers": 1,
+    "recurrent_layers": 0,
     "recurrent_hidden": 64,
     "recurrent_type": "LSTM",
     "recurrent_activation": "relu",
     "recurrent_is_bidirectional": true,
     "recurrent_dropout": 0.2,
 
-    "dense_layers": 1,
+    "dense_layers": 3,
     "dense_hidden": 64,
     "dense_activation": "relu",
     "dense_init": "he_normal",
