@@ -100,7 +100,7 @@ def train(args, params):
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
-        monitor=monitor_metric,
+        monitor='loss',
         factor=0.5,
         patience=2,
         min_lr=0.00001,
