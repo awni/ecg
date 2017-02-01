@@ -13,7 +13,7 @@ import time
 import load
 from models import nn
 
-NUMBER_EPOCHS = 1000
+MAX_EPOCHS = 500
 
 
 def get_folder_name(start_time, net_type):
@@ -100,10 +100,10 @@ def train(args, params):
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
-        monitor=monitor_metric,
+        monitor='loss',
         factor=0.5,
-        patience=3,
-        min_lr=0.00005,
+        patience=2,
+        min_lr=0.00001,
         verbose=args.verbose)
 
     checkpointer = ModelCheckpoint(
@@ -114,7 +114,7 @@ def train(args, params):
     model.fit(
         x_train, y_train,
         validation_data=(x_val, y_val),
-        nb_epoch=NUMBER_EPOCHS,
+        nb_epoch=MAX_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
         verbose=1)
 

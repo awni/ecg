@@ -1,5 +1,4 @@
 cycler==0.10.0
-docopt==0.6.2
 funcsigs==1.0.2
 future==0.16.0
 h5py==2.6.0

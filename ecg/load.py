@@ -29,6 +29,9 @@ class Loader(object):
             normalizer=False,
             ignore_classes=[],
             wavelet_fns=[],
+            wavelet_type='discrete',
+            wavelet_level=1,
+            use_bandpass_filter=False,
             toy=False,
             **kwargs):
 
@@ -44,11 +47,14 @@ class Loader(object):
         self.val_frac = val_frac
         self.wavelet_fns = wavelet_fns
         self.normalizer = normalizer
+        self.wavelet_type = wavelet_type
+        self.wavelet_level = wavelet_level
         self.use_one_hot_labels = use_one_hot_labels
         self.step = step
         self.ignore_classes = ignore_classes
         self.use_cached_if_available = use_cached_if_available
         self.save_cache_if_possible = save_cache_if_possible
+        self.use_bandpass_filter = use_bandpass_filter
         self.toy = toy
 
         self._load(data_path)
@@ -60,9 +66,21 @@ class Loader(object):
         self.y_train = np.array(self.y_train)
         self.y_test = np.array(self.y_test)
 
+        if self.use_bandpass_filter is True:
+            bp_filter = featurize.BandPassFilter()
+            self.x_train = bp_filter.transform(self.x_train)
+            self.x_test = bp_filter.transform(self.x_test)
+
         if len(self.wavelet_fns) != 0:
-            wavelet_transformer = \
-                featurize.DiscreteWaveletTransformer(self.wavelet_fns)
+            if (self.wavelet_type == 'discrete'):
+                wavelet_transformer = \
+                    featurize.DiscreteWaveletTransformer(
+                        self.wavelet_fns, self.wavelet_level)
+            elif (self.wavelet_type == 'continuous'):
+                wavelet_transformer = \
+                    featurize.ContinuousWaveletTransformer(self.wavelet_fns)
+            else:
+                raise ValueError("Wavelet type not defined.")
             self.x_train = wavelet_transformer.transform(self.x_train)
             self.x_test = wavelet_transformer.transform(self.x_test)
 
@@ -166,6 +184,10 @@ class Loader(object):
     @property
     def output_dim(self):
         return len(self._int_to_class)
+
+    @property
+    def class_to_int(self):
+        return self._class_to_int
 
 
 def load(args, params):

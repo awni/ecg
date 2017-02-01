@@ -17,3 +17,12 @@ def get_model_params(model_path):
         os.path.dirname(model_path) + '/params.json', 'r'))
     warn_model_outdated(params)
     return params
+
+
+def get_object_from_dict(**params):
+    class AttrDict(dict):
+        def __init__(self, *args, **kwargs):
+            super(AttrDict, self).__init__(*args, **kwargs)
+            self.__dict__ = self
+    args = AttrDict(**params)
+    return args

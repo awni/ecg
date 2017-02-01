@@ -1,22 +1,26 @@
 from __future__ import print_function
 from __future__ import division
-from __future__ import unicode_literals
 from __future__ import absolute_import
-
 from builtins import zip
-from builtins import int
 from builtins import range
-from future import standard_library
-standard_library.install_aliases()
 import collections
 import json
 import numpy as np
+import fnmatch
 import os
 from tqdm import tqdm
 
-from .dataset_tools.db_constants import ECG_SAMP_RATE
-from .dataset_tools.db_constants import ECG_EXT, EPI_EXT
-from .dataset_tools.extract_episodes import _find_all_files, qa
+# ECG constants
+ECG_SAMP_RATE = 200.0  # Hz
+ECG_EXT = '.ecg'
+EPI_EXT = '.episodes.json'
+qa = '_post'
+
+
+def _find_all_files(src, qa, ext):
+    for root, dirnames, filenames in os.walk(src):
+        for filename in fnmatch.filter(filenames, '*' + qa + ext):
+            yield(os.path.join(root, filename))
 
 
 def get_all_records(src):
@@ -137,23 +141,3 @@ def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
     print('Constructing Validation Set...')
     val = construct_dataset(val, duration, step=step)
     return train, val
-
-if __name__ == "__main__":
-    src = "/deep/group/med/irhythm/ecg/clean_30sec_recs/batch1"
-    duration = 30
-    val_frac = 0.1
-
-    import time
-    start = time.time()
-    train, val = load_all_data(src, duration, val_frac)
-    print("Training examples: {}".format(len(train)))
-    print("Validation examples: {}".format(len(val)))
-    print("Load time: {:.3f} (s)".format(time.time() - start))
-
-    # Some tests
-    for n, m in [(401, 401), (1, 1), (7, 1), (199, 201),
-                 (200, 201), (101, 201), (100, 1)]:
-        msg = "Bad round: {} didn't round to {} ."
-        assert round_to_step(n, 200) == m, msg.format(n, m)
-
-    print("Tests passed!")
