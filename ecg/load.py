@@ -89,7 +89,7 @@ class Loader(object):
             self.x_train = wavelet_transformer.transform(self.x_train)
             self.x_test = wavelet_transformer.transform(self.x_test)
 
-        if False and self.normalizer is not False:
+        if self.normalizer is not False:
             n = featurize.Normalizer(self.normalizer)
             n.fit(self.x_train)
             self.x_train = n.transform(self.x_train)
