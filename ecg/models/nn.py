@@ -81,10 +81,12 @@ def add_compile(model, **params):
     optimizer = Adam(lr=params["learning_rate"],
                      clipnorm=params["clipnorm"])
 
+
+    loss_weight = 0.2
     model.compile(optimizer=optimizer,
                   loss=['categorical_crossentropy',
                         'binary_crossentropy'],
-                  loss_weights=[0.5, 0.0],
+                  loss_weights=[1 - loss_weight, loss_weight],
                   metrics=['accuracy'])
 
 def build_network(**params):
