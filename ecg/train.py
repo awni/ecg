@@ -25,7 +25,7 @@ def get_folder_name(start_time, net_type):
 
 def get_filename_for_saving(start_time, net_type):
     saved_filename = get_folder_name(start_time, net_type) + \
-        "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
+        "/{val_loss:.3f}-{val_primary_acc:.3f}-{epoch:03d}-{loss:.3f}-{primary_acc:.3f}.hdf5"
     return saved_filename
 
 
@@ -76,6 +76,7 @@ def train(args, params):
 
     params.update({
         "input_shape": x_train[0].shape,
+        "secondary_output_shape" : (y_train.shape[1], 7),
         "num_categories": dl.output_dim
     })
 
@@ -111,9 +112,13 @@ def train(args, params):
         save_best_only=False,
         verbose=args.verbose)
 
-    model.fit(
-        x_train, y_train,
-        validation_data=(x_val, y_val),
+    inputs = [x_train, dl.mask_train]
+    outputs = [y_train, dl.rfeats_train]
+    val_inputs = [x_val, dl.mask_val]
+    val_outputs = [y_val, dl.rfeats_val]
+
+    model.fit(inputs, outputs,
+        validation_data=(val_inputs, val_outputs),
         nb_epoch=MAX_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
         verbose=1)

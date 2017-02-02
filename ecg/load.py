@@ -12,7 +12,7 @@ import joblib
 
 import featurize
 from data.irhythm.extract_data import load_all_data
-
+from data import rhythm_features
 
 class Loader(object):
     def __init__(
@@ -61,8 +61,13 @@ class Loader(object):
         self._postprocess()
 
     def _postprocess(self):
-        self.x_train = np.array(self.x_train)
-        self.x_test = np.array(self.x_test)
+        self.x_train = np.array(self.x_train)[..., None]
+        self.x_test = np.array(self.x_test)[..., None]
+        rhythm_feats = self._rhythm_feature_labels(self.y_train)
+        self.rfeats_train, self.mask_train = rhythm_feats
+        rhythm_feats = self._rhythm_feature_labels(self.y_test)
+        self.rfeats_val, self.mask_val = rhythm_feats
+
         self.y_train = np.array(self.y_train)
         self.y_test = np.array(self.y_test)
 
@@ -84,7 +89,7 @@ class Loader(object):
             self.x_train = wavelet_transformer.transform(self.x_train)
             self.x_test = wavelet_transformer.transform(self.x_test)
 
-        if self.normalizer is not False:
+        if False and self.normalizer is not False:
             n = featurize.Normalizer(self.normalizer)
             n.fit(self.x_train)
             self.x_train = n.transform(self.x_train)
@@ -121,6 +126,19 @@ class Loader(object):
                 label_mod = tmp
             labels_mod.append(label_mod)
         return np.array(labels_mod)
+
+    def _rhythm_feature_labels(self, y_split):
+        domain_theory = rhythm_features.load_domain()
+        num_feats = rhythm_features.num_features(domain_theory)
+        rfeats = np.empty((len(y_split), len(y_split[0]), num_feats))
+        mask = np.empty((len(y_split), len(y_split[0]), num_feats))
+        for i, y in enumerate(y_split):
+            for j, l in enumerate(y):
+                f, m = rhythm_features.get_features(l,
+                                        domain_theory)
+                rfeats[i, j, :] = f
+                mask[i, j, :] = m
+        return rfeats, mask
 
     def _load_internal(self, data_folder):
         train_x_y_pairs, val_x_y_pairs = load_all_data(
@@ -166,20 +184,6 @@ class Loader(object):
                     print("Couldn't save cache...")
 
         (self.x_train, self.x_test, self.y_train, self.y_test) = loaded
-
-    def train_generator(self):
-        return self._batch_generate(self.x_train, self.y_train)
-
-    def test_generator(self):
-        return self._batch_generate(self.x_test, self.y_test)
-
-    def _batch_generate(self, inputs, labels):
-        batch_size = self.batch_size
-        data_size = len(labels)
-        for i in range(0, data_size - batch_size + 1, batch_size):
-            batch_data = inputs[i:i + batch_size]
-            batch_labels = labels[i:i + batch_size]
-            yield (batch_data, batch_labels)
 
     @property
     def output_dim(self):

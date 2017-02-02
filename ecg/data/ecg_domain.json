@@ -1,0 +1,158 @@
+{
+
+"features" : ["r_present", "p_present", "r_regular",
+              "p_regular", "rr_regular", "pr_regular",
+              "pp_regular"],
+
+"rhythms" : {
+    "NSR" : {
+         "r_present" : "yes",
+         "p_present" : "yes",
+         "r_regular" : "yes",
+         "p_regular" : "yes",
+         "rr_regular" : "yes",
+         "pr_regular" : "yes",
+         "pp_regular" : "yes"
+    },
+
+    "PAUSE" : {
+         "r_present" : "no",
+         "p_present" : "no",
+         "r_regular" : "no",
+         "p_regular" : "no",
+         "rr_regular" : "no",
+         "pr_regular" : "no",
+         "pp_regular" : "yes"
+    },
+
+    "AFIB" : {
+         "r_present" : "yes",
+         "p_present" : "no",
+         "r_regular" : "yes",
+         "p_regular" : "no",
+         "rr_regular" : "no",
+         "pr_regular" : "no",
+         "pp_regular" : "no"
+    },
+
+    "AFL" : {
+         "r_present" : "yes",
+         "p_present" : "no",
+         "r_regular" : "yes",
+         "p_regular" : "no",
+         "rr_regular" : "x",
+         "pr_regular" : "no",
+         "pp_regular" : "no"
+    },
+
+    "JUNCTIONAL" : {
+         "r_present" : "yes",
+         "p_present" : "x",
+         "r_regular" : "yes",
+         "p_regular" : "no",
+         "rr_regular" : "yes",
+         "pr_regular" : "x",
+         "pp_regular" : "x"
+    },
+
+    "EAR" : {
+         "r_present" : "yes",
+         "p_present" : "yes",
+         "r_regular" : "yes",
+         "p_regular" : "no",
+         "rr_regular" : "no",
+         "pr_regular" : "no",
+         "pp_regular" : "no"
+    },
+
+    "AVB_TYPE2" : {
+         "r_present" : "yes",
+         "p_present" : "yes",
+         "r_regular" : "x",
+         "p_regular" : "yes",
+         "rr_regular" : "yes",
+         "pr_regular" : "yes",
+         "pp_regular" : "yes"
+    },
+
+    "WENCKEBACH" : {
+         "r_present" : "yes",
+         "p_present" : "yes",
+         "r_regular" : "yes",
+         "p_regular" : "yes",
+         "rr_regular" : "no",
+         "pr_regular" : "no",
+         "pp_regular" : "yes"
+    },
+
+    "SUDDEN_BRADY" : {
+         "r_present" : "yes",
+         "p_present" : "yes",
+         "r_regular" : "x",
+         "p_regular" : "yes",
+         "rr_regular" : "yes",
+         "pr_regular" : "no",
+         "pp_regular" : "yes"
+    },
+
+    "BIGEMINY" : {
+         "r_present" : "yes",
+         "p_present" : "x",
+         "r_regular" : "no",
+         "p_regular" : "x",
+         "rr_regular" : "no",
+         "pr_regular" : "x",
+         "pp_regular" : "x"
+    },
+
+    "TRIGEMINY" : {
+         "r_present" : "yes",
+         "p_present" : "x",
+         "r_regular" : "no",
+         "p_regular" : "x",
+         "rr_regular" : "no",
+         "pr_regular" : "x",
+         "pp_regular" : "x"
+     },
+
+    "IVR" : {
+         "r_present" : "yes",
+         "p_present" : "no",
+         "r_regular" : "no",
+         "p_regular" : "no",
+         "rr_regular" : "yes",
+         "pr_regular" : "no",
+         "pp_regular" : "no"
+    },
+
+    "VT" : {
+         "r_present" : "yes",
+         "p_present" : "no",
+         "r_regular" : "no",
+         "p_regular" : "no",
+         "rr_regular" : "yes",
+         "pr_regular" : "no",
+         "pp_regular" : "no"
+    },
+
+    "SVT" : {
+         "r_present" : "yes",
+         "p_present" : "x",
+         "r_regular" : "x",
+         "p_regular" : "x",
+         "rr_regular" : "x",
+         "pr_regular" : "x",
+         "pp_regular" : "x"
+    },
+
+    "NOISE" : {
+         "r_present" : "no",
+         "p_present" : "no",
+         "r_regular" : "no",
+         "p_regular" : "no",
+         "rr_regular" : "no",
+         "pr_regular" : "no",
+         "pp_regular" : "x"
+    }
+}
+}

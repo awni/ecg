@@ -53,21 +53,39 @@ def add_dense_layers(acts, **params):
     return acts
 
 
+PRIMARY_LOSS = 'primary'
+SECONDARY_LOSS = 'secondary'
+
 def add_output_layer(acts, **params):
     from keras.layers.core import Dense, Activation
     from keras.layers.wrappers import TimeDistributed
     acts = TimeDistributed(Dense(params["num_categories"]))(acts)
-    return Activation('softmax')(acts)
+    return Activation('softmax', name=PRIMARY_LOSS)(acts)
 
+def add_mask(acts, mask, name=None):
+    from keras.layers.core import Lambda
+    def masking(inputs):
+        return inputs[0] * inputs[1]
+    return Lambda(masking, name=name)([acts, mask])
+
+def add_second_task(acts, mask, **params):
+    from keras.layers.core import Dense, Activation, Lambda
+    from keras.layers.wrappers import TimeDistributed
+
+    acts =TimeDistributed(Dense(1, activation="sigmoid"))(acts)
+    return add_mask(acts, mask, name=SECONDARY_LOSS)
 
 def add_compile(model, **params):
     from keras.optimizers import Adam
-    optimizer = Adam(lr=params["learning_rate"], clipnorm=params["clipnorm"])
 
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=optimizer,
+    optimizer = Adam(lr=params["learning_rate"],
+                     clipnorm=params["clipnorm"])
+
+    model.compile(optimizer=optimizer,
+                  loss=['categorical_crossentropy',
+                        'binary_crossentropy'],
+                  loss_weights=[0.5, 0.0],
                   metrics=['accuracy'])
-
 
 def build_network(**params):
     from keras.models import Model
@@ -79,6 +97,17 @@ def build_network(**params):
     acts = add_recurrent_layers(acts, **params)
     acts = add_dense_layers(acts, **params)
     output = add_output_layer(acts, **params)
-    model = Model(input=[inputs], output=[output])
+
+    inputs = [inputs]
+    outputs = [output]
+    # TODO, awni, only include secondary task if needed
+    mask = Input(shape=params['secondary_output_shape'],
+                   dtype='float32',
+                   name='mask')
+    inputs.append(mask)
+    second_out = add_second_task(acts, mask, **params)
+    outputs.append(second_out)
+
+    model = Model(input=inputs, output=outputs)
     add_compile(model, **params)
     return model
