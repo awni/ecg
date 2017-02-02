@@ -3,9 +3,11 @@ def add_conv_layers(acts, **params):
     from keras.layers.convolutional import Convolution1D
     from keras.regularizers import l2
     from keras.layers import Dropout, Activation, BatchNormalization
-    from keras.layers.advanced_activations import PReLU
+    from keras.layers.noise import GaussianNoise
     subsample_lengths = params["conv_subsample_lengths"]
     for subsample_length in subsample_lengths:
+        if params.get("gaussian_noise", 0) > 0:
+            acts = GaussianNoise(params["gaussian_noise"])(acts)
         acts = Convolution1D(
             nb_filter=params["conv_num_filters"],
             filter_length=params["conv_filter_length"],
@@ -17,7 +19,11 @@ def add_conv_layers(acts, **params):
             acts = BatchNormalization()(acts)
         activation_fn = params["conv_activation"]
         if activation_fn == 'prelu':
+            from keras.layers.advanced_activations import PReLU
             acts = PReLU()(acts)
+        if activation_fn == 'elu':
+            from keras.layers.advanced_activations import ELU
+            acts = ELU()(acts)
         else:
             acts = Activation(activation_fn)(acts)
 

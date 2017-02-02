@@ -12,6 +12,7 @@
     "ignore_classes": [],
     "toy": false,
 
+    "gaussian_noise": 0.001,
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",
     "conv_filter_length": 16,
@@ -30,7 +31,7 @@
 
     "dense_layers": 0,
     "dense_hidden": 64,
-    "dense_activation": "prelu",
+    "dense_activation": "elu",
     "dense_init": "he_normal",
     "dense_l2_penalty": 0.000,
     "dense_dropout": 0.2,
