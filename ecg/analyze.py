@@ -6,6 +6,7 @@ import csv
 import json
 import os
 from tabulate import tabulate
+from collections import defaultdict
 from io import BytesIO
 
 
@@ -13,7 +14,6 @@ def get_params_table(path, max_models=5, metric="val_loss"):
     def process_params(parameters):
         for key in parameters:
             if isinstance(parameters[key], list):
-                from collections import defaultdict
                 fq = defaultdict(int)
                 for w in parameters[key]:
                     fq[w] += 1
