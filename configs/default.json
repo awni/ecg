@@ -1,10 +1,11 @@
 {
     "version": 6,
 
-    "toy": true,
+    "toy": false,
     "normalizer": "robust_scale",
     "seed": 2016,
     "step": 256,
+    "val_frac": 0.2,
 
     "gaussian_noise": 0.001,
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2],
