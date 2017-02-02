@@ -3,6 +3,7 @@ def add_conv_layers(acts, **params):
     from keras.layers.convolutional import Convolution1D
     from keras.regularizers import l2
     from keras.layers import Dropout, Activation, BatchNormalization
+    from keras.layers.advanced_activations import PReLU
     subsample_lengths = params["conv_subsample_lengths"]
     for subsample_length in subsample_lengths:
         acts = Convolution1D(
@@ -14,7 +15,12 @@ def add_conv_layers(acts, **params):
             W_regularizer=l2(params["conv_l2_penalty"]))(acts)
         if params.get("use_batch_norm", False) is True:
             acts = BatchNormalization()(acts)
-        acts = Activation(params["conv_activation"])(acts)
+        activation_fn = params["conv_activation"]
+        if activation_fn == 'prelu':
+            acts = PReLU()(acts)
+        else:
+            acts = Activation(activation_fn)(acts)
+
         if params.get("conv_dropout", 0) > 0:
             acts = Dropout(params["conv_dropout"])(acts)
     return acts
