@@ -4,8 +4,6 @@ from __future__ import absolute_import
 from builtins import open
 import argparse
 import numpy as np
-import json
-import os
 
 import load
 import util

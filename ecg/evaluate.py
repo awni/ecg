@@ -7,8 +7,6 @@ import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from tabulate import tabulate
 from tqdm import tqdm
-import json
-import os
 
 import load
 import decode
