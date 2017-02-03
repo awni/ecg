@@ -1,21 +1,23 @@
 from __future__ import print_function
 from builtins import zip
 from builtins import open
-from builtins import str
 import argparse
 import csv
 import json
 import os
 from tabulate import tabulate
+from collections import defaultdict
 from io import BytesIO
 
 
 def get_params_table(path, max_models=5, metric="val_loss"):
-
     def process_params(parameters):
         for key in parameters:
             if isinstance(parameters[key], list):
-                parameters[key] = ','.join(str(x) for x in parameters[key])
+                fq = defaultdict(int)
+                for w in parameters[key]:
+                    fq[w] += 1
+                parameters[key] = dict(fq)
         if 'FOLDER_TO_SAVE' in parameters:
             del parameters["FOLDER_TO_SAVE"]
         return parameters
@@ -23,7 +25,7 @@ def get_params_table(path, max_models=5, metric="val_loss"):
     output = BytesIO()
     first = True
     visited_dirs = {}
-    for val, _, dirpath in get_best_models(path, metric):
+    for sortval, metric_table, _, dirpath in get_best_models(path, metric):
         if len(visited_dirs) == max_models:
             break
         if dirpath in visited_dirs:
@@ -31,7 +33,9 @@ def get_params_table(path, max_models=5, metric="val_loss"):
         visited_dirs[dirpath] = True
         parameters = json.load(open(os.path.join(dirpath, 'params.json'), 'r'))
         parameters = process_params(parameters)
-        parameters.update({"_val": val})
+        parameters.update({"_val": sortval})
+        parameters.update(metric_table)
+        parameters.update({'dirpath': os.path.basename(dirpath)})
         if first is True:
             fieldnames = sorted(parameters.keys())
             writer = csv.DictWriter(
@@ -51,17 +55,15 @@ def get_best_models(path, metric='val_loss'):
         for filename in filenames:
             if filename.endswith('.hdf5'):
                 name_split = filename.split('.hdf5')[0].split('-')
-                if metric == 'val_loss':
-                    value = float(name_split[0])
-                elif metric == 'val_accuracy':
-                    value = float(name_split[1])
-                elif metric == 'loss':
-                    value = float(name_split[-2])
-                elif metric == 'accuracy':
-                    value = float(name_split[-1])
-                else:
-                        raise ValueError('Metric not defined')
-                models.append((value, filename, dirpath))
+                metric_table = {
+                    'val_loss': float(name_split[0]),
+                    'val_accuracy': float(name_split[1]),
+                    'epoch': float(name_split[2]),
+                    'loss': float(name_split[3]),
+                    'accuracy': float(name_split[4])
+                }
+                sort_value = metric_table[metric]
+                models.append((sort_value, metric_table, filename, dirpath))
     models.sort(reverse='accuracy' in metric)
     return models
 
@@ -69,8 +71,8 @@ def get_best_models(path, metric='val_loss'):
 def get_best_model(path, get_structure=False, metric='val_loss'):
     models = get_best_models(path, metric)
     best_model = models[0]
-    dirpath = best_model[2]
-    filename = best_model[1]
+    dirpath = best_model[3]
+    filename = best_model[2]
     best_model_path = os.path.join(dirpath, filename)
     if get_structure is True:
         structure = json.load(open(os.path.join(dirpath, 'params.json'), 'r'))
