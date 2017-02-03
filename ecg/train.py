@@ -52,6 +52,7 @@ def train(args, params):
     # if overfit, remove all dropout
     if args.overfit is True:
         params["overfit"] = True
+        params["gaussian_noise"] = 0
         for key in params:
             if "dropout" in key:
                 params[key] = 0
