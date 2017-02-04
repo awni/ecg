@@ -37,5 +37,5 @@ when the API of the model is not compatible with previous models.
 # Sort results by increasing validation loss (default)
 python ecg/analyze.py saved/<version_folder> --version <version_number>
 # Sort results by increasing training loss (default)
-python ecg/analyze.py saved/<version_folder> --version <version_number> --metric=loss
+python ecg/analyze.py saved/<version_folder> --version <version_number> --metric=train_loss
 ```

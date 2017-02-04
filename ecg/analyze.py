@@ -33,7 +33,6 @@ def get_params_table(path, max_models=5, metric="val_loss"):
         visited_dirs[dirpath] = True
         parameters = json.load(open(os.path.join(dirpath, 'params.json'), 'r'))
         parameters = process_params(parameters)
-        parameters.update({"_val": sortval})
         parameters.update(metric_table)
         parameters.update({'dirpath': os.path.basename(dirpath)})
         if first is True:
@@ -56,13 +55,13 @@ def get_best_models(path, metric='val_loss'):
             if filename.endswith('.hdf5'):
                 name_split = filename.split('.hdf5')[0].split('-')
                 metric_table = {
-                    'val_loss': float(name_split[0]),
-                    'val_accuracy': float(name_split[1]),
-                    'epoch': float(name_split[2]),
-                    'loss': float(name_split[3]),
-                    'accuracy': float(name_split[4])
+                    '_val_loss': float(name_split[0]),
+                    '_val_accuracy': float(name_split[1]),
+                    '_epoch': float(name_split[2]),
+                    '_train_loss': float(name_split[3]),
+                    '_train_accuracy': float(name_split[4])
                 }
-                sort_value = metric_table[metric]
+                sort_value = metric_table['_' + metric]
                 models.append((sort_value, metric_table, filename, dirpath))
     models.sort(reverse='accuracy' in metric)
     return models
