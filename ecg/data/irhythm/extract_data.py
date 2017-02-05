@@ -40,13 +40,20 @@ def stratify(records, val_frac):
     def patient_id(record):
         return os.path.basename(record).split("_")[0]
 
+    def get_bucket_from_id(pat):
+        return int(int(pat, 16) % 10)
+
     patients = collections.defaultdict(list)
     for record in tqdm(records):
         patients[patient_id(record)].append(record)
-    patients = sorted(list(patients.values()))
-    np.random.shuffle(patients)
-    cut = int(len(patients) * val_frac)
-    train, val = patients[cut:], patients[:cut]
+    val = []
+    train = []
+    for patient_id in patients:
+        bucket = get_bucket_from_id(patient_id)
+        if bucket < (val_frac * 10):
+            val.append(patients[patient_id])
+        else:
+            train.append(patients[patient_id])
     train = [record for patient in train for record in patient]
     val = [record for patient in val for record in patient]
     return train, val
