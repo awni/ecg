@@ -39,9 +39,7 @@ class Loader(object):
             msg = "Non-existent data path: {}".format(data_path)
             raise ValueError(msg)
 
-        if seed is not None:
-            np.random.seed(seed)
-
+        np.random.seed(seed)
         self.batch_size = batch_size
         self.duration = duration
         self.val_frac = val_frac
@@ -129,7 +127,6 @@ class Loader(object):
             self.val_frac,
             step=self.step,
             toy=self.toy)
-        np.random.shuffle(train_x_y_pairs)
 
         x_train, y_train = zip(*train_x_y_pairs)
         x_test, y_test = zip(*val_x_y_pairs)
