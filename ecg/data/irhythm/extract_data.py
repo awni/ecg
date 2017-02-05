@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import absolute_import
 from builtins import zip
 from builtins import range
-import collections
 import json
 import numpy as np
 import fnmatch
@@ -43,19 +42,11 @@ def stratify(records, val_frac):
     def get_bucket_from_id(pat):
         return int(int(pat, 16) % 10)
 
-    patients = collections.defaultdict(list)
+    val, train = [], []
     for record in tqdm(records):
-        patients[patient_id(record)].append(record)
-    val = []
-    train = []
-    for patient_id in patients:
-        bucket = get_bucket_from_id(patient_id)
-        if bucket < (val_frac * 10):
-            val.append(patients[patient_id])
-        else:
-            train.append(patients[patient_id])
-    train = [record for patient in train for record in patient]
-    val = [record for patient in val for record in patient]
+        bucket = get_bucket_from_id(patient_id(record))
+        chosen = val if bucket < (val_frac * 10) else train
+        chosen.append(record)
     return train, val
 
 
