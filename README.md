@@ -17,14 +17,7 @@ python ecg/train.py data configs/<choice_of_configs>
 python ecg/train.py data configs/<choice_of_configs> --overfit
 ```
 
-#### Prediction
-```bash
-python ecg/predict.py data <path_to_saved_model_hdf5> {train/test}
-```
-
 #### Evaluation
-Before running evaluation on a model, run the prediction script
-to generate neccessary prediction files for evaluation.
 ```bash
 python ecg/evaluate.py data <path_to_saved_model_hdf5> {train/test} # use --decode for decoding
 ```
