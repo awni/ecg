@@ -126,7 +126,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
-    parser.add_argument("--verbose", "-v", help="verbosity level", default=2)
+    parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
     parser.add_argument(
         "--overfit",
         help="whether to overfit training set",
