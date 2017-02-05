@@ -73,6 +73,8 @@ def train(args, params):
 
     net_type = str(params["version"])
 
+    params["TRAIN_DATA_PATH"] = os.path.realpath(args.data_path)
+
     save_params(params, start_time, net_type)
 
     params.update({
