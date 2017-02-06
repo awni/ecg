@@ -97,7 +97,7 @@ def add_compile(model, **params):
                      clipnorm=params["clipnorm"])
 
 
-    loss_weight = 0.2
+    loss_weight = 0.1
     model.compile(optimizer=optimizer,
                   loss=['categorical_crossentropy',
                         'binary_crossentropy'],

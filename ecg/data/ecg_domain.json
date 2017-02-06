@@ -1,5 +1,8 @@
 {
 
+# IDEAS FOR OTHER FEATURES
+# >100bpm
+# qrs_wide
 "features" : ["r_present", "p_present", "r_regular",
               "p_regular", "rr_regular", "pr_regular",
               "pp_regular"],
@@ -17,12 +20,12 @@
 
     "PAUSE" : {
          "r_present" : "no",
-         "p_present" : "no",
+         "p_present" : "x",
          "r_regular" : "no",
-         "p_regular" : "no",
+         "p_regular" : "x",
          "rr_regular" : "no",
          "pr_regular" : "no",
-         "pp_regular" : "yes"
+         "pp_regular" : "x"
     },
 
     "AFIB" : {
@@ -152,7 +155,7 @@
          "p_regular" : "no",
          "rr_regular" : "no",
          "pr_regular" : "no",
-         "pp_regular" : "x"
+         "pp_regular" : "no"
     }
 }
 }

@@ -8,7 +8,7 @@ YES = "yes"
 NO = "no"
 DONT_CARE = "x"
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
-DOMAIN_FILE = os.path.join(DIR_NAME, "ecg_domain.json")
+DOMAIN_FILE = os.path.join(DIR_NAME, "ecg_domain_simple.json")
 
 def binarize(rhythm, features):
     feat_vec = np.empty(len(features))
@@ -45,4 +45,4 @@ def num_features(domain_theory):
     return len(domain_theory['features'])
 
 if __name__ == "__main__":
-    domain = load_domain(DOMAIN_FILE)
+    domain = load_domain()
