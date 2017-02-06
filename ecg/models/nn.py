@@ -2,25 +2,39 @@
 def add_conv_layers(acts, **params):
     from keras.layers.convolutional import Convolution1D
     from keras.regularizers import l2
-    from keras.layers import Dropout
+    from keras.layers import Dropout, Activation, BatchNormalization
+    from keras.layers.noise import GaussianNoise
     subsample_lengths = params["conv_subsample_lengths"]
     for subsample_length in subsample_lengths:
+        if params.get("gaussian_noise", 0) > 0:
+            acts = GaussianNoise(params["gaussian_noise"])(acts)
         acts = Convolution1D(
             nb_filter=params["conv_num_filters"],
             filter_length=params["conv_filter_length"],
             border_mode='same',
             subsample_length=subsample_length,
-            init=params["conv_init"],
-            activation=params["conv_activation"],
-            W_regularizer=l2(params["conv_l2_penalty"]))(acts)
+            init=params["conv_init"])(acts)
+        if params.get("use_batch_norm", False) is True:
+            acts = BatchNormalization()(acts)
+        activation_fn = params["conv_activation"]
+        if activation_fn == 'prelu':
+            from keras.layers.advanced_activations import PReLU
+            acts = PReLU()(acts)
+        if activation_fn == 'elu':
+            from keras.layers.advanced_activations import ELU
+            acts = ELU()(acts)
+        else:
+            acts = Activation(activation_fn)(acts)
+
         if params.get("conv_dropout", 0) > 0:
             acts = Dropout(params["conv_dropout"])(acts)
     return acts
 
+
 def add_recurrent_layers(acts, **params):
     from keras.layers.recurrent import LSTM, GRU
     from keras.layers.wrappers import Bidirectional
-    for i in range(params["recurrent_layers"]):
+    for i in range(params.get("recurrent_layers", 0)):
         rt = params["recurrent_type"]
         if rt == 'GRU':
             Recurrent = GRU
@@ -37,12 +51,13 @@ def add_recurrent_layers(acts, **params):
             acts = rec_layer(acts)
     return acts
 
+
 def add_dense_layers(acts, **params):
     from keras.layers.core import Dense
     from keras.layers.wrappers import TimeDistributed
     from keras.layers import Dropout
     from keras.regularizers import l2
-    for i in range(params["dense_layers"]):
+    for i in range(params.get("dense_layers", 0)):
         acts = TimeDistributed(Dense(
             params["dense_hidden"],
             activation=params["dense_activation"],

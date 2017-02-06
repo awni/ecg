@@ -7,8 +7,6 @@ import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from tabulate import tabulate
 from tqdm import tqdm
-import json
-import os
 
 import load
 import decode
@@ -20,6 +18,17 @@ def evaluate(args, params):
     split = args.split
     x_val = dl.x_train if split == 'train' else dl.x_test
     y_val = dl.y_train if split == 'train' else dl.y_test
+
+    from keras.models import load_model
+    model = load_model(args.model_path)
+    print("Predicting on:", split)
+
+    # todo: add caching option (data path is option in util)
+    predictions = model.predict(x_val, verbose=1)
+    with open(util.get_prediction_path_for_model(
+              args.model_path, split), 'wb') as outfile:
+        np.save(outfile, predictions)
+
     print("Size: " + str(len(x_val)) + " examples.")
 
     predictions = np.load(open(util.get_prediction_path_for_model(

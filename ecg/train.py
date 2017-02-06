@@ -52,6 +52,7 @@ def train(args, params):
     # if overfit, remove all dropout
     if args.overfit is True:
         params["overfit"] = True
+        params["gaussian_noise"] = 0
         for key in params:
             if "dropout" in key:
                 params[key] = 0
@@ -71,6 +72,8 @@ def train(args, params):
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
 
     net_type = str(params["version"])
+
+    params["TRAIN_DATA_PATH"] = os.path.realpath(args.data_path)
 
     save_params(params, start_time, net_type)
 
@@ -101,8 +104,8 @@ def train(args, params):
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
-        monitor='loss',
-        factor=0.5,
+        monitor=monitor_metric,
+        factor=0.2,
         patience=2,
         min_lr=0.00001,
         verbose=args.verbose)
@@ -128,7 +131,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
-    parser.add_argument("--verbose", "-v", help="verbosity level", default=2)
+    parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
     parser.add_argument(
         "--overfit",
         help="whether to overfit training set",
