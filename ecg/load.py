@@ -24,8 +24,8 @@ class Loader(object):
             val_frac=0.1,
             seed=2016,
             use_one_hot_labels=True,
-            use_cached_if_available=False,  # todo: find how to cache w step
-            save_cache_if_possible=False,
+            use_cached_if_available=True,
+            save_cache_if_possible=True,
             normalizer=False,
             ignore_classes=[],
             wavelet_fns=[],
@@ -133,12 +133,16 @@ class Loader(object):
 
         return (x_train, x_test, y_train, y_test)
 
+    def get_cached_filepath(self, data_folder):
+        cached_filename = data_folder + '/cached-' + str(self.step) + '.gz'
+        return cached_filename
+
     def _load(self, data_folder):
         """Run the pipeline to load the dataset.
 
         Returns the dataset with a train test split.
         """
-        cached_filename = data_folder + '/cached-' + str(self.step)
+        cached_filename = self.get_cached_filepath(data_folder)
 
         def check_cached_copy():
             return os.path.isfile(cached_filename)
