@@ -16,6 +16,25 @@ from joblib import Memory
 memory = Memory(cachedir='./data_cache', verbose=1)
 
 
+def plot_confusion_matrix(cm, classes, model_path):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    cmap = plt.cm.Blues
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title('Confusion matrix')
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=90)
+    plt.yticks(tick_marks, classes)
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.show()
+    plt.savefig(util.get_confusion_figure_path(model_path))
+
+
 @memory.cache
 def get_model_predictions(args, x_val):
     from keras.models import load_model
@@ -49,6 +68,12 @@ def evaluate(args, params):
     predictions_flat.extend(range(len(dl.classes)))
 
     cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
+
+    plot_confusion_matrix(
+        np.log10(np.array(cnf_matrix) + 1),
+        dl.classes,
+        args.model_path)
+
     for i, row in enumerate(cnf_matrix):
         row.insert(0, dl.classes[i])
 
