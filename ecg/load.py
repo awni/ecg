@@ -153,37 +153,6 @@ class Loader(object):
 
         return (x_train, x_test, y_train, y_test)
 
-    def _load(self, data_folder):
-        """Run the pipeline to load the dataset.
-
-        Returns the dataset with a train test split.
-        """
-        cached_filename = data_folder + '/cached-' + str(self.step)
-
-        def check_cached_copy():
-            return os.path.isfile(cached_filename)
-
-        def load_cached():
-            return joblib.load(cached_filename)
-
-        def save_loaded(loaded):
-            joblib.dump(loaded, cached_filename)
-
-        if self.use_cached_if_available is True and check_cached_copy():
-            print("Using cached copy of dataset...")
-            loaded = load_cached()
-        else:
-            print("Loading dataset...")
-            loaded = self._load_internal(data_folder)
-            if self.save_cache_if_possible is True:
-                print("Saving to cache (this may take some time)...")
-                try:
-                    save_loaded(loaded)
-                except:
-                    print("Couldn't save cache...")
-
-        (self.x_train, self.x_test, self.y_train, self.y_test) = loaded
-
     @property
     def output_dim(self):
         return len(self._int_to_class)
