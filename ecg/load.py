@@ -8,11 +8,12 @@ import collections
 import numpy as np
 import os
 import json
-import joblib
-
+from joblib import Memory
 import featurize
 from data.irhythm.extract_data import load_all_data
 from data import rhythm_features
+
+memory = Memory(cachedir='./data_cache', verbose=1)
 
 class Loader(object):
     def __init__(
@@ -24,8 +25,8 @@ class Loader(object):
             val_frac=0.1,
             seed=2016,
             use_one_hot_labels=True,
-            use_cached_if_available=False,  # todo: find how to cache w step
-            save_cache_if_possible=False,
+            use_cached_if_available=True,
+            save_cache_if_possible=True,
             normalizer=False,
             ignore_classes=[],
             wavelet_fns=[],
@@ -55,7 +56,8 @@ class Loader(object):
         self.use_bandpass_filter = use_bandpass_filter
         self.toy = toy
 
-        self._load(data_path)
+        (self.x_train, self.x_test, self.y_train, self.y_test) = \
+            self._load_internal(data_path)
         self._postprocess()
 
     def _postprocess(self):
@@ -191,8 +193,14 @@ class Loader(object):
         return self._class_to_int
 
 
+@memory.cache
+def load_inner(data_path, params):
+    dl = Loader(data_path, **params)
+    return dl
+
+
 def load(args, params):
-    dl = Loader(args.data_path, **params)
+    dl = load_inner(args.data_path, params)
     print("Length of training set {}".format(len(dl.x_train)))
     print("Length of validation set {}".format(len(dl.x_test)))
     print("Output dimension {}".format(dl.output_dim))

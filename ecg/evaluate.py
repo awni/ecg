@@ -1,6 +1,5 @@
 from __future__ import print_function
 from builtins import range
-from builtins import open
 from builtins import str
 import argparse
 import numpy as np
@@ -11,6 +10,19 @@ from tqdm import tqdm
 import load
 import decode
 import util
+from joblib import Memory
+
+
+memory = Memory(cachedir='./data_cache', verbose=1)
+
+
+@memory.cache
+def get_model_predictions(args, x_val):
+    from keras.models import load_model
+    model = load_model(args.model_path)
+
+    predictions = model.predict(x_val, verbose=1)
+    return predictions
 
 
 def evaluate(args, params):
@@ -18,21 +30,10 @@ def evaluate(args, params):
     split = args.split
     x_val = dl.x_train if split == 'train' else dl.x_test
     y_val = dl.y_train if split == 'train' else dl.y_test
-
-    from keras.models import load_model
-    model = load_model(args.model_path)
-    print("Predicting on:", split)
-
-    # todo: add caching option (data path is option in util)
-    predictions = model.predict(x_val, verbose=1)
-    with open(util.get_prediction_path_for_model(
-              args.model_path, split), 'wb') as outfile:
-        np.save(outfile, predictions)
-
     print("Size: " + str(len(x_val)) + " examples.")
 
-    predictions = np.load(open(util.get_prediction_path_for_model(
-                               args.model_path, split), 'rb'))
+    print("Predicting on:", split)
+    predictions = get_model_predictions(args, x_val)
 
     if args.decode is True:
         language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
