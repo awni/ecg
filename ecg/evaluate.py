@@ -15,7 +15,6 @@ from joblib import Memory
 
 memory = Memory(cachedir='./data_cache', verbose=1)
 
-
 @memory.cache
 def get_model_predictions(args, x_val):
     from keras.models import load_model
@@ -24,12 +23,12 @@ def get_model_predictions(args, x_val):
     predictions = model.predict(x_val, verbose=1)
     return predictions
 
-
 def evaluate(args, params):
     dl = load.load(args, params)
     split = args.split
     x_val = dl.x_train if split == 'train' else dl.x_test
     y_val = dl.y_train if split == 'train' else dl.y_test
+    mask_val = dl.mask_train if split == 'train' else dl.mask_val
     print("Size: " + str(len(x_val)) + " examples.")
 
     print("Predicting on:", split)
