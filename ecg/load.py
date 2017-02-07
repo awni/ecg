@@ -8,10 +8,11 @@ import collections
 import numpy as np
 import os
 import json
-import joblib
-
+from joblib import Memory
 import featurize
 from data.irhythm.extract_data import load_all_data
+
+memory = Memory(cachedir='./data_cache', verbose=1)
 
 
 class Loader(object):
@@ -55,7 +56,8 @@ class Loader(object):
         self.use_bandpass_filter = use_bandpass_filter
         self.toy = toy
 
-        self._load(data_path)
+        (self.x_train, self.x_test, self.y_train, self.y_test) = \
+            self._load_internal(data_path)
         self._postprocess()
 
     def _postprocess(self):
@@ -133,55 +135,6 @@ class Loader(object):
 
         return (x_train, x_test, y_train, y_test)
 
-    def get_cached_filepath(self, data_folder):
-        cached_filename = data_folder + '/cached-' + str(self.step) + '.gz'
-        return cached_filename
-
-    def _load(self, data_folder):
-        """Run the pipeline to load the dataset.
-
-        Returns the dataset with a train test split.
-        """
-        cached_filename = self.get_cached_filepath(data_folder)
-
-        def check_cached_copy():
-            return os.path.isfile(cached_filename)
-
-        def load_cached():
-            return joblib.load(cached_filename)
-
-        def save_loaded(loaded):
-            joblib.dump(loaded, cached_filename)
-
-        if self.use_cached_if_available is True and check_cached_copy():
-            print("Using cached copy of dataset...")
-            loaded = load_cached()
-        else:
-            print("Loading dataset...")
-            loaded = self._load_internal(data_folder)
-            if self.save_cache_if_possible is True:
-                print("Saving to cache (this may take some time)...")
-                try:
-                    save_loaded(loaded)
-                except:
-                    print("Couldn't save cache...")
-
-        (self.x_train, self.x_test, self.y_train, self.y_test) = loaded
-
-    def train_generator(self):
-        return self._batch_generate(self.x_train, self.y_train)
-
-    def test_generator(self):
-        return self._batch_generate(self.x_test, self.y_test)
-
-    def _batch_generate(self, inputs, labels):
-        batch_size = self.batch_size
-        data_size = len(labels)
-        for i in range(0, data_size - batch_size + 1, batch_size):
-            batch_data = inputs[i:i + batch_size]
-            batch_labels = labels[i:i + batch_size]
-            yield (batch_data, batch_labels)
-
     @property
     def output_dim(self):
         return len(self._int_to_class)
@@ -191,8 +144,14 @@ class Loader(object):
         return self._class_to_int
 
 
+@memory.cache
+def load_inner(data_path, params):
+    dl = Loader(data_path, **params)
+    return dl
+
+
 def load(args, params):
-    dl = Loader(args.data_path, **params)
+    dl = load_inner(args.data_path, params)
     print("Length of training set {}".format(len(dl.x_train)))
     print("Length of validation set {}".format(len(dl.x_test)))
     print("Output dimension {}".format(dl.output_dim))

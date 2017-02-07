@@ -1,4 +1,5 @@
 data/
+data_cache/
 saved/
 
 # Byte-compiled / optimized / DLL files
