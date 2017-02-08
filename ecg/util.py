@@ -3,6 +3,10 @@ import os
 import json
 
 
+def get_confusion_figure_path(model_path):
+    return model_path + '.png'
+
+
 def get_prediction_path_for_model(model_path, split):
     return model_path + '-pred-' + split + '.pkl'
 
