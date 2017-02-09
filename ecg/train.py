@@ -12,12 +12,14 @@ import time
 
 import load
 from models import nn
+import random
 
 MAX_EPOCHS = 500
 
 
 def get_folder_name(start_time, experiment_name):
-    folder_name = FOLDER_TO_SAVE + experiment_name + '/' + start_time
+    folder_name = FOLDER_TO_SAVE + experiment_name + '/' + \
+        start_time + '-' + str(random.randrange(1000))
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
     return folder_name
