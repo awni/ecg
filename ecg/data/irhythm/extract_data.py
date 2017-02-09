@@ -74,6 +74,9 @@ def load_episodes(record, step):
         if e == len(episodes) - 1:
             episode['offset_round'] = episode['offset']
         else:
+            if(episodes[e+1]['onset_round'] != round_to_step(episode['offset'] + 1, step)):
+                print('Something wrong with data in... ' + ep_json)
+                return None
             episode['offset_round'] = episodes[e+1]['onset_round'] - 1
 
     return episodes
@@ -120,9 +123,10 @@ def construct_dataset(records, duration, step=ECG_SAMP_RATE):
     data = []
     for record in tqdm(records):
         episodes = load_episodes(record, step)
-        labels = make_labels(episodes, duration, step)
-        segments = load_ecg(record, duration, step)
-        data.extend(zip(segments, labels))
+        if episodes is not None:
+            labels = make_labels(episodes, duration, step)
+            segments = load_ecg(record, duration, step)
+            data.extend(zip(segments, labels))
     return data
 
 
