@@ -79,7 +79,7 @@ def train(args, params):
 
     params.update({
         "input_shape": x_train[0].shape,
-        "secondary_output_shape" : (y_train.shape[1], 1),
+        "secondary_output_shape" : (y_train.shape[1], 6),
         "num_categories": dl.output_dim
     })
 
