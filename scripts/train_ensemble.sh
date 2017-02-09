@@ -2,7 +2,7 @@
 for DEVICE in 0 1 2 3
 do
     DEVICE_UTILIZATION=$(nvidia-smi --id=$DEVICE --query-gpu=utilization.gpu --format=csv,nounits,noheader)
-    if [ $(($DEVICE_UTILIZATION + 0)) -gt 2 ]
+    if [ "$DEVICE_UTILIZATION" -gt 2 ]
         then
             echo "GPU $DEVICE not free"
         else
