@@ -1,6 +1,4 @@
 {
-    "version": 9,
-
     "toy": false,
     "normalizer": "robust_scale",
     "seed": 2016,

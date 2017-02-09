@@ -16,30 +16,31 @@ from models import nn
 MAX_EPOCHS = 500
 
 
-def get_folder_name(start_time, net_type):
-    folder_name = FOLDER_TO_SAVE + net_type + '/' + start_time
+def get_folder_name(start_time, experiment_name):
+    folder_name = FOLDER_TO_SAVE + experiment_name + '/' + start_time
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
     return folder_name
 
 
-def get_filename_for_saving(start_time, net_type):
-    saved_filename = get_folder_name(start_time, net_type) + \
+def get_filename_for_saving(start_time, experiment_name):
+    saved_filename = get_folder_name(start_time, experiment_name) + \
         "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
     return saved_filename
 
 
-def plot_model(model, start_time, net_type):
+def plot_model(model, start_time, experiment_name):
     from keras.utils.visualize_util import plot
     plot(
         model,
-        to_file=get_folder_name(start_time, net_type) + '/model.png',
+        to_file=get_folder_name(start_time, experiment_name) + '/model.png',
         show_shapes=True,
         show_layer_names=False)
 
 
-def save_params(params, start_time, net_type):
-    saving_filename = get_folder_name(start_time, net_type) + "/params.json"
+def save_params(params, start_time, experiment_name):
+    saving_filename = get_folder_name(start_time, experiment_name) + \
+        "/params.json"
     save_str = json.dumps(params, ensure_ascii=False)
     save_str = save_str if isinstance(save_str, str) \
         else save_str.decode('utf-8')
@@ -68,14 +69,13 @@ def train(args, params):
     print("Validation size: " + str(len(x_val)) + " examples.")
 
     start_time = str(int(time.time()))
+    experiment_name = args.experiment_name
 
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
-
-    net_type = str(params["version"])
-
+    params["EXPERIMENT_NAME"] = experiment_name
     params["TRAIN_DATA_PATH"] = os.path.realpath(args.data_path)
 
-    save_params(params, start_time, net_type)
+    save_params(params, start_time, experiment_name)
 
     params.update({
         "input_shape": x_train[0].shape,
@@ -85,7 +85,7 @@ def train(args, params):
     model = nn.build_network(**params)
 
     try:
-        plot_model(model, start_time, net_type)
+        plot_model(model, start_time, experiment_name)
     except:
         print("Skipping plot")
 
@@ -110,7 +110,7 @@ def train(args, params):
         verbose=args.verbose)
 
     checkpointer = ModelCheckpoint(
-        filepath=get_filename_for_saving(start_time, net_type),
+        filepath=get_filename_for_saving(start_time, experiment_name),
         save_best_only=False,
         verbose=args.verbose)
 
@@ -126,6 +126,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
+    parser.add_argument("experiment_name", help="tag with experiment name")
     parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
     parser.add_argument(
         "--overfit",
