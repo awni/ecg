@@ -38,7 +38,7 @@ def get_model_predictions(args, x_val):
     from keras.models import load_model
     model = load_model(args.model_path)
 
-    predictions = model.predict(x_val, verbose=1)
+    predictions = model.predict(x_val, verbose=1)[0]
     return predictions
 
 def evaluate(args, params):
@@ -50,7 +50,7 @@ def evaluate(args, params):
     print("Size: " + str(len(x_val)) + " examples.")
 
     print("Predicting on:", split)
-    predictions = get_model_predictions(args, x_val)
+    predictions = get_model_predictions(args, [x_val, mask_val])
 
     if args.decode is True:
         language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
