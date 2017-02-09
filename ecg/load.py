@@ -34,6 +34,7 @@ class Loader(object):
             wavelet_level=1,
             use_bandpass_filter=False,
             toy=False,
+            extension='.episodes.json',
             **kwargs):
 
         if not os.path.exists(data_path):
@@ -55,6 +56,7 @@ class Loader(object):
         self.save_cache_if_possible = save_cache_if_possible
         self.use_bandpass_filter = use_bandpass_filter
         self.toy = toy
+        self.extension = extension
 
         (self.x_train, self.x_test, self.y_train, self.y_test) = \
             self._load_internal(data_path)
@@ -128,7 +130,8 @@ class Loader(object):
             self.duration,
             self.val_frac,
             step=self.step,
-            toy=self.toy)
+            toy=self.toy,
+            extension=self.extension)
 
         x_train, y_train = zip(*train_x_y_pairs)
         x_test, y_test = zip(*val_x_y_pairs)

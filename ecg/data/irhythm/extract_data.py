@@ -12,7 +12,7 @@ from tqdm import tqdm
 # ECG constants
 ECG_SAMP_RATE = 200.0  # Hz
 ECG_EXT = '.ecg'
-EPI_EXT = '.episodes.json'
+EPI_EXT = None
 qa = '_post'
 
 
@@ -89,7 +89,6 @@ def make_labels(episodes, duration, step):
         rhythm_labels = int(rhythm_len / step)
         rhythm = [episode['rhythm_name']] * rhythm_labels
         labels.extend(rhythm)
-
     dur_labels = int(duration * ECG_SAMP_RATE / step)
     labels = [labels[i:i+dur_labels]
               for i in range(0, len(labels) - dur_labels + 1, dur_labels)]
@@ -131,7 +130,10 @@ def construct_dataset(records, duration, step=ECG_SAMP_RATE):
 
 
 def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
-                  toy=False):
+                  toy=False, extension='.episodes.json'):
+    # _rev0.episodes
+    global EPI_EXT
+    EPI_EXT = extension
     print('Stratifying records...')
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
     if toy is True:
