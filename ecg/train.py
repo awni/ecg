@@ -18,8 +18,7 @@ MAX_EPOCHS = 500
 
 
 def get_folder_name(start_time, experiment_name):
-    folder_name = FOLDER_TO_SAVE + experiment_name + '/' + \
-        start_time + '-' + str(random.randrange(1000))
+    folder_name = FOLDER_TO_SAVE + experiment_name + '/' + start_time
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
     return folder_name
@@ -70,7 +69,7 @@ def train(args, params):
     y_val = dl.y_test
     print("Validation size: " + str(len(x_val)) + " examples.")
 
-    start_time = str(int(time.time()))
+    start_time = str(int(time.time())) + '-' + str(random.randrange(1000))
     experiment_name = args.experiment_name
 
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
