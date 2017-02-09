@@ -8,7 +8,7 @@ do
         else
             echo "GPU $DEVICE free"
             export CUDA_VISIBLE_DEVICES=$DEVICE
-            python ecg/train.py data configs/default.json $1 > $DEVICE.out 2>&1 &
+            screen -d -m bash -c "python ecg/train.py data configs/default.json $1 > $DEVICE.out 2>&1"
+            echo "Started training script on $DEVICE..."
     fi
-echo $OUTPUT
 done
