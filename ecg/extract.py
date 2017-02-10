@@ -32,6 +32,14 @@ def patient_id(record):
 
 def stratify(records, val_frac):
 
+    blacklist = []
+
+    def build_blacklist():
+        for record in get_all_records('./data/label_review'):
+            pid = patient_id(record)
+            blacklist.append(pid)
+        return blacklist
+
     def get_bucket_from_id(pat):
         return int(int(pat, 16) % 10)
 
@@ -118,16 +126,6 @@ def construct_dataset(records, duration, step=ECG_SAMP_RATE):
             segments = load_ecg(record, duration, step)
             data.extend(zip(segments, labels))
     return data
-
-blacklist = []
-
-
-def build_blacklist():
-    global blacklist
-    for record in get_all_records('./data/label_review'):
-        pid = patient_id(record)
-        blacklist.append(pid)
-    print(blacklist)
 
 
 def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
