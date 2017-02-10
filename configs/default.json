@@ -4,7 +4,7 @@
     "seed": 2016,
     "step": 256,
     "val_frac": 0,
-    "extension": "_rev0.episodes.json",
+    "extension": ".episodes.json",
 
     "gaussian_noise": 0.001,
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2],
