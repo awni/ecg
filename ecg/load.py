@@ -25,8 +25,6 @@ class Loader(object):
             val_frac=0.1,
             seed=2016,
             use_one_hot_labels=True,
-            use_cached_if_available=True,
-            save_cache_if_possible=True,
             normalizer=False,
             ignore_classes=[],
             wavelet_fns=[],
@@ -52,8 +50,6 @@ class Loader(object):
         self.use_one_hot_labels = use_one_hot_labels
         self.step = step
         self.ignore_classes = ignore_classes
-        self.use_cached_if_available = use_cached_if_available
-        self.save_cache_if_possible = save_cache_if_possible
         self.use_bandpass_filter = use_bandpass_filter
         self.toy = toy
         self.extension = extension
