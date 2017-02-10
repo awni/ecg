@@ -136,7 +136,7 @@ def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
     global EPI_EXT
     EPI_EXT = extension
     print('Stratifying records...')
-    build_blacklist()
+    #build_blacklist()
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
     if toy is True:
         print('Using toy dataset...')

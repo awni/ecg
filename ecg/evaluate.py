@@ -13,30 +13,33 @@ import util
 from joblib import Memory
 
 
-memory = Memory(cachedir='./data_cache', verbose=1)
+# memory = Memory(cachedir='./data_cache', verbose=3)
 
 
 def plot_confusion_matrix(cm, classes, model_path=None):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    cmap = plt.cm.Blues
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title('Confusion matrix')
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=90)
-    plt.yticks(tick_marks, classes)
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        cmap = plt.cm.Blues
+        plt.imshow(cm, interpolation='nearest', cmap=cmap)
+        plt.title('Confusion matrix')
+        plt.colorbar()
+        tick_marks = np.arange(len(classes))
+        plt.xticks(tick_marks, classes, rotation=90)
+        plt.yticks(tick_marks, classes)
 
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.show()
-    if model_path is not None:
-        plt.savefig(util.get_confusion_figure_path(model_path))
+        plt.tight_layout()
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        plt.show()
+        if model_path is not None:
+            plt.savefig(util.get_confusion_figure_path(model_path))
+    except:
+        print("Skipping plot")
 
 
-@memory.cache
+# @memory.cache
 def get_model_predictions(args, x_val):
     from keras.models import load_model
     model = load_model(args.model_path)
