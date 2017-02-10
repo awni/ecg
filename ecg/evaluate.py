@@ -16,7 +16,7 @@ from joblib import Memory
 memory = Memory(cachedir='./data_cache', verbose=1)
 
 
-def plot_confusion_matrix(cm, classes, model_path):
+def plot_confusion_matrix(cm, classes, model_path=None):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -32,7 +32,8 @@ def plot_confusion_matrix(cm, classes, model_path):
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.show()
-    plt.savefig(util.get_confusion_figure_path(model_path))
+    if model_path is not None:
+        plt.savefig(util.get_confusion_figure_path(model_path))
 
 
 @memory.cache
