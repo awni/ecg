@@ -23,28 +23,25 @@ def _find_all_files(src, qa, ext):
 
 
 def get_all_records(src):
-    """
-    Find all the ECG files.
-    """
     return _find_all_files(src, '', ECG_EXT)
 
 
-def stratify(records, val_frac):
-    """
-    Splits the data by patient into train and validation.
+def patient_id(record):
+    return os.path.basename(record).split("_")[0]
 
-    Returns a tuple of two lists (train, val). Each list contains the
-    corresponding records.
-    """
-    def patient_id(record):
-        return os.path.basename(record).split("_")[0]
+
+def stratify(records, val_frac):
 
     def get_bucket_from_id(pat):
         return int(int(pat, 16) % 10)
 
     val, train = [], []
     for record in tqdm(records):
-        bucket = get_bucket_from_id(patient_id(record))
+        pid = patient_id(record)
+        if pid in blacklist:
+            print(pid + ' in blacklist, skipping')
+            continue
+        bucket = get_bucket_from_id(pid)
         chosen = val if bucket < (val_frac * 10) else train
         chosen.append(record)
     return train, val
@@ -76,7 +73,7 @@ def load_episodes(record, step):
         else:
             if(episodes[e+1]['onset_round'] != round_to_step(episode['offset'] + 1, step)):
                 print('Something wrong with data in... ' + ep_json)
-                return None
+                # return None
             episode['offset_round'] = episodes[e+1]['onset_round'] - 1
 
     return episodes
@@ -113,12 +110,6 @@ def load_ecg(record, duration, step):
 
 
 def construct_dataset(records, duration, step=ECG_SAMP_RATE):
-    """
-    List of ecg records, duration to segment them into.
-    :param duration: The length of examples in seconds.
-    :param step: Number of samples to step the label by.
-                 (e.g. step=200 means new label every second).
-    """
     data = []
     for record in tqdm(records):
         episodes = load_episodes(record, step)
@@ -128,6 +119,16 @@ def construct_dataset(records, duration, step=ECG_SAMP_RATE):
             data.extend(zip(segments, labels))
     return data
 
+blacklist = []
+
+
+def build_blacklist():
+    global blacklist
+    for record in get_all_records('./data/label_review'):
+        pid = patient_id(record)
+        blacklist.append(pid)
+    print(blacklist)
+
 
 def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
                   toy=False, extension='.episodes.json'):
@@ -135,6 +136,7 @@ def load_all_data(data_path, duration, val_frac, step=ECG_SAMP_RATE,
     global EPI_EXT
     EPI_EXT = extension
     print('Stratifying records...')
+    build_blacklist()
     train, val = stratify(get_all_records(data_path), val_frac=val_frac)
     if toy is True:
         print('Using toy dataset...')
