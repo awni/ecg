@@ -90,7 +90,8 @@ class Loader(object):
             n = featurize.Normalizer(self.normalizer)
             n.fit(self.x_train)
             self.x_train = n.transform(self.x_train)
-            self.x_test = n.transform(self.x_test)
+            if len(self.x_test) > 0:
+                self.x_test = n.transform(self.x_test)
 
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
@@ -134,7 +135,11 @@ class Loader(object):
             extension=self.extension)
 
         x_train, y_train = zip(*train_x_y_pairs)
-        x_test, y_test = zip(*val_x_y_pairs)
+        print(val_x_y_pairs)
+        if (len(val_x_y_pairs) > 0):
+            x_test, y_test = zip(*val_x_y_pairs)
+        else:
+            x_test = y_test = []
 
         return (x_train, x_test, y_train, y_test)
 
