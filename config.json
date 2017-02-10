@@ -3,7 +3,7 @@
     "normalizer": "robust_scale",
     "seed": 2016,
     "step": 256,
-    "val_frac": 0,
+    "test_frac": 0.2,
     "extension": ".episodes.json",
 
     "gaussian_noise": 0.001,

@@ -8,41 +8,45 @@ import numpy as np
 import fnmatch
 import os
 import warnings
+import argparse
 from tqdm import tqdm
 
 
-def Loader(object):
+class Loader(object):
     def __init__(
-        self,
-        data_path,
-        ecg_samp_rate=200.0,
-        ecg_ext='.ecg',
-        epi_ext='.episodes.json',
-        blacklist_path='./data/label_review',
-        duration=30,
-        val_frac=0.2,
-        step=200,
-        toy=False,
-        **kwargs
-    ):
+            self,
+            data_path,
+            ecg_samp_rate=200.0,
+            ecg_ext='.ecg',
+            epi_ext='.episodes.json',
+            blacklist_path='./data/label_review',
+            duration=30,
+            test_frac=0.2,
+            step=200,
+            toy=False,
+            **kwargs):
+        self.x_train = self.x_test = self.y_train = self.y_test = None
+        self.TOY_LIMIT = 1000
+        self.blacklist = []
+
         self.data_path = data_path
         self.ecg_samp_rate = ecg_samp_rate
         self.ecg_ext = ecg_ext
         self.epi_ext = epi_ext
         self.blacklist_path = blacklist_path
         self.duration = duration
-        self.val_frac = val_frac
+        self.test_frac = test_frac
         self.step = step
         self.toy = toy
-        self.TOY_LIMIT = 1000
-        self.blacklist = []
 
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
             raise ValueError(msg)
 
-    def get_all_records(self):
-        for root, dirnames, filenames in os.walk(self.data_path):
+        self.load()
+
+    def get_all_records(self, path):
+        for root, dirnames, filenames in os.walk(path):
             for filename in fnmatch.filter(filenames, '*' + self.ecg_ext):
                 yield(os.path.join(root, filename))
 
@@ -50,48 +54,48 @@ def Loader(object):
         return os.path.basename(record).split("_")[0]
 
     def build_blacklist(self):
+        print('Building blacklist...')
         self.blacklist = []
-        for record in get_all_records(self.blacklist_path):
-            pid = patient_id(record)
+        for record in tqdm(self.get_all_records(self.blacklist_path)):
+            pid = self.patient_id(record)
             self.blacklist.append(pid)
 
     def stratify(self, records):
         def get_bucket_from_id(pat):
             return int(int(pat, 16) % 10)
 
-        val, train = [], []
+        test, train = [], []
         for record in tqdm(records):
-            pid = patient_id(record)
+            pid = self.patient_id(record)
             if len(self.blacklist) > 0 and pid in self.blacklist:
-                print(pid + ' in blacklist, skipping')
                 continue
             bucket = get_bucket_from_id(pid)
-            chosen = val if bucket < (self.val_frac * 10) else train
+            chosen = test if bucket < (self.test_frac * 10) else train
             chosen.append(record)
-        return train, val
+        return train, test
 
-    def round_to_step(self, n, step):
-        diff = (n - 1) % step
-        if diff < (step / 2):
-            return n - diff
-        else:
-            return n + (step - diff)
+    def load_episodes(self, record):
+        def round_to_step(n, step):
+            diff = (n - 1) % step
+            if diff < (step / 2):
+                return n - diff
+            else:
+                return n + (step - diff)
 
-    def load_episodes(self, record, step):
         base = os.path.splitext(record)[0]
         ep_json = base + self.epi_ext
         with open(ep_json, 'r') as fid:
             episodes = json.load(fid)['episodes']
 
         for episode in episodes:
-            episode['onset_round'] = round_to_step(episode['onset'], step)
+            episode['onset_round'] = round_to_step(episode['onset'], self.step)
 
         for e, episode in enumerate(episodes):
             if e == len(episodes) - 1:
                 episode['offset_round'] = episode['offset']
             else:
                 if(episodes[e+1]['onset_round'] !=
-                   round_to_step(episode['offset'] + 1, step)):
+                   round_to_step(episode['offset'] + 1, self.step)):
                     warnings.warn('Something wrong with data in... ' + ep_json)
                 episode['offset_round'] = episodes[e+1]['onset_round'] - 1
 
@@ -136,16 +140,37 @@ def Loader(object):
 
     def load(self):
         if (self.blacklist_path is not None):
-            print('Building blacklist...')
             self.build_blacklist()
-        records = self.get_all_records()
-        train, val = self.stratify(records)
+        records = self.get_all_records(self.data_path)
+        train, test = self.stratify(records)
         if self.toy is True:
             print('Using toy dataset...')
             train = train[:self.TOY_LIMIT]
-            val = val[:self.TOY_LIMIT]
+            test = test[:self.TOY_LIMIT]
         print('Constructing Training Set...')
-        train = self.construct_dataset(train)
-        print('Constructing Validation Set...')
-        val = self.construct_dataset(val)
-        return train, val
+        train_x_y_pairs = self.construct_dataset(train)
+        print('Constructing testidation Set...')
+        test_x_y_pairs = self.construct_dataset(test)
+
+        self.x_train, self.y_train = zip(*train_x_y_pairs)
+
+        if (len(test_x_y_pairs) > 0):
+            self.x_test, self.y_test = zip(*test_x_y_pairs)
+        else:
+            self.x_test = self.y_test = []
+
+
+def load(args, params):
+    loader = Loader(args.data_path, **params)
+    print("Length of training set {}".format(len(loader.x_train)))
+    print("Length of validation set {}".format(len(loader.x_test)))
+    print("Output dimension {}".format(loader.output_dim))
+    return loader
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("data_path", help="path to files")
+    parser.add_argument("config_file", help="path to config file")
+    args = parser.parse_args()
+    params = json.load(open(args.config_file, 'r'))
+    load(args, params)
