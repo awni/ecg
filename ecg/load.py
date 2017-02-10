@@ -12,7 +12,7 @@ from joblib import Memory
 import featurize
 from data.irhythm.extract_data import load_all_data
 
-memory = Memory(cachedir='./data_cache', verbose=1)
+# memory = Memory(cachedir='./data_cache', verbose=1)
 
 
 class Loader(object):
@@ -147,7 +147,7 @@ class Loader(object):
         return self._class_to_int
 
 
-@memory.cache
+# @memory.cache
 def load_inner(data_path, params):
     dl = Loader(data_path, **params)
     return dl
