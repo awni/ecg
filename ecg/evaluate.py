@@ -10,36 +10,28 @@ from tqdm import tqdm
 import load
 import decode
 import util
-from joblib import Memory
-
-
-# memory = Memory(cachedir='./data_cache', verbose=3)
 
 
 def plot_confusion_matrix(cm, classes, model_path=None):
-    try:
-        import matplotlib
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
-        cmap = plt.cm.Blues
-        plt.imshow(cm, interpolation='nearest', cmap=cmap)
-        plt.title('Confusion matrix')
-        plt.colorbar()
-        tick_marks = np.arange(len(classes))
-        plt.xticks(tick_marks, classes, rotation=90)
-        plt.yticks(tick_marks, classes)
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    cmap = plt.cm.Blues
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title('Confusion matrix')
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=90)
+    plt.yticks(tick_marks, classes)
 
-        plt.tight_layout()
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-        plt.show()
-        if model_path is not None:
-            plt.savefig(util.get_confusion_figure_path(model_path))
-    except:
-        print("Skipping plot")
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.show()
+    if model_path is not None:
+        plt.savefig(util.get_confusion_figure_path(model_path))
 
 
-# @memory.cache
 def get_model_predictions(args, x_val):
     from keras.models import load_model
     model = load_model(args.model_path)
@@ -73,10 +65,13 @@ def evaluate(args, params):
 
     cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
 
-    plot_confusion_matrix(
-        np.log10(np.array(cnf_matrix) + 1),
-        dl.classes,
-        args.model_path)
+    try:
+        plot_confusion_matrix(
+            np.log10(np.array(cnf_matrix) + 1),
+            dl.classes,
+            args.model_path)
+    except:
+        print("Skipping plot")
 
     for i, row in enumerate(cnf_matrix):
         row.insert(0, dl.classes[i])
