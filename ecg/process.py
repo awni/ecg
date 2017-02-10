@@ -6,56 +6,37 @@ from builtins import range
 import argparse
 import collections
 import numpy as np
-import os
 import json
-from joblib import Memory
 import featurize
-from data.irhythm.extract_data import load_all_data
-
-# memory = Memory(cachedir='./data_cache', verbose=1)
 
 
-class Loader(object):
+class Processor(object):
     def __init__(
-            self,
-            data_path,
-            batch_size=32,
-            duration=30,
-            step=200,
-            val_frac=0.1,
-            seed=2016,
-            use_one_hot_labels=True,
-            normalizer=False,
-            ignore_classes=[],
-            wavelet_fns=[],
-            wavelet_type='discrete',
-            wavelet_level=1,
-            use_bandpass_filter=False,
-            toy=False,
-            extension='.episodes.json',
-            **kwargs):
-
-        if not os.path.exists(data_path):
-            msg = "Non-existent data path: {}".format(data_path)
-            raise ValueError(msg)
+        self,
+        loader,
+        seed=2016,
+        use_one_hot_labels=True,
+        normalizer=False,
+        ignore_classes=[],
+        wavelet_fns=[],
+        wavelet_type='discrete',
+        wavelet_level=1,
+        use_bandpass_filter=False,
+        **kwargs
+    ):
 
         np.random.seed(seed)
-        self.batch_size = batch_size
-        self.duration = duration
-        self.val_frac = val_frac
+        self.loader = loader
         self.wavelet_fns = wavelet_fns
         self.normalizer = normalizer
         self.wavelet_type = wavelet_type
         self.wavelet_level = wavelet_level
         self.use_one_hot_labels = use_one_hot_labels
-        self.step = step
         self.ignore_classes = ignore_classes
         self.use_bandpass_filter = use_bandpass_filter
-        self.toy = toy
-        self.extension = extension
 
         (self.x_train, self.x_test, self.y_train, self.y_test) = \
-            self._load_internal(data_path)
+            self._load_internal(self.loader)
         self._postprocess()
 
     def _postprocess(self):
@@ -91,8 +72,7 @@ class Loader(object):
 
         label_counter = collections.Counter(l for labels in self.y_train
                                             for l in labels)
-        self.classes = sorted(
-            [c for c, _ in label_counter.most_common()])  # FIXME: rm 'sorted'
+        self.classes = sorted([c for c, _ in label_counter.most_common()])
 
         self._int_to_class = dict(zip(range(len(self.classes)), self.classes))
         self._class_to_int = {c: i for i, c in self._int_to_class.items()}
@@ -122,16 +102,10 @@ class Loader(object):
         return np.array(labels_mod)
 
     def _load_internal(self, data_folder):
-        train_x_y_pairs, val_x_y_pairs = load_all_data(
-            data_folder,
-            self.duration,
-            self.val_frac,
-            step=self.step,
-            toy=self.toy,
-            extension=self.extension)
+        train_x_y_pairs, val_x_y_pairs = self.loader.load_all_data()
 
         x_train, y_train = zip(*train_x_y_pairs)
-        print(val_x_y_pairs)
+
         if (len(val_x_y_pairs) > 0):
             x_test, y_test = zip(*val_x_y_pairs)
         else:
@@ -148,14 +122,8 @@ class Loader(object):
         return self._class_to_int
 
 
-# @memory.cache
-def load_inner(data_path, params):
-    dl = Loader(data_path, **params)
-    return dl
-
-
 def load(args, params):
-    dl = load_inner(args.data_path, params)
+    dl = Loader(data_path, **params)
     print("Length of training set {}".format(len(dl.x_train)))
     print("Length of validation set {}".format(len(dl.x_test)))
     print("Output dimension {}".format(dl.output_dim))
