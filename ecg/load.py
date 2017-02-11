@@ -50,7 +50,8 @@ class Loader(object):
 
         self.load()
         self.setup_label_mappings()
-        self.processor.process(self)
+        (self.x_train, self.y_train, self.x_test, self.y_test) = \
+            self.processor.process(self)
 
     def setup_label_mappings(self):
         label_counter = collections.Counter(l for labels in self.y_train

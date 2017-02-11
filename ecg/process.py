@@ -65,10 +65,9 @@ class Processor(object):
                         setattr(self, prop + split, getattr(
                             self, prop + split)[indices])
 
-        loader.y_train = self.transform_to_int_label(y_train, loader)
-        loader.y_test = self.transform_to_int_label(y_test, loader)
-        loader.x_train = x_train
-        loader.y_train = y_train
+        y_train = self.transform_to_int_label(y_train, loader)
+        y_test = self.transform_to_int_label(y_test, loader)
+        return (x_train, y_train, x_test, y_test)
 
     def transform_to_int_label(self, y_split, loader):
         labels_mod = []

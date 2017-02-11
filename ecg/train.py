@@ -82,7 +82,6 @@ def train(args, params):
         "input_shape": x_train[0].shape,
         "num_categories": dl.output_dim
     })
-    print(params["input_shape"])
 
     model = network.build_network(**params)
 
