@@ -11,7 +11,7 @@ import os
 import time
 
 import load
-from models import nn
+import network
 import random
 
 MAX_EPOCHS = 500
@@ -83,7 +83,7 @@ def train(args, params):
         "num_categories": dl.output_dim
     })
 
-    model = nn.build_network(**params)
+    model = network.build_network(**params)
 
     try:
         plot_model(model, start_time, experiment_name)
