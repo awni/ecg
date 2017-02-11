@@ -51,7 +51,7 @@ def save_params(params, start_time, experiment_name):
 
 def train(args, params):
     global FOLDER_TO_SAVE
-    # if overfit, remove all dropout
+
     if args.overfit is True:
         params["overfit"] = True
         params["gaussian_noise"] = 0
@@ -65,9 +65,9 @@ def train(args, params):
     y_train = dl.y_train
     print("Training size: " + str(len(x_train)) + " examples.")
 
-    x_val = dl.x_test
-    y_val = dl.y_test
-    print("Validation size: " + str(len(x_val)) + " examples.")
+    x_test = dl.x_test
+    y_test = dl.y_test
+    print("Validation size: " + str(len(x_test)) + " examples.")
 
     start_time = str(int(time.time())) + '-' + str(random.randrange(1000))
     experiment_name = args.experiment_name
@@ -82,6 +82,7 @@ def train(args, params):
         "input_shape": x_train[0].shape,
         "num_categories": dl.output_dim
     })
+    print(params["input_shape"])
 
     model = network.build_network(**params)
 
@@ -117,7 +118,7 @@ def train(args, params):
 
     model.fit(
         x_train, y_train,
-        validation_data=(x_val, y_val),
+        validation_data=(x_test, y_test),
         nb_epoch=MAX_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
         verbose=1)
