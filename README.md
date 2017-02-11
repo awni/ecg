@@ -12,9 +12,9 @@ mkdir saved/
 #### Training
 ```bash
 # Normal
-python ecg/train.py data configs/<choice_of_configs>
+python ecg/train.py data config.json
 # To overfit the training set
-python ecg/train.py data configs/<choice_of_configs> --overfit
+python ecg/train.py data config.json --overfit
 ```
 
 #### Evaluation
