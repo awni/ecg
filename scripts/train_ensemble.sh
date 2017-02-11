@@ -1,5 +1,5 @@
 #!/bin/sh
-if [[ $# -eq 0 ]] ; then
+if [[ $# -lt 1 ]] ; then
     echo "Please supply experiment name"
     exit 1
 fi
