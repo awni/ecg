@@ -1,7 +1,6 @@
 {
     "toy": false,
     "normalizer": "robust_scale",
-    "seed": 2016,
     "step": 256,
     "test_frac": 0.2,
     "extension": ".episodes.json",

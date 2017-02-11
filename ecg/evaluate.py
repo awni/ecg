@@ -7,6 +7,7 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 import load
+import json
 import decode
 import util
 
@@ -31,12 +32,16 @@ def plot_confusion_matrix(cm, classes, model_path=None):
         plt.savefig(util.get_confusion_figure_path(model_path))
 
 
-def get_model_predictions(args, x_val):
+def get_all_model_predictions(args, x_val):
     from keras.models import load_model
-    model = load_model(args.model_path)
+    all_model_predictions = []
+    print("Averaging " + len(args.model_paths) + " model predictions...")
+    for model_path in args.model_paths:
+        model = load_model(args.model_path)
 
-    predictions = model.predict(x_val, verbose=1)
-    return predictions
+        predictions = model.predict(x_val, verbose=1)
+        all_model_predictions.append(predictions)
+    return np.array(all_model_predictions)
 
 
 def evaluate(args, params):
@@ -47,7 +52,8 @@ def evaluate(args, params):
     print("Size: " + str(len(x_val)) + " examples.")
 
     print("Predicting on:", split)
-    predictions = get_model_predictions(args, x_val)
+    all_predictions = get_all_model_predictions(args, x_val)
+    predictions = np.mean(all_predictions, axis=0)
 
     if args.decode is True:
         language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
@@ -82,11 +88,13 @@ def evaluate(args, params):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
+    parser.add_argument("config_file", help="path to config file")
     parser.add_argument(
-        "model_path",
-        help="path to model, assuming prediction script generated")
+        'model_paths',
+        nargs='+',
+        help="path to models")
     parser.add_argument("split", help="train/val", choices=['train', 'test'])
     parser.add_argument('--decode', action='store_true')
     args = parser.parse_args()
-    params = util.get_model_params(args.model_path)
+    params = json.load(open(args.config_file, 'r'))
     evaluate(args, params)
