@@ -58,8 +58,6 @@ class Loader(object):
         self.classes = sorted([c for c, _ in label_counter.most_common()])
 
         self.int_to_class = dict(zip(range(len(self.classes)), self.classes))
-        print(self.int_to_class)
-        print(self.int_to_class.items())
         self.class_to_int = {c: i for i, c in self.int_to_class.items()}
 
     def get_all_records(self, path):
