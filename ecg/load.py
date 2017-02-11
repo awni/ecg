@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+from builtins import dict
 from builtins import zip
 from builtins import range
 import json
@@ -9,13 +10,16 @@ import fnmatch
 import os
 import warnings
 import argparse
+import collections
 from tqdm import tqdm
+from process import Processor
 
 
 class Loader(object):
     def __init__(
             self,
             data_path,
+            processor,
             ecg_samp_rate=200.0,
             ecg_ext='.ecg',
             epi_ext='.episodes.json',
@@ -26,7 +30,7 @@ class Loader(object):
             toy=False,
             **kwargs):
         self.x_train = self.x_test = self.y_train = self.y_test = None
-        self.TOY_LIMIT = 1000
+        self.TOY_LIMIT = 2000
         self.blacklist = []
 
         self.data_path = data_path
@@ -38,12 +42,25 @@ class Loader(object):
         self.test_frac = test_frac
         self.step = step
         self.toy = toy
+        self.processor = processor
 
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
             raise ValueError(msg)
 
         self.load()
+        self.setup_label_mappings()
+        self.processor.process(self)
+
+    def setup_label_mappings(self):
+        label_counter = collections.Counter(l for labels in self.y_train
+                                            for l in labels)
+        self.classes = sorted([c for c, _ in label_counter.most_common()])
+
+        self.int_to_class = dict(zip(range(len(self.classes)), self.classes))
+        print(self.int_to_class)
+        print(self.int_to_class.items())
+        self.class_to_int = {c: i for i, c in self.int_to_class.items()}
 
     def get_all_records(self, path):
         for root, dirnames, filenames in os.walk(path):
@@ -159,9 +176,15 @@ class Loader(object):
         else:
             self.x_test = self.y_test = []
 
+    @property
+    def output_dim(self):
+        return len(self.int_to_class)
+
 
 def load(args, params):
-    loader = Loader(args.data_path, **params)
+    processor = Processor(**params)
+    loader = Loader(args.data_path, processor, **params)
+
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of validation set {}".format(len(loader.x_test)))
     print("Output dimension {}".format(loader.output_dim))
