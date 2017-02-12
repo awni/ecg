@@ -1,0 +1,6 @@
+{
+  "toy": false,
+  "test_frac": 0,
+  "blacklist_path": "",
+  "epi_ext": "_rev0.episodes.json"
+}

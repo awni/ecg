@@ -78,11 +78,10 @@ def evaluate(args, train_params, test_params):
     for i, row in enumerate(cnf_matrix):
         row.insert(0, dl.classes[i])
 
+    print(tabulate(cnf_matrix, headers=[c[:1] for c in dl.classes]))
     print(classification_report(
         y_flat, predictions_flat,
         target_names=dl.classes))
-
-    print(tabulate(cnf_matrix, headers=[c[:1] for c in dl.classes]))
 
 
 if __name__ == '__main__':
@@ -96,6 +95,8 @@ if __name__ == '__main__':
         help="path to models")
     parser.add_argument('--decode', action='store_true')
     args = parser.parse_args()
-    test_params = json.load(open(args.test_config_file, 'r'))
     train_params = util.get_model_params(args.model_paths[0])
+    test_params = train_params.copy()
+    test_new_params = json.load(open(args.test_config_file, 'r'))
+    test_params.update(test_new_params)
     evaluate(args, train_params, test_params)
