@@ -1,7 +1,6 @@
 
 def add_conv_layers(acts, **params):
     from keras.layers.convolutional import Convolution1D
-    from keras.regularizers import l2
     from keras.layers import Dropout, Activation, BatchNormalization
     from keras.layers.noise import GaussianNoise
     subsample_lengths = params["conv_subsample_lengths"]

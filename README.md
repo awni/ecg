@@ -11,15 +11,12 @@ mkdir saved/
 
 #### Training
 ```bash
-# Normal
-python ecg/train.py data configs/<choice_of_configs>
-# To overfit the training set
-python ecg/train.py data configs/<choice_of_configs> --overfit
+python ecg/train.py data configs/train.json # use --overfit for overfitting
 ```
 
 #### Evaluation
 ```bash
-python ecg/evaluate.py data <path_to_saved_model_hdf5> {train/test} # use --decode for decoding
+python ecg/evaluate.py configs/val.json <list_of_paths_to_saved_model_hdf5> # use --decode for decoding
 ```
 
 #### Analyze

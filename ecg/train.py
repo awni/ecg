@@ -11,35 +11,37 @@ import os
 import time
 
 import load
-from models import nn
+import network
+import random
 
 MAX_EPOCHS = 500
 
 
-def get_folder_name(start_time, net_type):
-    folder_name = FOLDER_TO_SAVE + net_type + '/' + start_time
+def get_folder_name(start_time, experiment_name):
+    folder_name = FOLDER_TO_SAVE + experiment_name + '/' + start_time
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
     return folder_name
 
 
-def get_filename_for_saving(start_time, net_type):
-    saved_filename = get_folder_name(start_time, net_type) + \
+def get_filename_for_saving(start_time, experiment_name):
+    saved_filename = get_folder_name(start_time, experiment_name) + \
         "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
     return saved_filename
 
 
-def plot_model(model, start_time, net_type):
+def plot_model(model, start_time, experiment_name):
     from keras.utils.visualize_util import plot
     plot(
         model,
-        to_file=get_folder_name(start_time, net_type) + '/model.png',
+        to_file=get_folder_name(start_time, experiment_name) + '/model.png',
         show_shapes=True,
         show_layer_names=False)
 
 
-def save_params(params, start_time, net_type):
-    saving_filename = get_folder_name(start_time, net_type) + "/params.json"
+def save_params(params, start_time, experiment_name):
+    saving_filename = get_folder_name(start_time, experiment_name) + \
+        "/params.json"
     save_str = json.dumps(params, ensure_ascii=False)
     save_str = save_str if isinstance(save_str, str) \
         else save_str.decode('utf-8')
@@ -49,7 +51,7 @@ def save_params(params, start_time, net_type):
 
 def train(args, params):
     global FOLDER_TO_SAVE
-    # if overfit, remove all dropout
+
     if args.overfit is True:
         params["overfit"] = True
         params["gaussian_noise"] = 0
@@ -57,35 +59,34 @@ def train(args, params):
             if "dropout" in key:
                 params[key] = 0
 
-    dl = load.load(args, params)
+    dl = load.load_train(args, params)
 
     x_train = dl.x_train
     y_train = dl.y_train
     print("Training size: " + str(len(x_train)) + " examples.")
 
-    x_val = dl.x_test
-    y_val = dl.y_test
-    print("Validation size: " + str(len(x_val)) + " examples.")
+    x_test = dl.x_test
+    y_test = dl.y_test
+    print("Test size: " + str(len(x_test)) + " examples.")
 
-    start_time = str(int(time.time()))
+    start_time = str(int(time.time())) + '-' + str(random.randrange(1000))
+    experiment_name = args.experiment
 
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
-
-    net_type = str(params["version"])
-
+    params["EXPERIMENT_NAME"] = experiment_name
     params["TRAIN_DATA_PATH"] = os.path.realpath(args.data_path)
 
-    save_params(params, start_time, net_type)
+    save_params(params, start_time, experiment_name)
 
     params.update({
         "input_shape": x_train[0].shape,
         "num_categories": dl.output_dim
     })
 
-    model = nn.build_network(**params)
+    model = network.build_network(**params)
 
     try:
-        plot_model(model, start_time, net_type)
+        plot_model(model, start_time, experiment_name)
     except:
         print("Skipping plot")
 
@@ -110,22 +111,24 @@ def train(args, params):
         verbose=args.verbose)
 
     checkpointer = ModelCheckpoint(
-        filepath=get_filename_for_saving(start_time, net_type),
+        filepath=get_filename_for_saving(start_time, experiment_name),
         save_best_only=False,
         verbose=args.verbose)
 
     model.fit(
         x_train, y_train,
-        validation_data=(x_val, y_val),
+        validation_data=(x_test, y_test),
         nb_epoch=MAX_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
-        verbose=1)
+        verbose=args.verbose)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
+    parser.add_argument("--experiment", "-e", help="tag with experiment name",
+                        default="default")
     parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
     parser.add_argument(
         "--overfit",
