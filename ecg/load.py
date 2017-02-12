@@ -28,6 +28,7 @@ class Loader(object):
             test_frac=0.2,
             step=200,
             toy=False,
+            fit_processor=True,
             **kwargs):
         self.x_train = self.x_test = self.y_train = self.y_test = None
         self.TOY_LIMIT = 2000
@@ -43,6 +44,7 @@ class Loader(object):
         self.step = step
         self.toy = toy
         self.processor = processor
+        self.fit_processor = fit_processor
 
         if not os.path.exists(data_path):
             msg = "Non-existent data path: {}".format(data_path)
@@ -51,7 +53,7 @@ class Loader(object):
         self.load()
         self.setup_label_mappings()
         (self.x_train, self.y_train, self.x_test, self.y_test) = \
-            self.processor.process(self)
+            self.processor.process(self, fit=self.fit_processor)
 
     def setup_label_mappings(self):
         label_counter = collections.Counter(l for labels in self.y_train
@@ -112,7 +114,8 @@ class Loader(object):
             else:
                 if(episodes[e+1]['onset_round'] !=
                    round_to_step(episode['offset'] + 1, self.step)):
-                    warnings.warn('Something wrong with data in... ' + ep_json)
+                    warnings.warn('Something wrong with data in... ' + ep_json,
+                                  DeprecationWarning)
                 episode['offset_round'] = episodes[e+1]['onset_round'] - 1
 
         return episodes
@@ -165,7 +168,7 @@ class Loader(object):
             test = test[:self.TOY_LIMIT]
         print('Constructing Training Set...')
         train_x_y_pairs = self.construct_dataset(train)
-        print('Constructing testidation Set...')
+        print('Constructing Test Set...')
         test_x_y_pairs = self.construct_dataset(test)
 
         self.x_train, self.y_train = zip(*train_x_y_pairs)
@@ -180,14 +183,31 @@ class Loader(object):
         return len(self.int_to_class)
 
 
-def load(args, params):
+def load_train(args, params):
     processor = Processor(**params)
     loader = Loader(args.data_path, processor, **params)
 
     print("Length of training set {}".format(len(loader.x_train)))
-    print("Length of validation set {}".format(len(loader.x_test)))
+    print("Length of test set {}".format(len(loader.x_test)))
     print("Output dimension {}".format(loader.output_dim))
     return loader
+
+
+def load_test(args, params_train, params_test):
+    params_train["fit_processor"] = True
+    params_test["fit_processor"] = False
+
+    processor = Processor(**params_train)
+    print("Fitting processor...")
+    Loader(params_train["TRAIN_DATA_PATH"], processor, **params_train)
+    print("Loading test dataset...")
+    loader = Loader(args.data_path, processor, **params_test)
+
+    print("Length of training set {}".format(len(loader.x_train)))
+    print("Length of test set {}".format(len(loader.x_test)))
+    print("Output dimension {}".format(loader.output_dim))
+    return loader
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -195,4 +215,4 @@ if __name__ == "__main__":
     parser.add_argument("config_file", help="path to config file")
     args = parser.parse_args()
     params = json.load(open(args.config_file, 'r'))
-    load(args, params)
+    load_train(args, params)

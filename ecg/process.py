@@ -23,8 +23,9 @@ class Processor(object):
         self.use_one_hot_labels = use_one_hot_labels
         self.ignore_classes = ignore_classes
         self.use_bandpass_filter = use_bandpass_filter
+        self.n = None
 
-    def process(self, loader):
+    def process(self, loader, fit=True):
         x_train = np.array(loader.x_train)
         y_train = np.array(loader.y_train)
         x_test = np.array(loader.x_test)
@@ -49,11 +50,12 @@ class Processor(object):
             x_test = wavelet_transformer.transform(x_test)
 
         if self.normalizer is not False:
-            n = featurize.Normalizer(self.normalizer)
-            n.fit(x_train)
-            x_train = n.transform(x_train)
+            if fit is True:
+                self.n = featurize.Normalizer(self.normalizer)
+                self.n.fit(x_train)
+            x_train = self.n.transform(x_train)
             if len(x_test) > 0:
-                x_test = n.transform(x_test)
+                x_test = self.n.transform(x_test)
 
         if self.ignore_classes is not False:
             for ignore_class in self.ignore_classes:
