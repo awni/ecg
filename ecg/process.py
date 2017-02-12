@@ -53,7 +53,8 @@ class Processor(object):
             if fit is True:
                 self.n = featurize.Normalizer(self.normalizer)
                 self.n.fit(x_train)
-            x_train = self.n.transform(x_train)
+            if len(x_train) > 0:
+                x_train = self.n.transform(x_train)
             if len(x_test) > 0:
                 x_test = self.n.transform(x_test)
 
