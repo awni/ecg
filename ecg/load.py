@@ -58,8 +58,9 @@ class Loader(object):
             self.processor.process(self, fit=self.fit_processor)
 
     def setup_label_mappings(self):
-        label_counter = collections.Counter(l for labels in self.y_train
-                                            for l in labels)
+        y_tot = list(self.y_train) + list(self.y_test)
+        label_counter = collections.Counter(
+            l for labels in y_tot for l in labels)
         self.classes = sorted([c for c, _ in label_counter.most_common()])
 
         self.int_to_class = dict(zip(range(len(self.classes)), self.classes))
@@ -183,7 +184,6 @@ class Loader(object):
         else:
             self.x_test = self.y_test = []
 
-
     @property
     def output_dim(self):
         return len(self.int_to_class)
@@ -207,7 +207,7 @@ def load_test(args, params_train, params_test):
     print("Fitting processor...")
     Loader(params_train["TRAIN_DATA_PATH"], processor, **params_train)
     print("Loading test dataset...")
-    loader = Loader(args.data_path, processor, **params_test)
+    loader = Loader(params_test["EVAL_PATH"], processor, **params_test)
 
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of test set {}".format(len(loader.x_test)))
