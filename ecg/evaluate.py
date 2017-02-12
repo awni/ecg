@@ -47,12 +47,12 @@ def get_all_model_predictions(args, x_val):
 def evaluate(args, train_params, test_params):
     dl = load.load_test(args, train_params, test_params)
     split = args.split
-    x_val = dl.x_train if split == 'train' else dl.x_test
-    y_val = dl.y_train if split == 'train' else dl.y_test
-    print("Size: " + str(len(x_val)) + " examples.")
+    x = dl.x_train if split == 'train' else dl.x_test
+    y = dl.y_train if split == 'train' else dl.y_test
+    print("Size: " + str(len(x)) + " examples.")
 
     print("Predicting on:", split)
-    all_predictions = get_all_model_predictions(args, x_val)
+    all_predictions = get_all_model_predictions(args, x)
     predictions = np.mean(all_predictions, axis=0)
 
     if args.decode is True:
@@ -62,10 +62,10 @@ def evaluate(args, train_params, test_params):
     else:
         predictions = np.argmax(predictions, axis=-1)
 
-    y_val_flat = np.argmax(y_val, axis=-1).flatten().tolist()
+    y_flat = np.argmax(y, axis=-1).flatten().tolist()
     predictions_flat = predictions.flatten().tolist()
 
-    cnf_matrix = confusion_matrix(y_val_flat, predictions_flat).tolist()
+    cnf_matrix = confusion_matrix(y_flat, predictions_flat).tolist()
 
     try:
         plot_confusion_matrix(
@@ -79,7 +79,7 @@ def evaluate(args, train_params, test_params):
         row.insert(0, dl.classes[i])
 
     print(classification_report(
-        y_val_flat, predictions_flat,
+        y_flat, predictions_flat,
         target_names=dl.classes))
 
     print(tabulate(cnf_matrix, headers=[c[:1] for c in dl.classes]))
