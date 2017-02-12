@@ -59,7 +59,7 @@ def train(args, params):
             if "dropout" in key:
                 params[key] = 0
 
-    dl = load.load(args, params)
+    dl = load.load_train(args, params)
 
     x_train = dl.x_train
     y_train = dl.y_train
@@ -67,10 +67,10 @@ def train(args, params):
 
     x_test = dl.x_test
     y_test = dl.y_test
-    print("Validation size: " + str(len(x_test)) + " examples.")
+    print("Test size: " + str(len(x_test)) + " examples.")
 
     start_time = str(int(time.time())) + '-' + str(random.randrange(1000))
-    experiment_name = args.experiment_name
+    experiment_name = args.experiment
 
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
     params["EXPERIMENT_NAME"] = experiment_name
@@ -120,14 +120,15 @@ def train(args, params):
         validation_data=(x_test, y_test),
         nb_epoch=MAX_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
-        verbose=1)
+        verbose=args.verbose)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
-    parser.add_argument("experiment_name", help="tag with experiment name")
+    parser.add_argument("--experiment", "-e", help="tag with experiment name",
+                        default="default")
     parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
     parser.add_argument(
         "--overfit",
