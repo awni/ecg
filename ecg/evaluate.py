@@ -35,17 +35,17 @@ def plot_confusion_matrix(cm, classes, model_path=None):
 def get_all_model_predictions(args, x_val):
     from keras.models import load_model
     all_model_predictions = []
-    print("Averaging " + len(args.model_paths) + " model predictions...")
+    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
     for model_path in args.model_paths:
-        model = load_model(args.model_path)
+        model = load_model(model_path)
 
         predictions = model.predict(x_val, verbose=1)
         all_model_predictions.append(predictions)
     return np.array(all_model_predictions)
 
 
-def evaluate(args, params):
-    dl = load.load(args, params)
+def evaluate(args, train_params, test_params):
+    dl = load.load_test(args, train_params, test_params)
     split = args.split
     x_val = dl.x_train if split == 'train' else dl.x_test
     y_val = dl.y_train if split == 'train' else dl.y_test
@@ -88,13 +88,14 @@ def evaluate(args, params):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="path to files")
-    parser.add_argument("config_file", help="path to config file")
+    parser.add_argument("test_config_file", help="path to config file")
+    parser.add_argument("split", help="train/val", choices=['train', 'test'])
     parser.add_argument(
         'model_paths',
         nargs='+',
         help="path to models")
-    parser.add_argument("split", help="train/val", choices=['train', 'test'])
     parser.add_argument('--decode', action='store_true')
     args = parser.parse_args()
-    params = json.load(open(args.config_file, 'r'))
-    evaluate(args, params)
+    test_params = json.load(open(args.test_config_file, 'r'))
+    train_params = util.get_model_params(args.model_paths[0])
+    evaluate(args, train_params, test_params)
