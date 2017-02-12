@@ -86,9 +86,9 @@ def evaluate(args, train_params, test_params):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="path to files")
     parser.add_argument("test_config_file", help="path to config file")
-    parser.add_argument("split", help="train/val", choices=['train', 'test'])
+    parser.add_argument("--split", help="train/val", choices=['train', 'test'],
+                        default='test')
     parser.add_argument(
         'model_paths',
         nargs='+',
