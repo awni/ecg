@@ -14,6 +14,8 @@ import collections
 from tqdm import tqdm
 from process import Processor
 
+# FIXME: step and samp_rate and duration should be part of process, not load
+
 
 class Loader(object):
     def __init__(
@@ -23,7 +25,7 @@ class Loader(object):
             ecg_samp_rate=200.0,
             ecg_ext='.ecg',
             epi_ext='.episodes.json',
-            blacklist_path='./data/label_review',
+            blacklist_path="",
             duration=30,
             test_frac=0.2,
             step=200,
@@ -158,7 +160,7 @@ class Loader(object):
         return data
 
     def load(self):
-        if (self.blacklist_path is not None):
+        if (self.blacklist_path != ""):
             self.build_blacklist()
         records = self.get_all_records(self.data_path)
         train, test = self.stratify(records)
@@ -171,12 +173,16 @@ class Loader(object):
         print('Constructing Test Set...')
         test_x_y_pairs = self.construct_dataset(test)
 
-        self.x_train, self.y_train = zip(*train_x_y_pairs)
+        if (len(train_x_y_pairs) > 0):
+            self.x_train, self.y_train = zip(*train_x_y_pairs)
+        else:
+            self.x_train = self.y_train = []
 
         if (len(test_x_y_pairs) > 0):
             self.x_test, self.y_test = zip(*test_x_y_pairs)
         else:
             self.x_test = self.y_test = []
+
 
     @property
     def output_dim(self):
