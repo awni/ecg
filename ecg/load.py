@@ -199,7 +199,7 @@ def load_train(args, params):
     return loader
 
 
-def load_test(args, params_train, params_test):
+def load_test(params_train, params_test):
     params_train["fit_processor"] = True
     params_test["fit_processor"] = False
 

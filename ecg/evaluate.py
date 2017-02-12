@@ -45,7 +45,7 @@ def get_all_model_predictions(args, x_val):
 
 
 def evaluate(args, train_params, test_params):
-    dl = load.load_test(args, train_params, test_params)
+    dl = load.load_test(train_params, test_params)
     split = args.split
     x = dl.x_train if split == 'train' else dl.x_test
     y = dl.y_train if split == 'train' else dl.y_test
