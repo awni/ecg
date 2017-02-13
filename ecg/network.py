@@ -15,13 +15,17 @@ def add_conv_layers(acts, **params):
             init=params["conv_init"])(acts)
         if params.get("use_batch_norm", False) is True:
             acts = BatchNormalization()(acts)
+
         activation_fn = params["conv_activation"]
         if activation_fn == 'prelu':
             from keras.layers.advanced_activations import PReLU
             acts = PReLU()(acts)
-        if activation_fn == 'elu':
+        elif activation_fn == 'elu':
             from keras.layers.advanced_activations import ELU
             acts = ELU()(acts)
+        elif activation_fn == 'leaky_relu':
+            from keras.layers.advanced_activations import LeakyReLU
+            acts = LeakyReLU()(acts)
         else:
             acts = Activation(activation_fn)(acts)
 
