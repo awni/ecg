@@ -104,10 +104,10 @@ def train(args, params):
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
-        monitor=monitor_metric,
-        factor=0.2,
+        monitor='loss',
+        factor=0.1,
         patience=2,
-        min_lr=0.00001,
+        min_lr=0.0001,
         verbose=args.verbose)
 
     checkpointer = ModelCheckpoint(
@@ -120,6 +120,7 @@ def train(args, params):
         validation_data=(x_test, y_test),
         nb_epoch=MAX_EPOCHS,
         callbacks=[checkpointer, reduce_lr, stopping],
+        batch_size=params.get("batch_size", 32),
         verbose=args.verbose)
 
 
