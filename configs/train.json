@@ -11,7 +11,7 @@
     "conv_filter_length": 16,
     "conv_num_filters": 64,
     "conv_init": "he_normal",
-    "conv_activation": "leaky_relu",
+    "conv_activation": "relu",
     "conv_dropout": 0.25,
     "is_resnet": false,
 
