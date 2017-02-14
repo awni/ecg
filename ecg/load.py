@@ -154,10 +154,12 @@ class Loader(object):
         data = []
         for record in tqdm(records):
             episodes = self.load_episodes(record)
-            if episodes is not None:
-                labels = self.make_labels(episodes)
-                segments = self.load_ecg(record)
-                data.extend(zip(segments, labels))
+            labels = self.make_labels(episodes)
+            segments = self.load_ecg(record)
+            if len(labels) == 0:
+                print(episodes)
+                print(labels)
+            data.extend(zip(segments, labels))
         return data
 
     def load(self):
