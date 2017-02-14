@@ -16,8 +16,7 @@
 
     "learning_rate": 0.001,
     "clipnorm": 1,
-    "use_batch_norm": true,
-    "batch_size": 32,
+    "batch_size": 128,
 
     "blacklist_path": "./data/label_review",
     "FOLDER_TO_SAVE": "./saved/"

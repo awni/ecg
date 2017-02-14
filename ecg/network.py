@@ -1,33 +1,50 @@
+def _bn_relu(layer, **params):
+    from keras.layers import Activation, BatchNormalization
+    activation_fn = params["conv_activation"]
+
+    layer = BatchNormalization()(layer)
+
+    if activation_fn == 'prelu':
+        from keras.layers.advanced_activations import PReLU
+        layer = PReLU()(layer)
+    elif activation_fn == 'elu':
+        from keras.layers.advanced_activations import ELU
+        layer = ELU()(layer)
+    elif activation_fn == 'leaky_relu':
+        from keras.layers.advanced_activations import LeakyReLU
+        layer = LeakyReLU()(layer)
+    else:
+        layer = Activation(activation_fn)(layer)
+
+    return layer
+
 
 def add_conv_layers(layer, **params):
     from keras.layers.convolutional import Convolution1D
-    from keras.layers import Dropout, Activation, BatchNormalization
+    from keras.layers import Dropout, merge
     from keras.layers.noise import GaussianNoise
-    subsample_lengths = params["conv_subsample_lengths"]
-    for subsample_length in subsample_lengths:
-        if params.get("gaussian_noise", 0) > 0:
-            layer = GaussianNoise(params["gaussian_noise"])(layer)
+
+    def add_conv_weight(layer, subsample_length):
         layer = Convolution1D(
             nb_filter=params["conv_num_filters"],
             filter_length=params["conv_filter_length"],
             border_mode='same',
             subsample_length=subsample_length,
             init=params["conv_init"])(layer)
-        if params.get("use_batch_norm", False) is True:
-            layer = BatchNormalization()(layer)
+        return layer
 
-        activation_fn = params["conv_activation"]
-        if activation_fn == 'prelu':
-            from keras.layers.advanced_activations import PReLU
-            layer = PReLU()(layer)
-        elif activation_fn == 'elu':
-            from keras.layers.advanced_activations import ELU
-            layer = ELU()(layer)
-        elif activation_fn == 'leaky_relu':
-            from keras.layers.advanced_activations import LeakyReLU
-            layer = LeakyReLU()(layer)
-        else:
-            layer = Activation(activation_fn)(layer)
+    subsample_lengths = params["conv_subsample_lengths"]
+    for subsample_length in subsample_lengths:
+        if params.get("gaussian_noise", 0) > 0:
+            layer = GaussianNoise(params["gaussian_noise"])(layer)
+        shortcut = add_conv_weight(layer, subsample_length)
+
+        layer = shortcut
+        for i in range(2):
+            layer = _bn_relu(layer, **params)
+            layer = add_conv_weight(layer, 1)
+
+        layer = merge([shortcut, layer], mode="sum")
 
         if params.get("conv_dropout", 0) > 0:
             layer = Dropout(params["conv_dropout"])(layer)
