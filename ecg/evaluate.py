@@ -44,29 +44,37 @@ def get_all_model_predictions(args, x_val):
     return np.array(all_model_predictions)
 
 
-def compute_scores(ground_truth, predictions, classes):
-    print(ground_truth.shape)
-    print(predictions.shape)
+def compute_scores(
+        ground_truth,
+        predictions,
+        classes,
+        confusion_table=True,
+        report=True,
+        plot=True):
     ground_truth_flat = ground_truth.flatten().tolist()
     predictions_flat = predictions.flatten().tolist()
 
     cnf_matrix = confusion_matrix(ground_truth_flat, predictions_flat).tolist()
 
-    try:
-        plot_confusion_matrix(
-            np.log10(np.array(cnf_matrix) + 1),
-            classes,
-            args.model_path)
-    except:
-        print("Skipping plot")
+    if plot is True:
+        try:
+            plot_confusion_matrix(
+                np.log10(np.array(cnf_matrix) + 1),
+                classes,
+                args.model_path)
+        except:
+            print("Skipping plot")
 
-    for i, row in enumerate(cnf_matrix):
-        row.insert(0, classes[i])
+    if confusion_table is True:
+        for i, row in enumerate(cnf_matrix):
+            row.insert(0, classes[i])
 
-    print(tabulate(cnf_matrix, headers=[c[:1] for c in classes]))
-    print(classification_report(
-        ground_truth_flat, predictions_flat,
-        target_names=classes))
+        print(tabulate(cnf_matrix, headers=[c[:1] for c in classes]))
+
+    if report is True:
+        print(classification_report(
+            ground_truth_flat, predictions_flat,
+            target_names=classes))
 
 
 def evaluate(args, train_params, test_params):
