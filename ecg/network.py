@@ -42,7 +42,7 @@ def add_conv_layers(layer, **params):
         layer = shortcut
 
         if params.get("is_resnet", True):
-            for i in range(2):
+            for i in range(params["num_skip"]):
                 layer = _bn_relu(layer, **params)
                 layer = add_conv_weight(layer, 1)
 
