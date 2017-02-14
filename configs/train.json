@@ -14,6 +14,7 @@
     "conv_activation": "relu",
     "conv_dropout": 0.25,
     "is_resnet": false,
+    "num_skip": 2,
 
     "learning_rate": 0.001,
     "clipnorm": 1,

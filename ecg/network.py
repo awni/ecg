@@ -1,5 +1,5 @@
 def _bn_relu(layer, **params):
-    from keras.layers import Activation, BatchNormalization
+    from keras.layers import Dropout, Activation, BatchNormalization
     activation_fn = params["conv_activation"]
 
     layer = BatchNormalization()(layer)
@@ -16,12 +16,15 @@ def _bn_relu(layer, **params):
     else:
         layer = Activation(activation_fn)(layer)
 
+    if params.get("conv_dropout", 0) > 0:
+        layer = Dropout(params["conv_dropout"])(layer)
+
     return layer
 
 
 def add_conv_layers(layer, **params):
     from keras.layers.convolutional import Convolution1D
-    from keras.layers import Dropout, merge
+    from keras.layers import merge
     from keras.layers.noise import GaussianNoise
 
     def add_conv_weight(layer, subsample_length):
@@ -47,9 +50,9 @@ def add_conv_layers(layer, **params):
                 layer = add_conv_weight(layer, 1)
 
             layer = merge([shortcut, layer], mode="sum")
+        else:
+            layer = _bn_relu(layer, **params)
 
-        if params.get("conv_dropout", 0) > 0:
-            layer = Dropout(params["conv_dropout"])(layer)
     return layer
 
 
