@@ -18,8 +18,10 @@ def get_params_table(path, max_models=5, metric="val_loss"):
                 for w in parameters[key]:
                     fq[w] += 1
                 parameters[key] = dict(fq)
-        if 'FOLDER_TO_SAVE' in parameters:
-            del parameters["FOLDER_TO_SAVE"]
+        for key in ['FOLDER_TO_SAVE', 'TRAIN_DATA_PATH']:
+            if key in parameters:
+                del parameters[key]
+
         return parameters
 
     output = BytesIO()
