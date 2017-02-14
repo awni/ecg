@@ -80,7 +80,8 @@ def compute_scores(
 def evaluate(args, train_params, test_params):
     dl = load.load_test(train_params, test_params)
     split = args.split
-    x, y = dl.x_train, dl.y_train if split == 'train' else dl.x_test, dl.y_test
+    (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
+        (dl.x_test, dl.y_test)
     print("Size: " + str(len(x)) + " examples.")
 
     print("Predicting on:", split)
