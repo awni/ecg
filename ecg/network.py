@@ -40,11 +40,13 @@ def add_conv_layers(layer, **params):
         shortcut = add_conv_weight(layer, subsample_length)
 
         layer = shortcut
-        for i in range(2):
-            layer = _bn_relu(layer, **params)
-            layer = add_conv_weight(layer, 1)
 
-        layer = merge([shortcut, layer], mode="sum")
+        if params.get("is_resnet", True):
+            for i in range(2):
+                layer = _bn_relu(layer, **params)
+                layer = add_conv_weight(layer, 1)
+
+            layer = merge([shortcut, layer], mode="sum")
 
         if params.get("conv_dropout", 0) > 0:
             layer = Dropout(params["conv_dropout"])(layer)

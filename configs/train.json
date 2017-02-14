@@ -13,6 +13,7 @@
     "conv_init": "he_normal",
     "conv_activation": "leaky_relu",
     "conv_dropout": 0.25,
+    "is_resnet": false,
 
     "learning_rate": 0.001,
     "clipnorm": 1,
