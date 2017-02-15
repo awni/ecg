@@ -107,7 +107,7 @@ class Loader(object):
         ep_json = base + self.epi_ext
         with open(ep_json, 'r') as fid:
             episodes = json.load(fid)['episodes']
-        episodes = sorted(episodes, key = lambda x: x['onset'])
+        episodes = sorted(episodes, key=lambda x: x['onset'])
 
         for episode in episodes:
             episode['onset_round'] = round_to_step(episode['onset'], self.step)
