@@ -107,6 +107,7 @@ class Loader(object):
         ep_json = base + self.epi_ext
         with open(ep_json, 'r') as fid:
             episodes = json.load(fid)['episodes']
+        episodes = sorted(episodes, key=lambda x: x['onset'])
 
         for episode in episodes:
             episode['onset_round'] = round_to_step(episode['onset'], self.step)
@@ -154,10 +155,12 @@ class Loader(object):
         data = []
         for record in tqdm(records):
             episodes = self.load_episodes(record)
-            if episodes is not None:
-                labels = self.make_labels(episodes)
-                segments = self.load_ecg(record)
-                data.extend(zip(segments, labels))
+            labels = self.make_labels(episodes)
+            segments = self.load_ecg(record)
+            if len(labels) == 0:
+                print(episodes)
+                print(labels)
+            data.extend(zip(segments, labels))
         return data
 
     def load(self):

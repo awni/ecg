@@ -1,36 +1,62 @@
-
-def add_conv_layers(acts, **params):
-    from keras.layers.convolutional import Convolution1D
+def _bn_relu(layer, **params):
     from keras.layers import Dropout, Activation, BatchNormalization
+    activation_fn = params["conv_activation"]
+
+    layer = BatchNormalization()(layer)
+
+    if activation_fn == 'prelu':
+        from keras.layers.advanced_activations import PReLU
+        layer = PReLU()(layer)
+    elif activation_fn == 'elu':
+        from keras.layers.advanced_activations import ELU
+        layer = ELU()(layer)
+    elif activation_fn == 'leaky_relu':
+        from keras.layers.advanced_activations import LeakyReLU
+        layer = LeakyReLU()(layer)
+    else:
+        layer = Activation(activation_fn)(layer)
+
+    if params.get("conv_dropout", 0) > 0:
+        layer = Dropout(params["conv_dropout"])(layer)
+
+    return layer
+
+
+def add_conv_layers(layer, **params):
+    from keras.layers.convolutional import Convolution1D
+    from keras.layers import merge
     from keras.layers.noise import GaussianNoise
-    subsample_lengths = params["conv_subsample_lengths"]
-    for subsample_length in subsample_lengths:
-        if params.get("gaussian_noise", 0) > 0:
-            acts = GaussianNoise(params["gaussian_noise"])(acts)
-        acts = Convolution1D(
+
+    def add_conv_weight(layer, subsample_length):
+        layer = Convolution1D(
             nb_filter=params["conv_num_filters"],
             filter_length=params["conv_filter_length"],
             border_mode='same',
             subsample_length=subsample_length,
-            init=params["conv_init"])(acts)
-        if params.get("use_batch_norm", False) is True:
-            acts = BatchNormalization()(acts)
-        activation_fn = params["conv_activation"]
-        if activation_fn == 'prelu':
-            from keras.layers.advanced_activations import PReLU
-            acts = PReLU()(acts)
-        if activation_fn == 'elu':
-            from keras.layers.advanced_activations import ELU
-            acts = ELU()(acts)
+            init=params["conv_init"])(layer)
+        return layer
+
+    subsample_lengths = params["conv_subsample_lengths"]
+    for subsample_length in subsample_lengths:
+        if params.get("gaussian_noise", 0) > 0:
+            layer = GaussianNoise(params["gaussian_noise"])(layer)
+        shortcut = add_conv_weight(layer, subsample_length)
+
+        layer = shortcut
+
+        if params.get("is_resnet", True):
+            for i in range(params["num_skip"]):
+                layer = _bn_relu(layer, **params)
+                layer = add_conv_weight(layer, 1)
+
+            layer = merge([shortcut, layer], mode="sum")
         else:
-            acts = Activation(activation_fn)(acts)
+            layer = _bn_relu(layer, **params)
 
-        if params.get("conv_dropout", 0) > 0:
-            acts = Dropout(params["conv_dropout"])(acts)
-    return acts
+    return layer
 
 
-def add_recurrent_layers(acts, **params):
+def add_recurrent_layers(layer, **params):
     from keras.layers.recurrent import LSTM, GRU
     from keras.layers.wrappers import Bidirectional
     for i in range(params.get("recurrent_layers", 0)):
@@ -45,33 +71,33 @@ def add_recurrent_layers(acts, **params):
                     dropout_U=params["recurrent_dropout"],
                     return_sequences=True)
         if params["recurrent_is_bidirectional"] is True:
-            acts = Bidirectional(rec_layer)(acts)
+            layer = Bidirectional(rec_layer)(layer)
         else:
-            acts = rec_layer(acts)
-    return acts
+            layer = rec_layer(layer)
+    return layer
 
 
-def add_dense_layers(acts, **params):
+def add_dense_layers(layer, **params):
     from keras.layers.core import Dense
     from keras.layers.wrappers import TimeDistributed
     from keras.layers import Dropout
     from keras.regularizers import l2
     for i in range(params.get("dense_layers", 0)):
-        acts = TimeDistributed(Dense(
+        layer = TimeDistributed(Dense(
             params["dense_hidden"],
             activation=params["dense_activation"],
             init=params["dense_init"],
-            W_regularizer=l2(params["dense_l2_penalty"])))(acts)
+            W_regularizer=l2(params["dense_l2_penalty"])))(layer)
         if params.get("dense_dropout", 0) > 0:
-            acts = Dropout(params["dense_dropout"])(acts)
-    return acts
+            layer = Dropout(params["dense_dropout"])(layer)
+    return layer
 
 
-def add_output_layer(acts, **params):
+def add_output_layer(layer, **params):
     from keras.layers.core import Dense, Activation
     from keras.layers.wrappers import TimeDistributed
-    acts = TimeDistributed(Dense(params["num_categories"]))(acts)
-    return Activation('softmax')(acts)
+    layer = TimeDistributed(Dense(params["num_categories"]))(layer)
+    return Activation('softmax')(layer)
 
 
 def add_compile(model, **params):
@@ -89,10 +115,10 @@ def build_network(**params):
     inputs = Input(shape=params['input_shape'],
                    dtype='float32',
                    name='inputs')
-    acts = add_conv_layers(inputs, **params)
-    acts = add_recurrent_layers(acts, **params)
-    acts = add_dense_layers(acts, **params)
-    output = add_output_layer(acts, **params)
+    layer = add_conv_layers(inputs, **params)
+    layer = add_recurrent_layers(layer, **params)
+    layer = add_dense_layers(layer, **params)
+    output = add_output_layer(layer, **params)
     model = Model(input=[inputs], output=[output])
     add_compile(model, **params)
     return model

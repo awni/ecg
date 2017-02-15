@@ -26,15 +26,15 @@ class Processor(object):
         self.n = None
 
     def process(self, loader, fit=True):
-        x_train = np.array(loader.x_train)
-        y_train = np.array(loader.y_train)
-        x_test = np.array(loader.x_test)
-        y_test = np.array(loader.y_test)
+        self.x_train = np.array(loader.x_train)
+        self.y_train = np.array(loader.y_train)
+        self.x_test = np.array(loader.x_test)
+        self.y_test = np.array(loader.y_test)
 
         if self.use_bandpass_filter is True:
             bp_filter = featurize.BandPassFilter()
-            x_train = bp_filter.transform(x_train)
-            x_test = bp_filter.transform(x_test)
+            self.x_train = bp_filter.transform(self.x_train)
+            self.x_test = bp_filter.transform(self.x_test)
 
         if len(self.wavelet_fns) != 0:
             if (self.wavelet_type == 'discrete'):
@@ -46,31 +46,33 @@ class Processor(object):
                     featurize.ContinuousWaveletTransformer(self.wavelet_fns)
             else:
                 raise ValueError("Wavelet type not defined.")
-            x_train = wavelet_transformer.transform(x_train)
-            x_test = wavelet_transformer.transform(x_test)
+            self.x_train = wavelet_transformer.transform(self.x_train)
+            self.x_test = wavelet_transformer.transform(self.x_test)
 
         if self.normalizer is not False:
             if fit is True:
                 self.n = featurize.Normalizer(self.normalizer)
-                self.n.fit(x_train)
-            if len(x_train) > 0:
-                x_train = self.n.transform(x_train)
-            if len(x_test) > 0:
-                x_test = self.n.transform(x_test)
+                self.n.fit(self.x_train)
+            if len(self.x_train) > 0:
+                self.x_train = self.n.transform(self.x_train)
+            if len(self.x_test) > 0:
+                self.x_test = self.n.transform(self.x_test)
 
         if self.ignore_classes is not False:
             for ignore_class in self.ignore_classes:
                 print("Ignoring class: " + ignore_class)
                 for split in ['_train', '_test']:
-                    indices = np.where(np.sum(getattr(
-                        locals, 'y' + split) == ignore_class, axis=1) == 0)[0]
-                    for prop in ['x', 'y']:
-                        setattr(self, prop + split, getattr(
-                            self, prop + split)[indices])
-
-        y_train = self.transform_to_int_label(y_train, loader)
-        y_test = self.transform_to_int_label(y_test, loader)
-        return (x_train, y_train, x_test, y_test)
+                    attr = getattr(self, 'y' + split)
+                    if len(attr) > 0:
+                        indices = np.where(np.sum(attr == ignore_class,
+                                           axis=1) == 0)[0]
+                        print(indices)
+                        for prop in ['x', 'y']:
+                            setattr(self, prop + split, getattr(
+                                self, prop + split)[indices])
+        self.y_train = self.transform_to_int_label(self.y_train, loader)
+        self.y_test = self.transform_to_int_label(self.y_test, loader)
+        return (self.x_train, self.y_train, self.x_test, self.y_test)
 
     def transform_to_int_label(self, y_split, loader):
         labels_mod = []

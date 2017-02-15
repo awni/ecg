@@ -18,8 +18,10 @@ def get_params_table(path, max_models=5, metric="val_loss"):
                 for w in parameters[key]:
                     fq[w] += 1
                 parameters[key] = dict(fq)
-        if 'FOLDER_TO_SAVE' in parameters:
-            del parameters["FOLDER_TO_SAVE"]
+        for key in ['FOLDER_TO_SAVE', 'TRAIN_DATA_PATH']:
+            if key in parameters:
+                del parameters[key]
+
         return parameters
 
     output = BytesIO()
@@ -82,13 +84,19 @@ def get_best_model(path, get_structure=False, metric='val_loss'):
 def analyze(args):
     best_model_path = get_best_model(args.saved_path, metric=args.metric)
     print('Best model path', args.metric, ':', best_model_path)
-    params_table = get_params_table(args.saved_path, metric=args.metric)
+    params_table = get_params_table(
+        args.saved_path, max_models=args.max_models, metric=args.metric)
     print(params_table)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("saved_path", help="path to saved files")
+    parser.add_argument(
+        "--max_models",
+        help="max models",
+        type=int,
+        default=3)
     parser.add_argument(
         "--metric",
         help="metric to use",

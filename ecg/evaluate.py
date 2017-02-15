@@ -44,11 +44,44 @@ def get_all_model_predictions(args, x_val):
     return np.array(all_model_predictions)
 
 
+def compute_scores(
+        ground_truth,
+        predictions,
+        classes,
+        confusion_table=True,
+        report=True,
+        plot=True):
+    ground_truth_flat = ground_truth.flatten().tolist()
+    predictions_flat = predictions.flatten().tolist()
+
+    cnf_matrix = confusion_matrix(ground_truth_flat, predictions_flat).tolist()
+
+    if plot is True:
+        try:
+            plot_confusion_matrix(
+                np.log10(np.array(cnf_matrix) + 1),
+                classes,
+                args.model_path)
+        except:
+            print("Skipping plot")
+
+    if confusion_table is True:
+        for i, row in enumerate(cnf_matrix):
+            row.insert(0, classes[i])
+
+        print(tabulate(cnf_matrix, headers=[c[:1] for c in classes]))
+
+    if report is True:
+        print(classification_report(
+            ground_truth_flat, predictions_flat,
+            target_names=classes))
+
+
 def evaluate(args, train_params, test_params):
     dl = load.load_test(train_params, test_params)
     split = args.split
-    x = dl.x_train if split == 'train' else dl.x_test
-    y = dl.y_train if split == 'train' else dl.y_test
+    (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
+        (dl.x_test, dl.y_test)
     print("Size: " + str(len(x)) + " examples.")
 
     print("Predicting on:", split)
@@ -62,26 +95,16 @@ def evaluate(args, train_params, test_params):
     else:
         predictions = np.argmax(predictions, axis=-1)
 
-    y_flat = np.argmax(y, axis=-1).flatten().tolist()
-    predictions_flat = predictions.flatten().tolist()
+    ground_truth = np.argmax(y, axis=-1)
 
-    cnf_matrix = confusion_matrix(y_flat, predictions_flat).tolist()
+    compute_scores(ground_truth, predictions, dl.classes)
 
-    try:
-        plot_confusion_matrix(
-            np.log10(np.array(cnf_matrix) + 1),
-            dl.classes,
-            args.model_path)
-    except:
-        print("Skipping plot")
 
-    for i, row in enumerate(cnf_matrix):
-        row.insert(0, dl.classes[i])
-
-    print(tabulate(cnf_matrix, headers=[c[:1] for c in dl.classes]))
-    print(classification_report(
-        y_flat, predictions_flat,
-        target_names=dl.classes))
+def evaluate_test(args, train_params, test_params):
+    assert(args.split == 'test')
+    for i in range(3):
+        test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
+        evaluate(args, train_params, test_params)
 
 
 if __name__ == '__main__':
@@ -99,4 +122,7 @@ if __name__ == '__main__':
     test_params = train_params.copy()
     test_new_params = json.load(open(args.test_config_file, 'r'))
     test_params.update(test_new_params)
-    evaluate(args, train_params, test_params)
+    if "label_review" in test_new_params["EVAL_PATH"]:
+        evaluate_test(args, train_params, test_params)
+    else:
+        evaluate(args, train_params, test_params)
