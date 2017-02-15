@@ -2,7 +2,6 @@
   "toy": false,
   "test_frac": 1,
   "blacklist_path": "",
-  "epi_ext": "_rev0.episodes.json",
 
   "EVAL_PATH": "./data/label_review"
 }

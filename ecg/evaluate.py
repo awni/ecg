@@ -100,6 +100,13 @@ def evaluate(args, train_params, test_params):
     compute_scores(ground_truth, predictions, dl.classes)
 
 
+def evaluate_test(args, train_params, test_params):
+    assert(args.split == 'test')
+    for i in range(3):
+        test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
+        evaluate(args, train_params, test_params)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("test_config_file", help="path to config file")
@@ -115,4 +122,7 @@ if __name__ == '__main__':
     test_params = train_params.copy()
     test_new_params = json.load(open(args.test_config_file, 'r'))
     test_params.update(test_new_params)
-    evaluate(args, train_params, test_params)
+    if "label_review" in test_new_params:
+        evaluate_test(args, train_params, test_params)
+    else:
+        evaluate(args, train_params, test_params)
