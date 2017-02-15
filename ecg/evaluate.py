@@ -122,7 +122,7 @@ if __name__ == '__main__':
     test_params = train_params.copy()
     test_new_params = json.load(open(args.test_config_file, 'r'))
     test_params.update(test_new_params)
-    if "label_review" in test_new_params:
+    if "label_review" in test_new_params["EVAL_PATH"]:
         evaluate_test(args, train_params, test_params)
     else:
         evaluate(args, train_params, test_params)
