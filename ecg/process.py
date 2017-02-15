@@ -9,7 +9,6 @@ class Processor(object):
         self,
         use_one_hot_labels=True,
         normalizer=False,
-        ignore_classes=[],
         wavelet_fns=[],
         wavelet_type='discrete',
         wavelet_level=1,
@@ -21,16 +20,10 @@ class Processor(object):
         self.wavelet_type = wavelet_type
         self.wavelet_level = wavelet_level
         self.use_one_hot_labels = use_one_hot_labels
-        self.ignore_classes = ignore_classes
         self.use_bandpass_filter = use_bandpass_filter
         self.n = None
 
-    def process(self, loader, fit=True):
-        self.x_train = np.array(loader.x_train)
-        self.y_train = np.array(loader.y_train)
-        self.x_test = np.array(loader.x_test)
-        self.y_test = np.array(loader.y_test)
-
+    def process_x(self, fit):
         if self.use_bandpass_filter is True:
             bp_filter = featurize.BandPassFilter()
             self.x_train = bp_filter.transform(self.x_train)
@@ -58,20 +51,19 @@ class Processor(object):
             if len(self.x_test) > 0:
                 self.x_test = self.n.transform(self.x_test)
 
-        if self.ignore_classes is not False:
-            for ignore_class in self.ignore_classes:
-                print("Ignoring class: " + ignore_class)
-                for split in ['_train', '_test']:
-                    attr = getattr(self, 'y' + split)
-                    if len(attr) > 0:
-                        indices = np.where(np.sum(attr == ignore_class,
-                                           axis=1) == 0)[0]
-                        print(indices)
-                        for prop in ['x', 'y']:
-                            setattr(self, prop + split, getattr(
-                                self, prop + split)[indices])
+    def process_y(self, loader):
         self.y_train = self.transform_to_int_label(self.y_train, loader)
         self.y_test = self.transform_to_int_label(self.y_test, loader)
+
+    def process(self, loader, fit=True):
+        self.x_train = np.array(loader.x_train)
+        self.x_test = np.array(loader.x_test)
+        self.process_x(fit)
+
+        self.y_train = np.array(loader.y_train)
+        self.y_test = np.array(loader.y_test)
+        self.process_y(loader)
+
         return (self.x_train, self.y_train, self.x_test, self.y_test)
 
     def transform_to_int_label(self, y_split, loader):

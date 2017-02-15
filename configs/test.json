@@ -2,6 +2,7 @@
   "toy": false,
   "test_frac": 1,
   "blacklist_path": "",
+  "relabel_classes": {"AFIB": "AF", "AFL": "AF"},
 
   "EVAL_PATH": "./data/label_review"
 }

@@ -25,6 +25,8 @@ class Loader(object):
             ecg_samp_rate=200.0,
             ecg_ext='.ecg',
             epi_ext='.episodes.json',
+            relabel_classes={},
+            ignore_classes=[],
             blacklist_path="",
             duration=30,
             test_frac=0.2,
@@ -41,6 +43,8 @@ class Loader(object):
         self.ecg_ext = ecg_ext
         self.epi_ext = epi_ext
         self.blacklist_path = blacklist_path
+        self.ignore_classes = ignore_classes
+        self.relabel_classes = relabel_classes
         self.duration = duration
         self.test_frac = test_frac
         self.step = step
@@ -58,6 +62,26 @@ class Loader(object):
             self.processor.process(self, fit=self.fit_processor)
 
     def setup_label_mappings(self):
+        if len(self.relabel_classes) > 0:
+            print("Relabelling Classes...")
+            for split in ['_train', '_test']:
+                y = getattr(self, 'y' + split)
+                y_new = [[self.relabel_classes[s] if s in self.relabel_classes
+                         else s for s in y_indiv] for y_indiv in y]
+                setattr(self, 'y' + split, y_new)
+
+        if len(self.ignore_classes) > 0:
+            for ignore_class in self.ignore_classes:
+                print("Ignoring class: " + ignore_class)
+                for split in ['_train', '_test']:
+                    attr = getattr(self, 'y' + split)
+                    if len(attr) > 0:
+                        indices = np.where(np.sum(attr == ignore_class,
+                                           axis=1) == 0)[0]
+                        for prop in ['x', 'y']:
+                            setattr(self, prop + split, getattr(
+                                self, prop + split)[indices])
+
         y_tot = list(self.y_train) + list(self.y_test)
         label_counter = collections.Counter(
             l for labels in y_tot for l in labels)
