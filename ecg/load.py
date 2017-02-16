@@ -31,7 +31,7 @@ class Loader(object):
             duration=30,
             test_frac=0.2,
             test_split_start=0,
-            step=200,
+            step=256,
             toy=False,
             fit_processor=True,
             **kwargs):
