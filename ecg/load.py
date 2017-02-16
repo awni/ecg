@@ -236,9 +236,11 @@ def load_test(params_train, params_test):
 
     processor = Processor(**params_train)
     print("Fitting processor...")
-    Loader(params_train["TRAIN_DATA_PATH"], processor, **params_train)
+    params_train["data_path"] = params_train["TRAIN_DATA_PATH"]
+    Loader(processor, **params_train)
     print("Loading test dataset...")
-    loader = Loader(params_test["EVAL_PATH"], processor, **params_test)
+    params_test["data_path"] = params_test["EVAL_PATH"]
+    loader = Loader(processor, **params_test)
 
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of test set {}".format(len(loader.x_test)))
