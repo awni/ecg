@@ -50,8 +50,10 @@ def resnet_block(layer, subsample_length, **params):
 
 
 def add_conv_layers(layer, **params):
+    layer = _bn_relu(add_conv_weight(layer, 16, 1, **params), **params)
     for subsample_length in params["conv_subsample_lengths"]:
         layer = resnet_block(layer, subsample_length, **params)
+    layer = _bn_relu(layer, **params)
     return layer
 
 
