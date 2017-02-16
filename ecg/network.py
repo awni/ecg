@@ -53,6 +53,8 @@ def add_conv_layers(layer, **params):
         else:
             layer = _bn_relu(layer, **params)
 
+    layer = _bn_relu(layer, **params)
+
     return layer
 
 
