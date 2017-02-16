@@ -20,16 +20,17 @@ from process import Processor
 class Loader(object):
     def __init__(
             self,
-            data_path,
             processor,
+            data_path='',
             ecg_samp_rate=200.0,
             ecg_ext='.ecg',
             epi_ext='.episodes.json',
             relabel_classes={},
             ignore_classes=[],
-            blacklist_path="",
+            blacklist_path='',
             duration=30,
             test_frac=0.2,
+            test_split_start=0,
             step=200,
             toy=False,
             fit_processor=True,
@@ -46,6 +47,7 @@ class Loader(object):
         self.ignore_classes = ignore_classes
         self.relabel_classes = relabel_classes
         self.duration = duration
+        self.test_split_start = test_split_start
         self.test_frac = test_frac
         self.step = step
         self.toy = toy
@@ -115,7 +117,9 @@ class Loader(object):
             if len(self.blacklist) > 0 and pid in self.blacklist:
                 continue
             bucket = get_bucket_from_id(pid)
-            chosen = test if bucket < (self.test_frac * 10) else train
+            in_test = bucket >= self.test_split_start and  \
+                bucket < (self.test_frac * 10 + self.test_split_start)
+            chosen = test if in_test else train
             chosen.append(record)
         return train, test
 
@@ -216,9 +220,9 @@ class Loader(object):
         return len(self.int_to_class)
 
 
-def load_train(args, params):
+def load_train(params):
     processor = Processor(**params)
-    loader = Loader(args.data_path, processor, **params)
+    loader = Loader(processor, **params)
 
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of test set {}".format(len(loader.x_test)))
@@ -244,8 +248,7 @@ def load_test(params_train, params_test):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="path to files")
     parser.add_argument("config_file", help="path to config file")
     args = parser.parse_args()
     params = json.load(open(args.config_file, 'r'))
-    load_train(args, params)
+    load_train(params)
