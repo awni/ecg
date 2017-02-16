@@ -16,10 +16,11 @@
     "is_resnet": true,
     "num_skip": 2,
 
-    "learning_rate": 0.001,
+    "learning_rate": 0.01,
     "clipnorm": 1,
     "batch_size": 128,
 
     "blacklist_path": "./data/label_review",
+    "data_path": "./data",
     "FOLDER_TO_SAVE": "./saved/"
 }
