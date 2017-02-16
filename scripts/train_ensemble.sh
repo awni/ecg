@@ -12,7 +12,7 @@ do
         else
             echo "GPU $DEVICE free"
             export CUDA_VISIBLE_DEVICES=$DEVICE
-            python ecg/train.py data configs/train.json -e $1 -v 2 > $DEVICE.out 2>&1 &
+            python ecg/train.py configs/train.json -e $1 -v 2 -t $((DEVICE * 2)) > $DEVICE-$1.out 2>&1 &
             echo "Started training script on $DEVICE..."
             
     fi

@@ -11,7 +11,7 @@ mkdir saved/
 
 #### Training
 ```bash
-python ecg/train.py data configs/train.json # use --overfit for overfitting
+python ecg/train.py configs/train.json # use --overfit for overfitting
 ```
 
 #### Evaluation

@@ -17,9 +17,10 @@
     "num_skip": 2,
 
     "learning_rate": 0.001,
-    "clipnorm": 1,
+    "clipnorm": 10,
     "batch_size": 128,
 
     "blacklist_path": "./data/label_review",
+    "data_path": "./data",
     "FOLDER_TO_SAVE": "./saved/"
 }

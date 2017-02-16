@@ -96,7 +96,7 @@ if __name__ == '__main__':
         "--max_models",
         help="max models",
         type=int,
-        default=3)
+        default=1)
     parser.add_argument(
         "--metric",
         help="metric to use",
