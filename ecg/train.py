@@ -59,7 +59,7 @@ def train(args, params):
             if "dropout" in key:
                 params[key] = 0
 
-    dl = load.load_train(args, params)
+    dl = load.load_train(params)
 
     x_train = dl.x_train
     y_train = dl.y_train
@@ -74,7 +74,7 @@ def train(args, params):
 
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
     params["EXPERIMENT_NAME"] = experiment_name
-    params["TRAIN_DATA_PATH"] = os.path.realpath(args.data_path)
+    params["TRAIN_DATA_PATH"] = os.path.realpath(params["data_path"])
 
     save_params(params, start_time, experiment_name)
 
@@ -104,9 +104,9 @@ def train(args, params):
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
-        monitor='loss',
-        factor=0.1,
-        patience=2,
+        monitor=monitor_metric,
+        factor=0.5,
+        patience=3,
         min_lr=0.0001,
         verbose=args.verbose)
 
@@ -126,7 +126,6 @@ def train(args, params):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="path to data files")
     parser.add_argument("config_file", help="path to confile file")
     parser.add_argument("--experiment", "-e", help="tag with experiment name",
                         default="default")
