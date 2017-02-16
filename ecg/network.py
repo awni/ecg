@@ -22,37 +22,36 @@ def _bn_relu(layer, **params):
     return layer
 
 
-def add_conv_layers(layer, **params):
+def add_conv_weight(layer, filter_length, subsample_length, **params):
     from keras.layers.convolutional import Convolution1D
+    layer = Convolution1D(
+        nb_filter=params["conv_num_filters"],
+        filter_length=filter_length,
+        border_mode='same',
+        subsample_length=subsample_length,
+        init=params["conv_init"])(layer)
+    return layer
+
+
+def resnet_block(layer, subsample_length, **params):
     from keras.layers import merge
-    from keras.layers.noise import GaussianNoise
+    shortcut = add_conv_weight(layer, 1, subsample_length, **params)
 
-    def add_conv_weight(layer, subsample_length):
-        layer = Convolution1D(
-            nb_filter=params["conv_num_filters"],
-            filter_length=params["conv_filter_length"],
-            border_mode='same',
-            subsample_length=subsample_length,
-            init=params["conv_init"])(layer)
-        return layer
+    for i in range(params["num_skip"]):
+        layer = _bn_relu(layer, **params)
+        layer = add_conv_weight(
+            layer,
+            params["conv_filter_length"],
+            subsample_length if i == 0 else 1,
+            **params)
 
-    subsample_lengths = params["conv_subsample_lengths"]
-    for subsample_length in subsample_lengths:
-        if params.get("gaussian_noise", 0) > 0:
-            layer = GaussianNoise(params["gaussian_noise"])(layer)
-        shortcut = add_conv_weight(layer, subsample_length)
+    layer = merge([shortcut, layer], mode="sum")
+    return layer
 
-        layer = shortcut
 
-        if params.get("is_resnet", True):
-            for i in range(params["num_skip"]):
-                layer = _bn_relu(layer, **params)
-                layer = add_conv_weight(layer, 1)
-
-            layer = merge([shortcut, layer], mode="sum")
-        else:
-            layer = _bn_relu(layer, **params)
-
+def add_conv_layers(layer, **params):
+    for subsample_length in params["conv_subsample_lengths"]:
+        layer = resnet_block(layer, subsample_length, **params)
     return layer
 
 

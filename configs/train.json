@@ -5,7 +5,6 @@
     "test_frac": 0.2,
     "relabel_classes": {"AFIB": "AF", "AFL": "AF"},
 
-    "gaussian_noise": 0.001,
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2],
     "conv_activation": "relu",
     "conv_filter_length": 16,
@@ -13,7 +12,6 @@
     "conv_init": "he_normal",
     "conv_activation": "relu",
     "conv_dropout": 0.25,
-    "is_resnet": true,
     "num_skip": 2,
 
     "learning_rate": 0.001,
