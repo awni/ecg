@@ -118,7 +118,7 @@ class Loader(object):
                 continue
             bucket = get_bucket_from_id(pid)
             in_test = bucket >= self.test_split_start and  \
-                bucket < (self.test_frac * 10 + self.test_split_start)
+                bucket < (int(self.test_frac * 10) + self.test_split_start)
             chosen = test if in_test else train
             chosen.append(record)
         return train, test

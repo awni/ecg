@@ -59,6 +59,8 @@ def train(args, params):
             if "dropout" in key:
                 params[key] = 0
 
+    params["test_split_start"] = args.test_split_start
+
     dl = load.load_train(params)
 
     x_train = dl.x_train
@@ -100,13 +102,13 @@ def train(args, params):
 
     stopping = EarlyStopping(
         monitor=monitor_metric,
-        patience=20,
+        patience=8,
         verbose=args.verbose)
 
     reduce_lr = ReduceLROnPlateau(
         monitor=monitor_metric,
-        factor=0.5,
-        patience=3,
+        factor=0.1,
+        patience=4,
         min_lr=0.0001,
         verbose=args.verbose)
 
@@ -129,7 +131,10 @@ if __name__ == '__main__':
     parser.add_argument("config_file", help="path to confile file")
     parser.add_argument("--experiment", "-e", help="tag with experiment name",
                         default="default")
-    parser.add_argument("--verbose", "-v", help="verbosity level", default=1)
+    parser.add_argument("--verbose", "-v", help="verbosity level", default=1,
+                        type=int)
+    parser.add_argument("--test_split_start", help="test split start",
+                        default=0, type=int)
     parser.add_argument(
         "--overfit",
         help="whether to overfit training set",
