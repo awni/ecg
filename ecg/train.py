@@ -133,7 +133,7 @@ if __name__ == '__main__':
                         default="default")
     parser.add_argument("--verbose", "-v", help="verbosity level", default=1,
                         type=int)
-    parser.add_argument("--test_split_start", help="test split start",
+    parser.add_argument("--test_split_start", "-t", help="test split start",
                         default=0, type=int)
     parser.add_argument(
         "--overfit",
