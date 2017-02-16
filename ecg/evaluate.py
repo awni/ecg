@@ -74,7 +74,7 @@ def compute_scores(
     if report is True:
         print(classification_report(
             ground_truth_flat, predictions_flat,
-            target_names=classes))
+            target_names=classes, digits=3))
 
 
 def evaluate(args, train_params, test_params):
