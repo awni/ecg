@@ -11,7 +11,7 @@
     "conv_num_filters": 32,
     "conv_init": "he_normal",
     "conv_activation": "relu",
-    "conv_dropout": 0.25,
+    "conv_dropout": 0.1,
     "num_skip": 2,
 
     "learning_rate": 0.001,

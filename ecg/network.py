@@ -34,7 +34,7 @@ def add_conv_weight(layer, filter_length, subsample_length, **params):
 
 
 def resnet_block(layer, subsample_length, **params):
-    from keras.layers import merge
+    from keras.layers import merge, Dropout
     shortcut = add_conv_weight(layer, 1, subsample_length, **params)
 
     for i in range(params["num_skip"]):
@@ -46,6 +46,8 @@ def resnet_block(layer, subsample_length, **params):
             **params)
 
     layer = merge([shortcut, layer], mode="sum")
+    # if params.get("conv_dropout", 0) > 0:
+    #    layer = Dropout(params["conv_dropout"])(layer)
     return layer
 
 
@@ -102,8 +104,9 @@ def add_output_layer(layer, **params):
 
 
 def add_compile(model, **params):
-    from keras.optimizers import Adam
-    optimizer = Adam(lr=params["learning_rate"], clipnorm=params["clipnorm"])
+    from keras.optimizers import Adam, SGD
+    # optimizer = Adam(lr=params["learning_rate"], clipnorm=params["clipnorm"])
+    optimizer = SGD(lr=0.01, decay=1e-4, momentum=0.9, clipnorm=params["clipnorm"])
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
