@@ -92,7 +92,7 @@ def train(args, params):
     except:
         print("Skipping plot")
 
-    from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+    from keras.callbacks import ModelCheckpoint
     from keras.callbacks import EarlyStopping
     from keras.callbacks import LearningRateScheduler
 
@@ -114,13 +114,6 @@ def train(args, params):
         patience=8,
         verbose=args.verbose)
 
-    reduce_lr = ReduceLROnPlateau(
-        monitor=monitor_metric,
-        factor=0.1,
-        patience=4,
-        min_lr=0.0001,
-        verbose=args.verbose)
-
     checkpointer = ModelCheckpoint(
         filepath=get_filename_for_saving(start_time, experiment_name),
         save_best_only=False,
@@ -130,7 +123,7 @@ def train(args, params):
         x_train, y_train,
         validation_data=(x_test, y_test),
         nb_epoch=MAX_EPOCHS,
-        callbacks=[checkpointer, reduce_lr, stopping, LearningRateScheduler(schedule)],
+        callbacks=[checkpointer, stopping, LearningRateScheduler(schedule)],
         batch_size=params.get("batch_size", 32),
         verbose=args.verbose)
 
