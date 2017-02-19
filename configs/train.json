@@ -15,6 +15,7 @@
     "num_skip": 2,
 
     "learning_rate": 0.01,
+    "reduce_lr_epoch": 10,
     "momentum": 0.9,
     "decay": 1e-4,
     "clipnorm": 5,

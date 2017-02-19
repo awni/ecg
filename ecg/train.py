@@ -101,13 +101,10 @@ def train(args, params):
     else:
         monitor_metric = 'val_loss'
 
-    def schedule(epoch):
-        if epoch < 20:
-            return 0.1
-        elif epoch < 40:
-            return 0.01
-        else:
-            return 0.001
+    def schedule_lr(epoch):
+        if epoch < ["reduce_lr_epoch"]:
+            return params["learning_rate"]
+        return params["learning_rate"] * 0.1
 
     stopping = EarlyStopping(
         monitor=monitor_metric,
@@ -123,7 +120,7 @@ def train(args, params):
         x_train, y_train,
         validation_data=(x_test, y_test),
         nb_epoch=MAX_EPOCHS,
-        callbacks=[checkpointer, stopping, LearningRateScheduler(schedule)],
+        callbacks=[checkpointer, stopping, LearningRateScheduler(schedule_lr)],
         batch_size=params.get("batch_size", 32),
         verbose=args.verbose)
 
