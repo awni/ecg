@@ -1,8 +1,5 @@
 def _bn_relu(layer, **params):
-    from keras.layers import Dropout, Activation, BatchNormalization
     activation_fn = params["conv_activation"]
-
-    layer = BatchNormalization()(layer)
 
     if activation_fn == 'prelu':
         from keras.layers.advanced_activations import PReLU
@@ -14,9 +11,13 @@ def _bn_relu(layer, **params):
         from keras.layers.advanced_activations import LeakyReLU
         layer = LeakyReLU()(layer)
     else:
+        from keras.layers import BatchNormalization
+        from keras.layers import Activation
+        layer = BatchNormalization()(layer)
         layer = Activation(activation_fn)(layer)
 
     if params.get("conv_dropout", 0) > 0:
+        from keras.layers import Dropout
         layer = Dropout(params["conv_dropout"])(layer)
 
     return layer
