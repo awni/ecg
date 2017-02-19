@@ -35,7 +35,9 @@ def add_conv_weight(layer, filter_length, subsample_length, **params):
 
 def resnet_block(layer, subsample_length, **params):
     from keras.layers import merge
-    shortcut = add_conv_weight(layer, 1, subsample_length, **params)
+    from keras.layers.pooling import MaxPooling1D
+
+    shortcut = MaxPooling1D(pool_length=subsample_length)(layer)
 
     for i in range(params["num_skip"]):
         layer = _bn_relu(layer, **params)
