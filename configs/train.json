@@ -7,7 +7,7 @@
 
     "gaussian_noise": 0.001,
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2],
-    "conv_activation": "leaky_relu",
+    "conv_activation": "elu",
     "conv_filter_length": 16,
     "conv_num_filters": 32,
     "conv_init": "he_normal",
