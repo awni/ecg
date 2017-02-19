@@ -21,6 +21,6 @@
     "batch_size": 128,
 
     "blacklist_path": "./data/label_review",
-    "data_path": "./data",
+    "data_path": "./data/batches",
     "FOLDER_TO_SAVE": "./saved/"
 }

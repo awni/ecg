@@ -94,11 +94,20 @@ def train(args, params):
 
     from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
     from keras.callbacks import EarlyStopping
+    from keras.callbacks import LearningRateScheduler
 
     if args.overfit is True:
         monitor_metric = 'loss'
     else:
         monitor_metric = 'val_loss'
+
+    def schedule(epoch):
+        if epoch < 20:
+            return 0.1
+        elif epoch < 40:
+            return 0.01
+        else:
+            return 0.001
 
     stopping = EarlyStopping(
         monitor=monitor_metric,
@@ -121,7 +130,7 @@ def train(args, params):
         x_train, y_train,
         validation_data=(x_test, y_test),
         nb_epoch=MAX_EPOCHS,
-        callbacks=[checkpointer, reduce_lr, stopping],
+        callbacks=[checkpointer, reduce_lr, stopping, LearningRateScheduler(schedule)],
         batch_size=params.get("batch_size", 32),
         verbose=args.verbose)
 
