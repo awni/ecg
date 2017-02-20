@@ -23,37 +23,63 @@ def _bn_relu(layer, **params):
     return layer
 
 
-def add_conv_layers(layer, **params):
+def add_conv_weight(layer, filter_length, subsample_length, **params):
     from keras.layers.convolutional import Convolution1D
+    layer = Convolution1D(
+        nb_filter=params["conv_num_filters"],
+        filter_length=filter_length,
+        border_mode='same',
+        subsample_length=subsample_length,
+        init=params["conv_init"])(layer)
+    return layer
+
+
+def resnet_block(layer, subsample_length, **params):
+    from keras.layers import merge
+    from keras.layers.pooling import MaxPooling1D
+
+    shortcut = MaxPooling1D(pool_length=subsample_length)(layer)
+
+    for i in range(params["num_skip"]):
+        layer = _bn_relu(layer, **params)
+        layer = add_conv_weight(
+            layer,
+            params["conv_filter_length"],
+            subsample_length if i == 0 else 1,
+            **params)
+
+    layer = merge([shortcut, layer], mode="sum")
+    return layer
+
+
+def add_resnet_layers(layer, **params):
+    layer = _bn_relu(add_conv_weight(layer, 16, 1, **params), **params)
+    for subsample_length in params["conv_subsample_lengths"]:
+        layer = resnet_block(layer, subsample_length, **params)
+    layer = _bn_relu(layer, **params)
+    return layer
+
+
+def add_conv_layers(layer, **params):
     from keras.layers import merge
     from keras.layers.noise import GaussianNoise
-
-    def add_conv_weight(layer, subsample_length):
-        layer = Convolution1D(
-            nb_filter=params["conv_num_filters"],
-            filter_length=params["conv_filter_length"],
-            border_mode='same',
-            subsample_length=subsample_length,
-            init=params["conv_init"])(layer)
-        return layer
-
-    subsample_lengths = params["conv_subsample_lengths"]
-    for subsample_length in subsample_lengths:
+    for subsample_length in params["conv_subsample_lengths"]:
         if params.get("gaussian_noise", 0) > 0:
             layer = GaussianNoise(params["gaussian_noise"])(layer)
-        shortcut = add_conv_weight(layer, subsample_length)
-
+        shortcut = add_conv_weight(
+            layer,
+            params["conv_filter_length"],
+            subsample_length,
+            **params)
         layer = shortcut
-
-        if params.get("is_resnet", True):
-            for i in range(params["num_skip"]):
-                layer = _bn_relu(layer, **params)
-                layer = add_conv_weight(layer, 1)
-
-            layer = merge([shortcut, layer], mode="sum")
-        else:
+        for i in range(params["num_skip"]):
             layer = _bn_relu(layer, **params)
-
+            layer = add_conv_weight(
+                layer,
+                params["conv_filter_length"],
+                1,
+                **params)
+        layer = merge([shortcut, layer], mode="sum")
     return layer
 
 
@@ -102,8 +128,10 @@ def add_output_layer(layer, **params):
 
 
 def add_compile(model, **params):
-    from keras.optimizers import Adam
-    optimizer = Adam(lr=params["learning_rate"], clipnorm=params["clipnorm"])
+    from keras.optimizers import SGD
+    optimizer = SGD(
+        lr=params["learning_rate"], decay=params["decay"],
+        momentum=params["momentum"], clipnorm=params["clipnorm"])
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
@@ -116,7 +144,10 @@ def build_network(**params):
     inputs = Input(shape=params['input_shape'],
                    dtype='float32',
                    name='inputs')
-    layer = add_conv_layers(inputs, **params)
+    if (params.get("is_correct_resnet", False)):
+        layer = add_resnet_layers(inputs, **params)
+    else:
+        layer = add_conv_layers(inputs, **params)
     layer = add_recurrent_layers(layer, **params)
     layer = add_dense_layers(layer, **params)
     output = add_output_layer(layer, **params)

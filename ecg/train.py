@@ -14,7 +14,7 @@ import load
 import network
 import random
 
-MAX_EPOCHS = 500
+MAX_EPOCHS = 100
 
 
 def get_folder_name(start_time, experiment_name):
@@ -92,19 +92,18 @@ def train(args, params):
     except:
         print("Skipping plot")
 
-    from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-    from keras.callbacks import EarlyStopping
-
     if args.overfit is True:
         monitor_metric = 'loss'
     else:
         monitor_metric = 'val_loss'
 
+    from keras.callbacks import EarlyStopping
     stopping = EarlyStopping(
         monitor=monitor_metric,
         patience=8,
         verbose=args.verbose)
 
+    from keras.callbacks import ReduceLROnPlateau
     reduce_lr = ReduceLROnPlateau(
         monitor=monitor_metric,
         factor=0.1,
@@ -112,6 +111,7 @@ def train(args, params):
         min_lr=params["learning_rate"] * 0.01,
         verbose=args.verbose)
 
+    from keras.callbacks import ModelCheckpoint
     checkpointer = ModelCheckpoint(
         filepath=get_filename_for_saving(start_time, experiment_name),
         save_best_only=False,
