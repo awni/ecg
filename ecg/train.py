@@ -107,8 +107,8 @@ def train(args, params):
     reduce_lr = ReduceLROnPlateau(
         monitor=monitor_metric,
         factor=0.1,
-        patience=4,
-        min_lr=params["learning_rate"] * 0.01,
+        patience=3,
+        min_lr=params["learning_rate"] * 0.001,
         verbose=args.verbose)
 
     from keras.callbacks import ModelCheckpoint
