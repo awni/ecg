@@ -109,7 +109,7 @@ def train(args, params):
         monitor=monitor_metric,
         factor=0.1,
         patience=4,
-        min_lr=0.0001,
+        min_lr=params["learning_rate"] * 0.01,
         verbose=args.verbose)
 
     checkpointer = ModelCheckpoint(
