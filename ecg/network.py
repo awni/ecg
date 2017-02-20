@@ -117,7 +117,6 @@ def build_network(**params):
                    dtype='float32',
                    name='inputs')
     if params.get("is_correct_resnet", False) is True:
-        params["conv_dropout"] = 0
         layer = add_resnet_layers(inputs, **params)
     else:
         layer = add_conv_layers(inputs, **params)
