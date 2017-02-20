@@ -93,7 +93,9 @@ def add_output_layer(layer, **params):
 def add_compile(model, **params):
     if params["optimizer"] == "adam":
         from keras.optimizers import Adam
-        optimizer = Adam(lr=params["learning_rate"])
+        optimizer = Adam(
+            lr=params["learning_rate"],
+            clipnorm=params.get("clipnorm", 1))
     else:
         assert(params["optimizer"] == 'sgd')
         from keras.optimizers import SGD
@@ -101,7 +103,7 @@ def add_compile(model, **params):
             lr=params["learning_rate"],
             decay=params.get("decay", 1e-4),
             momentum=params.get("momentum", 0.9),
-            clipnorm=params.get("clipnorm", 5))
+            clipnorm=params.get("clipnorm", 1))
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
