@@ -91,10 +91,17 @@ def add_output_layer(layer, **params):
 
 
 def add_compile(model, **params):
-    from keras.optimizers import SGD
-    optimizer = SGD(
-        lr=params["learning_rate"], decay=params["decay"],
-        momentum=params["momentum"], clipnorm=params["clipnorm"])
+    if params["optimizer"] == "adam":
+        from keras.optimizers import Adam
+        optimizer = Adam(lr=params["learning_rate"])
+    else:
+        assert(params["optimizer"] == 'sgd')
+        from keras.optimizers import SGD
+        optimizer = SGD(
+            lr=params["learning_rate"],
+            decay=params.get("decay", 1e-4),
+            momentum=params.get("momentum", 0.9),
+            clipnorm=params.get("clipnorm", 5))
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,

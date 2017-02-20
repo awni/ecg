@@ -14,10 +14,8 @@
     "num_skip": 2,
     "is_correct_resnet": false,
 
-    "learning_rate": 0.01,
-    "momentum": 0.9,
-    "decay": 1e-4,
-    "clipnorm": 5,
+    "learning_rate": 0.001,
+    "optimizer": "adam",
     "batch_size": 128,
 
     "blacklist_path": "./data/label_review",
