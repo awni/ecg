@@ -1,4 +1,4 @@
 {
   "toy": false,
-  "EVAL_PATH": "./data"
+  "EVAL_PATH": "./data/batches"
 }
