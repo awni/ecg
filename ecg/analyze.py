@@ -21,6 +21,7 @@ def get_params_table(path, max_models=5, metric="val_loss"):
         for key in ['FOLDER_TO_SAVE', 'TRAIN_DATA_PATH']:
             if key in parameters:
                 del parameters[key]
+        parameters["relabel_classes"] = parameters["relabel_classes"].keys()
 
         return parameters
 
