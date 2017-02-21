@@ -78,6 +78,10 @@ def resnet_block(
     return layer
 
 
+def get_num_filters_at_index(index, num_start_filters):
+    return 2**int(index / 2) * num_start_filters
+
+
 def add_resnet_layers(layer, **params):
     layer = add_conv_weight(
         layer,
@@ -87,7 +91,8 @@ def add_resnet_layers(layer, **params):
         **params)
     layer = _bn_relu(layer, **params)
     for index, subsample_length in enumerate(params["conv_subsample_lengths"]):
-        num_filters = 2**int(index / 2) * params["conv_num_filters_start"]
+        num_filters = get_num_filters_at_index(
+            index, params["conv_num_filters_start"])
         zero_pad = (index % 2) == 0 and index > 0
         layer = resnet_block(
             layer,
@@ -102,10 +107,12 @@ def add_resnet_layers(layer, **params):
 def add_conv_layers(layer, **params):
     from keras.layers import merge
     for index, subsample_length in enumerate(params["conv_subsample_lengths"]):
+        num_filters = get_num_filters_at_index(
+            index, params["conv_num_filters_start"])
         shortcut = add_conv_weight(
             layer,
             params["conv_filter_length"],
-            params["conv_num_filters"],
+            num_filters,
             subsample_length,
             **params)
         layer = shortcut
@@ -114,7 +121,7 @@ def add_conv_layers(layer, **params):
             layer = add_conv_weight(
                 layer,
                 params["conv_filter_length"],
-                params["conv_num_filters"],
+                num_filters,
                 subsample_length=1,
                 **params)
         layer = merge([shortcut, layer], mode="sum")
