@@ -62,10 +62,7 @@ def add_resnet_layers(layer, **params):
 
 def add_conv_layers(layer, **params):
     from keras.layers import merge
-    from keras.layers.noise import GaussianNoise
     for subsample_length in params["conv_subsample_lengths"]:
-        if params.get("gaussian_noise", 0) > 0:
-            layer = GaussianNoise(params["gaussian_noise"])(layer)
         shortcut = add_conv_weight(
             layer,
             params["conv_filter_length"],

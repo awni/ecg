@@ -13,7 +13,6 @@
     "conv_dropout": 0.25,
     "num_skip": 2,
     "is_correct_resnet": false,
-    "gaussian_noise": 0.001,
 
     "learning_rate": 0.001,
     "optimizer": "adam",
