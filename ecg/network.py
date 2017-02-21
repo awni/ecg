@@ -39,6 +39,7 @@ def add_conv_weight(
     return layer
 
 
+from keras import backend as K
 def resnet_block(
         layer,
         num_filters,
@@ -49,7 +50,6 @@ def resnet_block(
     from keras.layers.pooling import MaxPooling1D
 
     from keras.layers.core import Lambda
-    from keras import backend as K
 
     def zeropad(x):
         y = K.zeros_like(x)
