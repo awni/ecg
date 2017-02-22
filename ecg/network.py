@@ -96,7 +96,7 @@ def add_resnet_layers(layer, **params):
     layer = _bn_relu(layer, **params)
     for index, subsample_length in enumerate(params["conv_subsample_lengths"]):
         num_filters = get_num_filters_at_index(
-            index, params["conv_num_filters_start"])
+            index, params["conv_num_filters_start"], **params)
         zero_pad = (index % params["conv_increase_channels_at"]) == 0 \
             and index > 0
         layer = resnet_block(
