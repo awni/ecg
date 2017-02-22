@@ -5,15 +5,15 @@
     "test_frac": 0.2,
     "relabel_classes": {"AFIB": "AF", "AFL": "AF"},
 
-    "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2],
+    "conv_subsample_lengths": [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
     "conv_filter_length": 16,
     "conv_num_filters_start": 32,
     "conv_init": "he_normal",
     "conv_activation": "relu",
     "conv_dropout": 0.25,
     "num_skip": 2,
-    "is_correct_resnet": false,
-    "conv_increase_channels_at": 2,
+    "is_correct_resnet": true,
+    "conv_increase_channels_at": 4,
 
     "learning_rate": 0.001,
     "optimizer": "adam",
