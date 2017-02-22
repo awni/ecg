@@ -82,7 +82,8 @@ def resnet_block(
 
 
 def get_num_filters_at_index(index, num_start_filters, **params):
-    return 2**int(index / 2) * num_start_filters
+    return 2**int(index / params["conv_increase_channels_at"]) \
+        * num_start_filters
 
 
 def add_resnet_layers(layer, **params):
@@ -96,7 +97,8 @@ def add_resnet_layers(layer, **params):
     for index, subsample_length in enumerate(params["conv_subsample_lengths"]):
         num_filters = get_num_filters_at_index(
             index, params["conv_num_filters_start"])
-        zero_pad = (index % 2) == 0 and index > 0
+        zero_pad = (index % params["conv_increase_channels_at"]) == 0 \
+            and index > 0
         layer = resnet_block(
             layer,
             num_filters,
