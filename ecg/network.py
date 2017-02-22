@@ -2,22 +2,10 @@ from keras import backend as K
 
 
 def _bn_relu(layer, dropout=0, **params):
-    activation_fn = params["conv_activation"]
-
-    if activation_fn == 'prelu':
-        from keras.layers.advanced_activations import PReLU
-        layer = PReLU()(layer)
-    elif activation_fn == 'elu':
-        from keras.layers.advanced_activations import ELU
-        layer = ELU()(layer)
-    elif activation_fn == 'leaky_relu':
-        from keras.layers.advanced_activations import LeakyReLU
-        layer = LeakyReLU()(layer)
-    else:
-        from keras.layers import BatchNormalization
-        from keras.layers import Activation
-        layer = BatchNormalization()(layer)
-        layer = Activation(activation_fn)(layer)
+    from keras.layers import BatchNormalization
+    from keras.layers import Activation
+    layer = BatchNormalization()(layer)
+    layer = Activation(params["conv_activation"])(layer)
 
     if dropout > 0:
         from keras.layers import Dropout
@@ -66,7 +54,7 @@ def resnet_block(
     if zero_pad is True:
         shortcut = Lambda(zeropad, output_shape=zeropad_output_shape)(shortcut)
 
-    for i in range(params["num_skip"]):
+    for i in range(params["conv_num_skip"]):
         layer = _bn_relu(
             layer,
             dropout=params["conv_dropout"] if i > 0 else 0,
@@ -109,30 +97,6 @@ def add_resnet_layers(layer, **params):
     return layer
 
 
-def add_conv_layers(layer, **params):
-    from keras.layers import merge
-    for index, subsample_length in enumerate(params["conv_subsample_lengths"]):
-        num_filters = get_num_filters_at_index(
-            index, params["conv_num_filters_start"], **params)
-        shortcut = add_conv_weight(
-            layer,
-            params["conv_filter_length"],
-            num_filters,
-            subsample_length,
-            **params)
-        layer = shortcut
-        for i in range(params["num_skip"]):
-            layer = _bn_relu(layer, dropout=params["conv_dropout"], **params)
-            layer = add_conv_weight(
-                layer,
-                params["conv_filter_length"],
-                num_filters,
-                subsample_length=1,
-                **params)
-        layer = merge([shortcut, layer], mode="sum")
-    return layer
-
-
 def add_output_layer(layer, **params):
     from keras.layers.core import Dense, Activation
     from keras.layers.wrappers import TimeDistributed
@@ -166,10 +130,7 @@ def build_network(**params):
     inputs = Input(shape=params['input_shape'],
                    dtype='float32',
                    name='inputs')
-    if params.get("is_correct_resnet", False) is True:
-        layer = add_resnet_layers(inputs, **params)
-    else:
-        layer = add_conv_layers(inputs, **params)
+    layer = add_resnet_layers(inputs, **params)
     output = add_output_layer(layer, **params)
     model = Model(input=[inputs], output=[output])
     add_compile(model, **params)

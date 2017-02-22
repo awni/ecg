@@ -11,8 +11,7 @@
     "conv_init": "he_normal",
     "conv_activation": "relu",
     "conv_dropout": 0.25,
-    "num_skip": 2,
-    "is_correct_resnet": true,
+    "conv_num_skip": 2,
     "conv_increase_channels_at": 4,
 
     "learning_rate": 0.001,
