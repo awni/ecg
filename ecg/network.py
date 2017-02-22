@@ -113,7 +113,7 @@ def add_conv_layers(layer, **params):
     from keras.layers import merge
     for index, subsample_length in enumerate(params["conv_subsample_lengths"]):
         num_filters = get_num_filters_at_index(
-            index, params["conv_num_filters_start"])
+            index, params["conv_num_filters_start"], **params)
         shortcut = add_conv_weight(
             layer,
             params["conv_filter_length"],
