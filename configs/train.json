@@ -7,13 +7,12 @@
 
     "conv_subsample_lengths": [2, 2, 2, 2, 2, 2, 2, 2],
     "conv_filter_length": 16,
-    "conv_num_filters": 32,
+    "conv_num_filters_start": 32,
     "conv_init": "he_normal",
     "conv_activation": "relu",
     "conv_dropout": 0.25,
     "num_skip": 2,
     "is_correct_resnet": false,
-    "conv_num_filters_start": 32,
 
     "learning_rate": 0.001,
     "optimizer": "adam",

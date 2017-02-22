@@ -78,9 +78,6 @@ def train(args, params):
     params["EXPERIMENT_NAME"] = experiment_name
     params["TRAIN_DATA_PATH"] = os.path.realpath(params["data_path"])
 
-    if params.get("is_correct_resnet", False) is True:
-        params["conv_dropout"] = 0
-
     save_params(params, start_time, experiment_name)
 
     params.update({

@@ -1,4 +1,7 @@
-def _bn_relu(layer, **params):
+from keras import backend as K
+
+
+def _bn_relu(layer, dropout=0, **params):
     activation_fn = params["conv_activation"]
 
     if activation_fn == 'prelu':
@@ -16,7 +19,7 @@ def _bn_relu(layer, **params):
         layer = BatchNormalization()(layer)
         layer = Activation(activation_fn)(layer)
 
-    if params.get("conv_dropout", 0) > 0:
+    if dropout > 0:
         from keras.layers import Dropout
         layer = Dropout(params["conv_dropout"])(layer)
 
@@ -39,7 +42,6 @@ def add_conv_weight(
     return layer
 
 
-from keras import backend as K
 def resnet_block(
         layer,
         num_filters,
@@ -48,7 +50,6 @@ def resnet_block(
         **params):
     from keras.layers import merge
     from keras.layers.pooling import MaxPooling1D
-
     from keras.layers.core import Lambda
 
     def zeropad(x):
@@ -66,19 +67,21 @@ def resnet_block(
         shortcut = Lambda(zeropad, output_shape=zeropad_output_shape)(shortcut)
 
     for i in range(params["num_skip"]):
-        layer = _bn_relu(layer, **params)
+        layer = _bn_relu(
+            layer,
+            dropout=params["conv_dropout"] if i > 0 else 0,
+            **params)
         layer = add_conv_weight(
             layer,
             params["conv_filter_length"],
             num_filters,
             subsample_length if i == 0 else 1,
             **params)
-
     layer = merge([shortcut, layer], mode="sum")
     return layer
 
 
-def get_num_filters_at_index(index, num_start_filters):
+def get_num_filters_at_index(index, num_start_filters, **params):
     return 2**int(index / 2) * num_start_filters
 
 
@@ -117,7 +120,7 @@ def add_conv_layers(layer, **params):
             **params)
         layer = shortcut
         for i in range(params["num_skip"]):
-            layer = _bn_relu(layer, **params)
+            layer = _bn_relu(layer, dropout=params["conv_dropout"], **params)
             layer = add_conv_weight(
                 layer,
                 params["conv_filter_length"],
