@@ -1,0 +1,27 @@
+{
+    "test_frac": 0.2,
+    "wave_model": true,
+
+    "is_regular_conv": true,
+    "conv_subsample_lengths": [1, 1, 1, 1, 1, 1, 1],
+    "conv_filter_length": 64,
+    "conv_num_filters_start": 8,
+    "conv_init": "he_normal",
+    "conv_activation": "relu",
+    "conv_dropout": 0.0,
+    "conv_num_skip": 1,
+    "conv_increase_channels_at": 100,
+
+    "early_stop_patience": 50,
+    "reduce_lr_patience": 10,
+    "reduce_lr_factor": 0.5,
+    "learning_rate": 0.1,
+    "momentum": 0.95,
+    "decay": 0.0,
+    "clipnorm": 100,
+    "optimizer": "sgd",
+    "batch_size": 8,
+
+    "data_path": "./data/waves",
+    "FOLDER_TO_SAVE": "./saved/wave_models/"
+}

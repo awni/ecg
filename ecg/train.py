@@ -10,7 +10,6 @@ import json
 import os
 import time
 
-import load
 import network
 import random
 
@@ -61,6 +60,12 @@ def train(args, params):
 
     params["test_split_start"] = args.test_split_start
 
+
+    if params.get("wave_model", False):
+        import wave_load as load
+    else:
+        import load
+
     dl = load.load_train(params)
 
     x_train = dl.x_train
@@ -100,14 +105,14 @@ def train(args, params):
     from keras.callbacks import EarlyStopping
     stopping = EarlyStopping(
         monitor=monitor_metric,
-        patience=8,
+        patience=params.get('early_stop_patience', 8),
         verbose=args.verbose)
 
     from keras.callbacks import ReduceLROnPlateau
     reduce_lr = ReduceLROnPlateau(
         monitor=monitor_metric,
-        factor=0.1,
-        patience=2,
+        factor=params.get('reduce_lr_factor', 0.1),
+        patience=params.get('reduce_lr_patience', 2),
         min_lr=params["learning_rate"] * 0.001,
         verbose=args.verbose)
 

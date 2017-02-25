@@ -1,6 +1,5 @@
 from keras import backend as K
 
-
 def _bn_relu(layer, dropout=0, **params):
     from keras.layers import BatchNormalization
     from keras.layers import Activation
@@ -12,7 +11,6 @@ def _bn_relu(layer, dropout=0, **params):
         layer = Dropout(params["conv_dropout"])(layer)
 
     return layer
-
 
 def add_conv_weight(
         layer,
@@ -29,6 +27,16 @@ def add_conv_weight(
         init=params["conv_init"])(layer)
     return layer
 
+def add_conv_layers(layer, **params):
+    for subsample_length in params["conv_subsample_lengths"]:
+        layer = add_conv_weight(
+                    layer,
+                    params["conv_filter_length"],
+                    params["conv_num_filters_start"],
+                    subsample_length=subsample_length,
+                    **params)
+        layer = _bn_relu(layer, **params)
+    return layer
 
 def resnet_block(
         layer,
@@ -130,7 +138,12 @@ def build_network(**params):
     inputs = Input(shape=params['input_shape'],
                    dtype='float32',
                    name='inputs')
-    layer = add_resnet_layers(inputs, **params)
+
+    if params.get('is_regular_conv', False):
+        layer = add_conv_layers(inputs, **params)
+    else:
+        layer = add_resnet_layers(inputs, **params)
+
     output = add_output_layer(layer, **params)
     model = Model(input=[inputs], output=[output])
     add_compile(model, **params)
