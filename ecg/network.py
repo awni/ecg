@@ -1,5 +1,6 @@
 from keras import backend as K
 
+
 def _bn_relu(layer, dropout=0, **params):
     from keras.layers import BatchNormalization
     from keras.layers import Activation
@@ -11,6 +12,7 @@ def _bn_relu(layer, dropout=0, **params):
         layer = Dropout(params["conv_dropout"])(layer)
 
     return layer
+
 
 def add_conv_weight(
         layer,
@@ -27,6 +29,7 @@ def add_conv_weight(
         init=params["conv_init"])(layer)
     return layer
 
+
 def add_conv_layers(layer, **params):
     for subsample_length in params["conv_subsample_lengths"]:
         layer = add_conv_weight(
@@ -37,6 +40,7 @@ def add_conv_layers(layer, **params):
                     **params)
         layer = _bn_relu(layer, **params)
     return layer
+
 
 def resnet_block(
         layer,

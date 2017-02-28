@@ -15,6 +15,7 @@ import process
 
 ECG_SAMP_RATE = 200
 
+
 class WaveLoader(object):
     def __init__(self, data_path='', test_frac=0.2, duration=10, **kwargs):
 
@@ -22,8 +23,8 @@ class WaveLoader(object):
             msg = "Non-existent data path: {}".format(data_path)
             raise ValueError(msg)
 
-        self.processor = process.Processor(use_one_hot_labels=True,
-                                    normalizer="robust_scale")
+        self.processor = process.Processor(
+            use_one_hot_labels=True, normalizer="robust_scale")
         self.data_path = data_path
         self.test_frac = test_frac
         self.duration = duration
@@ -41,23 +42,26 @@ class WaveLoader(object):
         self.x_test, self.y_test = zip(*test_x_y_pairs)
 
         # Setup labels
-        label_counter = collections.Counter(l for labels in self.y_train for l in labels)
+        label_counter = collections.Counter(
+            l for labels in self.y_train for l in labels)
         self.classes = sorted([c for c, _ in label_counter.most_common()])
         self.int_to_class = dict(zip(range(len(self.classes)), self.classes))
         self.class_to_int = {c: i for i, c in self.int_to_class.items()}
 
-
     @property
     def output_dim(self):
         return len(self.classes)
+
 
 def get_all_records(path):
     for root, dirnames, filenames in os.walk(path):
         for filename in fnmatch.filter(filenames, "*.ecg"):
             yield(os.path.join(root, filename))
 
+
 def patient_id(record):
     return os.path.basename(record).split("_")[0]
+
 
 def stratify(records, test_frac):
     def get_bucket_from_id(pat):
@@ -72,6 +76,7 @@ def stratify(records, test_frac):
         chosen.append(record)
     return train, test
 
+
 def load_waves(record):
     base = os.path.splitext(record)[0]
     wv_json = base + ".waves.json"
@@ -79,6 +84,7 @@ def load_waves(record):
         waves = json.load(fid)['waves']
     waves = sorted(waves, key=lambda x: x['onset'])
     return waves
+
 
 def make_labels(waves, duration):
     labels = []
@@ -90,6 +96,7 @@ def make_labels(waves, duration):
     labels = [labels[i:i+dur_labels]
               for i in range(0, len(labels) - dur_labels + 1, dur_labels)]
     return labels
+
 
 def load_ecg(record, duration):
     with open(record, 'r') as fid:
@@ -105,6 +112,7 @@ def load_ecg(record, duration):
                 for arr in np.vsplit(ecg, range(1, n_segments))]
     return segments
 
+
 def construct_dataset(records, duration):
     data = []
     for record in records:
@@ -113,6 +121,7 @@ def construct_dataset(records, duration):
         segments = load_ecg(record, duration)
         data.extend(zip(segments, labels))
     return data
+
 
 def load_train(params):
     loader = WaveLoader(**params)
