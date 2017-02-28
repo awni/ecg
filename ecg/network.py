@@ -46,7 +46,7 @@ def resnet_block(
         layer,
         num_filters,
         subsample_length,
-        zero_pad=False,
+        block_index,
         **params):
     from keras.layers import merge
     from keras.layers.pooling import MaxPooling1D
@@ -63,14 +63,17 @@ def resnet_block(
         return tuple(shape)
 
     shortcut = MaxPooling1D(pool_length=subsample_length)(layer)
+    zero_pad = (block_index % params["conv_increase_channels_at"]) == 0 \
+        and block_index > 0
     if zero_pad is True:
         shortcut = Lambda(zeropad, output_shape=zeropad_output_shape)(shortcut)
 
     for i in range(params["conv_num_skip"]):
-        layer = _bn_relu(
-            layer,
-            dropout=params["conv_dropout"] if i > 0 else 0,
-            **params)
+        if not (block_index == 0 and i == 0):
+            layer = _bn_relu(
+                layer,
+                dropout=params["conv_dropout"] if i > 0 else 0,
+                **params)
         layer = add_conv_weight(
             layer,
             params["conv_filter_length"],
@@ -97,13 +100,11 @@ def add_resnet_layers(layer, **params):
     for index, subsample_length in enumerate(params["conv_subsample_lengths"]):
         num_filters = get_num_filters_at_index(
             index, params["conv_num_filters_start"], **params)
-        zero_pad = (index % params["conv_increase_channels_at"]) == 0 \
-            and index > 0
         layer = resnet_block(
             layer,
             num_filters,
             subsample_length,
-            zero_pad=zero_pad,
+            index,
             **params)
     layer = _bn_relu(layer, **params)
     return layer
