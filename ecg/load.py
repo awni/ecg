@@ -103,24 +103,30 @@ class Loader(object):
     def build_blacklist(self):
         print('Building blacklist...')
         self.blacklist = []
+        pids = {}
         for record in tqdm(self.get_all_records(self.blacklist_path)):
             pid = self.patient_id(record)
+            pids[pid] = True
             self.blacklist.append(pid)
+        print('Contains', len(pids), 'patients')
 
     def stratify(self, records):
         def get_bucket_from_id(pat):
             return int(int(pat, 16) % 10)
 
         test, train = [], []
+        pids = {} 
         for record in tqdm(records):
             pid = self.patient_id(record)
             if len(self.blacklist) > 0 and pid in self.blacklist:
                 continue
             bucket = get_bucket_from_id(pid)
+            pids[pid] = True
             in_test = bucket >= self.test_split_start and  \
                 bucket < (int(self.test_frac * 10) + self.test_split_start)
             chosen = test if in_test else train
             chosen.append(record)
+        print('Contains', len(pids), 'patients')
         return train, test
 
     def load_episodes(self, record):
