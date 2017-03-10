@@ -32,16 +32,28 @@ def plot_confusion_matrix(cm, classes, model_path=None):
         plt.savefig(util.get_confusion_figure_path(model_path))
 
 
-def get_all_model_predictions(args, x_val):
+def get_all_model_predictions(args, x):
     from keras.models import load_model
     all_model_predictions = []
     print("Averaging " + str(len(args.model_paths)) + " model predictions...")
     for model_path in args.model_paths:
         model = load_model(model_path)
 
-        predictions = model.predict(x_val, verbose=1)
+        predictions = model.predict(x, verbose=1)
         all_model_predictions.append(predictions)
     return np.array(all_model_predictions)
+
+def get_model_predictions(args, x):
+    all_predictions = get_all_model_predictions(args, x)
+    predictions = np.mean(all_predictions, axis=0)
+
+    if args.decode is True:
+        language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
+        predictions = np.array([decode.beam_search(prediction, language_model)
+                                for prediction in tqdm(predictions)])
+    else:
+        predictions = np.argmax(predictions, axis=-1)
+    return predictions
 
 
 def compute_scores(
@@ -77,34 +89,31 @@ def compute_scores(
             target_names=classes, digits=3))
 
 
-def evaluate(args, train_params, test_params):
-    dl = load.load_test(train_params, test_params)
-    split = args.split
-    (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
-        (dl.x_test, dl.y_test)
-    print("Size: " + str(len(x)) + " examples.")
+def evaluate(
+        args,
+        train_params,
+        test_params,
+        num_reviewers=3):
+    _, processor = load.load_train(train_params)
+    ground_truths = []
+    for i in range(num_reviewers):
+        test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
+        dl = load.load_using_processor(test_params, processor)
+        split = args.split
+        (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
+            (dl.x_test, dl.y_test)
+        print("Size: " + str(len(x)) + " examples.")
+        ground_truth = np.argmax(y, axis=-1)
+        ground_truths.extend(ground_truth)
+    ground_truths = np.array(ground_truths)
 
     print("Predicting on:", split)
-    all_predictions = get_all_model_predictions(args, x)
-    predictions = np.mean(all_predictions, axis=0)
+    predictions = get_model_predictions(args, x)
+    # Repeat the predictions by the number of reviewers.
+    predictions = np.tile(predictions, (num_reviewers, 1))
+    print(predictions.shape)
 
-    if args.decode is True:
-        language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
-        predictions = np.array([decode.beam_search(prediction, language_model)
-                                for prediction in tqdm(predictions)])
-    else:
-        predictions = np.argmax(predictions, axis=-1)
-
-    ground_truth = np.argmax(y, axis=-1)
-
-    compute_scores(ground_truth, predictions, dl.classes)
-
-
-def evaluate_test(args, train_params, test_params):
-    assert(args.split == 'test')
-    for i in range(3):
-        test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
-        evaluate(args, train_params, test_params)
+    compute_scores(ground_truths, predictions, dl.classes)
 
 
 if __name__ == '__main__':
@@ -123,6 +132,5 @@ if __name__ == '__main__':
     test_new_params = json.load(open(args.test_config_file, 'r'))
     test_params.update(test_new_params)
     if "label_review" in test_new_params["EVAL_PATH"]:
-        evaluate_test(args, train_params, test_params)
-    else:
-        evaluate(args, train_params, test_params)
+        assert(args.split == 'test')
+    evaluate(args, train_params, test_params)

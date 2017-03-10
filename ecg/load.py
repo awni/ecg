@@ -115,7 +115,7 @@ class Loader(object):
             return int(int(pat, 16) % 10)
 
         test, train = [], []
-        pids = {} 
+        pids = {}
         for record in tqdm(records):
             pid = self.patient_id(record)
             if len(self.blacklist) > 0 and pid in self.blacklist:
@@ -233,20 +233,14 @@ def load_train(params):
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of test set {}".format(len(loader.x_test)))
     print("Output dimension {}".format(loader.output_dim))
-    return loader
+    return loader, processor
 
 
-def load_test(params_train, params_test):
-    params_train["fit_processor"] = True
-    params_test["fit_processor"] = False
-
-    processor = Processor(**params_train)
-    print("Fitting processor...")
-    params_train["data_path"] = params_train["TRAIN_DATA_PATH"]
-    Loader(processor, **params_train)
-    print("Loading test dataset...")
-    params_test["data_path"] = params_test["EVAL_PATH"]
-    loader = Loader(processor, **params_test)
+def load_using_processor(params, processor):
+    print("Loading using processor...")
+    params["fit_processor"] = False
+    params["data_path"] = params["EVAL_PATH"]
+    loader = Loader(processor, **params)
 
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of test set {}".format(len(loader.x_test)))
