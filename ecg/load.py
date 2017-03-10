@@ -248,9 +248,33 @@ def load_using_processor(params, processor):
     return loader
 
 
+def load_test(test_params, train_params=None, split='test'):
+    if train_params is not None:
+        _, processor = load_train(train_params)
+    else:
+        processor = Processor(**test_params)
+
+    test_params["fit_processor"] = False
+    test_params["data_path"] = test_params["EVAL_PATH"]
+
+    ground_truths = []
+    for i in range(test_params.get("num_reviewers", 3)):
+        test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
+        dl = Loader(processor, **test_params)
+        (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
+            (dl.x_test, dl.y_test)
+        print("Size: " + str(len(x)) + " examples.")
+        ground_truth = np.argmax(y, axis=-1)
+        ground_truths.append(ground_truth)
+    ground_truths = np.array(ground_truths)
+    ground_truths = np.swapaxes(ground_truths, 0, 1)
+    return x, ground_truths, dl.classes
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("config_file", help="path to config file")
     args = parser.parse_args()
     params = json.load(open(args.config_file, 'r'))
     load_train(params)
+    load_test(params)

@@ -3,6 +3,7 @@
   "test_frac": 1,
   "blacklist_path": "",
   "test_split_start": 0,
+  "num_reviewers": 3,
 
   "EVAL_PATH": "./data/label_review"
 }
