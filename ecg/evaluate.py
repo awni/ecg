@@ -31,8 +31,7 @@ def plot_confusion_matrix(cm, classes, model_path=None):
     if model_path is not None:
         plt.savefig(util.get_confusion_figure_path(model_path))
 
-
-def get_all_model_predictions(args, x):
+def get_model_predictions(args, x):
     from keras.models import load_model
     all_model_predictions = []
     print("Averaging " + str(len(args.model_paths)) + " model predictions...")
@@ -41,11 +40,7 @@ def get_all_model_predictions(args, x):
 
         predictions = model.predict(x, verbose=1)
         all_model_predictions.append(predictions)
-    return np.array(all_model_predictions)
-
-def get_model_predictions(args, x):
-    all_predictions = get_all_model_predictions(args, x)
-    predictions = np.mean(all_predictions, axis=0)
+    predictions = np.mean(all_model_predictions, axis=0)
 
     if args.decode is True:
         language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
@@ -89,31 +84,22 @@ def compute_scores(
             target_names=classes, digits=3))
 
 
-def evaluate(
-        args,
-        train_params,
+def evaluate(args, train_params, test_params, num_reviewers=3):
+    x, ground_truths, classes = load.load_test(
         test_params,
-        num_reviewers=3):
-    _, processor = load.load_train(train_params)
-    ground_truths = []
-    for i in range(num_reviewers):
-        test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
-        dl = load.load_using_processor(test_params, processor)
-        split = args.split
-        (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
-            (dl.x_test, dl.y_test)
-        print("Size: " + str(len(x)) + " examples.")
-        ground_truth = np.argmax(y, axis=-1)
-        ground_truths.extend(ground_truth)
-    ground_truths = np.array(ground_truths)
+        train_params=train_params,
+        split=args.split)
+   
+    ground_truths = np.swapaxes(ground_truths, 0, 1)
 
-    print("Predicting on:", split)
+    print("Predicting on:", args.split)
+
     predictions = get_model_predictions(args, x)
+
     # Repeat the predictions by the number of reviewers.
     predictions = np.tile(predictions, (num_reviewers, 1))
-    print(predictions.shape)
 
-    compute_scores(ground_truths, predictions, dl.classes)
+    compute_scores(ground_truths, predictions, classes)
 
 
 if __name__ == '__main__':
