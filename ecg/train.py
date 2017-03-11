@@ -66,7 +66,7 @@ def train(args, params):
     else:
         import load
 
-    dl = load.load_train(params)
+    dl, _ = load.load_train(params)
 
     x_train = dl.x_train
     y_train = dl.y_train
