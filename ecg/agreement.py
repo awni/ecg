@@ -9,7 +9,7 @@ import argparse
 def agreement(args, params):
     x, ground_truths, classes = load.load_test(params)
     
-    num_reviewers = params.get("num_reviewers", 3)
+    num_reviewers = params["num_reviewers"]
 
     select_index = np.random.randint(0, num_reviewers, size=len(ground_truths))
     human_prediction_mask = np.zeros((select_index.size, select_index.max()+1), dtype='bool')
@@ -26,7 +26,6 @@ def agreement(args, params):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("config_file", help="path to config file")
     args = parser.parse_args()
-    params = json.load(open(args.config_file, 'r'))
+    params = json.load(open('configs/test.json', 'r'))
     agreement(args, params)
