@@ -1,4 +1,5 @@
 {
   "toy": false,
-  "EVAL_PATH": "./data/batches"
+  "EVAL_PATH": "./data/batches",
+  "num_reviewers": 1
 }

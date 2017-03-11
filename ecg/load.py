@@ -54,10 +54,6 @@ class Loader(object):
         self.processor = processor
         self.fit_processor = fit_processor
 
-        if not os.path.exists(data_path):
-            msg = "Non-existent data path: {}".format(data_path)
-            raise ValueError(msg)
-
         self.load()
         self.setup_label_mappings()
         (self.x_train, self.y_train, self.x_test, self.y_test) = \
@@ -227,6 +223,7 @@ class Loader(object):
 
 
 def load_train(params):
+    assert('data_path' in params)
     processor = Processor(**params)
     loader = Loader(processor, **params)
 
@@ -249,6 +246,7 @@ def load_using_processor(params, processor):
 
 
 def load_test(test_params, train_params=None, split='test'):
+    assert("EVAL_PATH" in test_params)
     if train_params is not None:
         _, processor = load_train(train_params)
     else:
@@ -258,8 +256,12 @@ def load_test(test_params, train_params=None, split='test'):
     test_params["data_path"] = test_params["EVAL_PATH"]
 
     ground_truths = []
-    for i in range(test_params.get("num_reviewers", 3)):
-        test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
+    num_reviewers = test_params["num_reviewers"]
+    for i in range(num_reviewers):
+        if num_reviewers == 1:
+            test_params["epi_ext"] = ".episodes.json"
+        else:
+            test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
         dl = Loader(processor, **test_params)
         (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
             (dl.x_test, dl.y_test)
@@ -276,5 +278,7 @@ if __name__ == "__main__":
     parser.add_argument("config_file", help="path to config file")
     args = parser.parse_args()
     params = json.load(open(args.config_file, 'r'))
-    load_train(params)
-    load_test(params)
+    if 'data_path' in params:
+        load_train(params)
+    elif 'EVAL_PATH' in params:
+        load_test(params)
