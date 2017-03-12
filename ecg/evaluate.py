@@ -54,11 +54,11 @@ def compute_scores(
         confusion_table=True,
         report=True,
         plot=True):
+
     ground_truth_flat = ground_truth.flatten().tolist()
     predictions_flat = predictions.flatten().tolist()
 
     cnf_matrix = confusion_matrix(ground_truth_flat, predictions_flat).tolist()
-
     if plot is True:
         try:
             plot_confusion_matrix(
@@ -80,19 +80,53 @@ def compute_scores(
             target_names=classes, digits=3))
 
 
-def evaluate(args, train_params, test_params, num_reviewers=3):
+def get_binary_preds_for_class(probs, class_int, threshold=0.5):
+    class_probs = probs[:,:,class_int]
+    mask_as_one = class_probs >= threshold
+    class_probs[mask_as_one] = 1
+    class_probs[~mask_as_one] = 0
+    return class_probs
+
+
+def get_ground_truths_for_class(ground_truths, class_int):
+    class_mask = ground_truths == class_int
+    ground_truths[class_mask] = 1
+    ground_truths[~class_mask] = 0
+    return ground_truths
+
+
+def get_ground_truths_and_probs(args, train_params, test_params):
     x, ground_truths, classes = load.load_test(
         test_params,
         train_params=train_params,
         split=args.split)
 
     ground_truths = np.swapaxes(ground_truths, 0, 1)
-
     print("Predicting on:", args.split)
 
     print("Averaging " + str(len(args.model_paths)) + " model predictions...")
     probs = get_ensemble_pred_probs(args.model_paths, x)
+    return ground_truths, probs, classes
 
+
+def evaluate_classes(args, train_params, test_params):
+    ground_truths, probs, classes = get_ground_truths_and_probs(args, train_params, test_params)
+    for class_int, class_name in enumerate(classes):
+        print(class_name)
+        gt = np.copy(ground_truths)
+        gt = get_ground_truths_for_class(gt, class_int)
+        predictions = get_binary_preds_for_class(probs, class_int)
+        # Repeat the predictions by the number of reviewers.
+        predictions = np.tile(predictions, (test_params.get("num_reviewers", 1), 1))
+        ground_truths_flat = gt.flatten().tolist()
+        predictions_flat = predictions.flatten().tolist()
+
+        cnf_matrix = confusion_matrix(ground_truths_flat, predictions_flat).tolist()
+        print(cnf_matrix)
+
+
+def evaluate_aggregate(args, train_params, test_params):
+    ground_truths, probs, classes = get_ground_truths_and_probs(args, train_params, test_params)
     if args.decode is True:
         raise NotImplementedError()  # TODO: fix
         """
@@ -104,7 +138,7 @@ def evaluate(args, train_params, test_params, num_reviewers=3):
         predictions = np.argmax(probs, axis=-1)
 
     # Repeat the predictions by the number of reviewers.
-    predictions = np.tile(predictions, (num_reviewers, 1))
+    predictions = np.tile(predictions, (test_params.get("num_reviewers", 1), 1))
 
     compute_scores(ground_truths, predictions, classes)
 
@@ -126,4 +160,5 @@ if __name__ == '__main__':
     test_params.update(test_new_params)
     if "label_review" in test_new_params["EVAL_PATH"]:
         assert(args.split == 'test')
-    evaluate(args, train_params, test_params)
+    evaluate_aggregate(args, train_params, test_params)
+    evaluate_classes(args, train_params, test_params)
