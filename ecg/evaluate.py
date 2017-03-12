@@ -41,7 +41,7 @@ def get_ensemble_pred_probs(model_paths, x):
         probs = model.predict(x, verbose=1)
         return probs
     
-    all_model_probs = [get_raw_model_predictions(model_path, x) \
+    all_model_probs = [get_model_pred_probs(model_path, x) \
         for model_path in args.model_paths]
     probs = np.mean(all_model_probs, axis=0)
     return probs
