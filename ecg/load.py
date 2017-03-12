@@ -248,6 +248,7 @@ def load_using_processor(params, processor):
     return loader
 
 
+@memory.cache
 def load_test(test_params, train_params=None, split='test'):
     assert("EVAL_PATH" in test_params)
     if train_params is not None:
