@@ -40,23 +40,11 @@ def get_ensemble_pred_probs(model_paths, x):
         model = load_model(model_path)
         probs = model.predict(x, verbose=1)
         return probs
-    
-    all_model_probs = [get_model_pred_probs(model_path, x) \
-        for model_path in args.model_paths]
+
+    all_model_probs = [get_model_pred_probs(model_path, x)
+                       for model_path in args.model_paths]
     probs = np.mean(all_model_probs, axis=0)
     return probs
-
-def get_predictions(args, x):
-    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
-    probs = get_ensemble_pred_probs(args.model_paths, x)
-
-    if args.decode is True:
-        language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
-        predictions = np.array([decode.beam_search(prediction, language_model)
-                                for prediction in tqdm(probs)])
-    else:
-        predictions = np.argmax(probs, axis=-1)
-    return predictions
 
 
 def compute_scores(
@@ -97,12 +85,23 @@ def evaluate(args, train_params, test_params, num_reviewers=3):
         test_params,
         train_params=train_params,
         split=args.split)
-   
+
     ground_truths = np.swapaxes(ground_truths, 0, 1)
 
     print("Predicting on:", args.split)
 
-    predictions = get_predictions(args, x)
+    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
+    probs = get_ensemble_pred_probs(args.model_paths, x)
+
+    if args.decode is True:
+        raise NotImplementedError()  # TODO: fix
+        """
+        language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
+        predictions = np.array([decode.beam_search(prediction, language_model)
+                                for prediction in tqdm(probs)])
+        """
+    else:
+        predictions = np.argmax(probs, axis=-1)
 
     # Repeat the predictions by the number of reviewers.
     predictions = np.tile(predictions, (num_reviewers, 1))
