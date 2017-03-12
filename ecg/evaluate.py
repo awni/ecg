@@ -34,24 +34,28 @@ def plot_confusion_matrix(cm, classes, model_path=None):
 
 
 @memory.cache
-def get_raw_model_predictions(model_path, x):
-    from keras.models import load_model
-    model = load_model(model_path)
-    predictions = model.predict(x, verbose=1)
-    return predictions
-
-def get_ensemble_predictions(args, x):
-    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
-    all_model_predictions = [get_raw_model_predictions(model_path, x) \
+def get_ensemble_pred_probs(model_paths, x):
+    def get_model_pred_probs(model_path, x):
+        from keras.models import load_model
+        model = load_model(model_path)
+        probs = model.predict(x, verbose=1)
+        return probs
+    
+    all_model_probs = [get_raw_model_predictions(model_path, x) \
         for model_path in args.model_paths]
-    predictions = np.mean(all_model_predictions, axis=0)
+    probs = np.mean(all_model_probs, axis=0)
+    return probs
+
+def get_predictions(args, x):
+    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
+    probs = get_ensemble_pred_probs(args.model_paths, x)
 
     if args.decode is True:
         language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
         predictions = np.array([decode.beam_search(prediction, language_model)
-                                for prediction in tqdm(predictions)])
+                                for prediction in tqdm(probs)])
     else:
-        predictions = np.argmax(predictions, axis=-1)
+        predictions = np.argmax(probs, axis=-1)
     return predictions
 
 
@@ -98,7 +102,7 @@ def evaluate(args, train_params, test_params, num_reviewers=3):
 
     print("Predicting on:", args.split)
 
-    predictions = get_ensemble_predictions(args, x)
+    predictions = get_predictions(args, x)
 
     # Repeat the predictions by the number of reviewers.
     predictions = np.tile(predictions, (num_reviewers, 1))
