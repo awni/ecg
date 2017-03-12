@@ -13,6 +13,8 @@ import argparse
 import collections
 from tqdm import tqdm
 from process import Processor
+from joblib import Memory
+memory = Memory(cachedir='./cache')
 
 # FIXME: step and samp_rate and duration should be part of process, not load
 
@@ -222,6 +224,7 @@ class Loader(object):
         return len(self.int_to_class)
 
 
+@memory.cache
 def load_train(params):
     assert('data_path' in params)
     processor = Processor(**params)

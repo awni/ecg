@@ -5,11 +5,12 @@ import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from tabulate import tabulate
 from tqdm import tqdm
-
 import load
 import json
 import decode
 import util
+from joblib import Memory
+memory = Memory(cachedir='./cache')
 
 
 def plot_confusion_matrix(cm, classes, model_path=None):
@@ -31,15 +32,18 @@ def plot_confusion_matrix(cm, classes, model_path=None):
     if model_path is not None:
         plt.savefig(util.get_confusion_figure_path(model_path))
 
-def get_model_predictions(args, x):
-    from keras.models import load_model
-    all_model_predictions = []
-    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
-    for model_path in args.model_paths:
-        model = load_model(model_path)
 
-        predictions = model.predict(x, verbose=1)
-        all_model_predictions.append(predictions)
+@memory.cache
+def get_raw_model_predictions(model_path, x):
+    from keras.models import load_model
+    model = load_model(model_path)
+    predictions = model.predict(x, verbose=1)
+    return predictions
+
+def get_ensemble_predictions(args, x):
+    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
+    all_model_predictions = [get_raw_model_predictions(model_path, x) \
+        for model_path in args.model_paths]
     predictions = np.mean(all_model_predictions, axis=0)
 
     if args.decode is True:
@@ -94,7 +98,7 @@ def evaluate(args, train_params, test_params, num_reviewers=3):
 
     print("Predicting on:", args.split)
 
-    predictions = get_model_predictions(args, x)
+    predictions = get_ensemble_predictions(args, x)
 
     # Repeat the predictions by the number of reviewers.
     predictions = np.tile(predictions, (num_reviewers, 1))
