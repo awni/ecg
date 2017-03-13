@@ -81,7 +81,6 @@ def train(args, params):
 
     FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
     params["EXPERIMENT_NAME"] = experiment_name
-    params["TRAIN_DATA_PATH"] = os.path.realpath(params["data_path"])
 
     save_params(params, start_time, experiment_name)
 
