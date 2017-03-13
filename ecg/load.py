@@ -273,7 +273,6 @@ def load_test(test_params, train_params=None, split='test'):
         ground_truth = np.argmax(y, axis=-1)
         ground_truths.append(ground_truth)
     ground_truths = np.array(ground_truths)
-    ground_truths = np.swapaxes(ground_truths, 0, 1)
     return x, ground_truths, dl.classes
 
 

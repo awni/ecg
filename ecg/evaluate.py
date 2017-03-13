@@ -102,18 +102,21 @@ def get_ground_truths_and_probs(args, train_params, test_params):
         train_params=train_params,
         split=args.split)
 
-    ground_truths = np.swapaxes(ground_truths, 0, 1)
     print("Predicting on:", args.split)
-
     print("Averaging " + str(len(args.model_paths)) + " model predictions...")
     probs = get_ensemble_pred_probs(args.model_paths, x)
     return ground_truths, probs, classes
 
 
-def compute_scores_class(cnf):
+def compute_scores_class(ground_truth_class, predictions):
+    ground_truths_flat = ground_truth_class.flatten().tolist()
+    predictions_flat = predictions.flatten().tolist()
+
+    cnf = confusion_matrix(
+        ground_truths_flat, predictions_flat).tolist()
     tn, fp, fn, tp = cnf[0][0], cnf[0][1], cnf[1][0], cnf[1][1]
     sensitivity, specificity = tp / (tp+fn), tn / (tn+fp)
-    print(sensitivity, specificity)
+    return sensitivity, specificity
 
 
 def evaluate_classes(args, train_params, test_params):
@@ -129,12 +132,8 @@ def evaluate_classes(args, train_params, test_params):
             # Repeat the predictions by the number of reviewers.
             predictions = np.tile(
                 predictions, (test_params.get("num_reviewers", 1), 1))
-            ground_truths_flat = ground_truth_class.flatten().tolist()
-            predictions_flat = predictions.flatten().tolist()
 
-            cnf_matrix = confusion_matrix(
-                ground_truths_flat, predictions_flat).tolist()
-            compute_scores_class(cnf_matrix)
+            compute_scores_class(ground_truth_class, predictions)
 
 
 def evaluate_aggregate(args, train_params, test_params):
