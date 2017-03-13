@@ -82,7 +82,7 @@ def compute_scores(
 
 
 def get_binary_preds_for_class(probs, class_int, threshold=0.5):
-    class_probs = probs[:,:,class_int]
+    class_probs = probs[:, :, class_int]
     mask_as_one = class_probs >= threshold
     class_probs[mask_as_one] = 1
     class_probs[~mask_as_one] = 0
@@ -109,42 +109,49 @@ def get_ground_truths_and_probs(args, train_params, test_params):
     probs = get_ensemble_pred_probs(args.model_paths, x)
     return ground_truths, probs, classes
 
+
 def compute_scores_class(cnf):
     tn, fp, fn, tp = cnf[0][0], cnf[0][1], cnf[1][0], cnf[1][1]
-    sensitivity, specificity = tp/(tp+fn), tn/(tn+fp)
+    sensitivity, specificity = tp / (tp+fn), tn / (tn+fp)
     print(sensitivity, specificity)
 
 
 def evaluate_classes(args, train_params, test_params):
-    ground_truths, probs, classes = get_ground_truths_and_probs(args, train_params, test_params)
+    ground_truths, probs, classes = get_ground_truths_and_probs(
+        args, train_params, test_params)
     for class_int, class_name in enumerate(classes):
         for threshold in np.linspace(0, 1, 5):
             print(class_name, threshold)
-            ground_truth_class = get_ground_truths_for_class(np.copy(ground_truths), class_int)
-            predictions = get_binary_preds_for_class(np.copy(probs), class_int, threshold=threshold)
+            ground_truth_class = get_ground_truths_for_class(
+                np.copy(ground_truths), class_int)
+            predictions = get_binary_preds_for_class(
+                np.copy(probs), class_int, threshold=threshold)
             # Repeat the predictions by the number of reviewers.
-            predictions = np.tile(predictions, (test_params.get("num_reviewers", 1), 1))
+            predictions = np.tile(
+                predictions, (test_params.get("num_reviewers", 1), 1))
             ground_truths_flat = ground_truth_class.flatten().tolist()
             predictions_flat = predictions.flatten().tolist()
 
-            cnf_matrix = confusion_matrix(ground_truths_flat, predictions_flat).tolist()
+            cnf_matrix = confusion_matrix(
+                ground_truths_flat, predictions_flat).tolist()
             compute_scores_class(cnf_matrix)
 
 
 def evaluate_aggregate(args, train_params, test_params):
-    ground_truths, probs, classes = get_ground_truths_and_probs(args, train_params, test_params)
+    ground_truths, probs, classes = get_ground_truths_and_probs(
+        args, train_params, test_params)
     if args.decode is True:
         raise NotImplementedError()  # TODO: fix
-        """
-        language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
+        # language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
+        language_model = None
         predictions = np.array([decode.beam_search(prediction, language_model)
                                 for prediction in tqdm(probs)])
-        """
     else:
         predictions = np.argmax(probs, axis=-1)
 
     # Repeat the predictions by the number of reviewers.
-    predictions = np.tile(predictions, (test_params.get("num_reviewers", 1), 1))
+    predictions = np.tile(
+        predictions, (test_params.get("num_reviewers", 1), 1))
 
     compute_scores(ground_truths, predictions, classes)
 
