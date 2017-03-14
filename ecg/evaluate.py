@@ -1,104 +1,14 @@
 from __future__ import print_function
 from __future__ import division
-from builtins import str
 import argparse
 import numpy as np
-from sklearn.metrics import classification_report, confusion_matrix
-from tabulate import tabulate
 from tqdm import tqdm
 import load
 import json
 import decode
 import util
-import plot
-from joblib import Memory
-memory = Memory(cachedir='./cache')
-
-
-@memory.cache
-def get_ensemble_pred_probs(model_paths, x):
-    def get_model_pred_probs(model_path, x):
-        from keras.models import load_model
-        model = load_model(model_path)
-        probs = model.predict(x, verbose=1)
-        return probs
-
-    all_model_probs = [get_model_pred_probs(model_path, x)
-                       for model_path in args.model_paths]
-    probs = np.mean(all_model_probs, axis=0)
-    return probs
-
-
-def compute_scores(
-        ground_truth,
-        predictions,
-        classes,
-        confusion_table=True,
-        report=True,
-        plotting=True):
-
-    ground_truth_flat = ground_truth.flatten().tolist()
-    predictions_flat = predictions.flatten().tolist()
-
-    cnf_matrix = confusion_matrix(ground_truth_flat, predictions_flat).tolist()
-    if plotting is True:
-        try:
-            plot.plot_confusion_matrix(
-                np.log10(np.array(cnf_matrix) + 1),
-                classes)
-        except:
-            print("Skipping plot")
-
-    if confusion_table is True:
-        for i, row in enumerate(cnf_matrix):
-            row.insert(0, classes[i])
-
-        print(tabulate(cnf_matrix, headers=[c[:1] for c in classes]))
-
-    if report is True:
-        print(classification_report(
-            ground_truth_flat, predictions_flat,
-            target_names=classes, digits=3))
-
-
-def get_binary_preds_for_class(probs, class_int, threshold):
-    probs = np.copy(probs)
-    class_probs = probs[:, :, class_int]
-    mask_as_one = class_probs >= threshold
-    class_probs[mask_as_one] = 1
-    class_probs[~mask_as_one] = 0
-    return class_probs
-
-
-def get_ground_truths_for_class(ground_truths, class_int):
-    ground_truths = np.copy(ground_truths)
-    class_mask = ground_truths == class_int
-    ground_truths[class_mask] = 1
-    ground_truths[~class_mask] = 0
-    return ground_truths
-
-
-def get_ground_truths_and_probs(args, train_params, test_params):
-    x, ground_truths, classes = load.load_test(
-        test_params,
-        train_params=train_params,
-        split=args.split)
-
-    print("Predicting on:", args.split)
-    print("Averaging " + str(len(args.model_paths)) + " model predictions...")
-    probs = get_ensemble_pred_probs(args.model_paths, x)
-    return ground_truths, probs, classes
-
-
-def compute_scores_class(ground_truth_class, predictions):
-    ground_truths_flat = ground_truth_class.flatten().tolist()
-    predictions_flat = predictions.flatten().tolist()
-
-    cnf = confusion_matrix(
-        ground_truths_flat, predictions_flat).tolist()
-    tn, fp, fn, tp = cnf[0][0], cnf[0][1], cnf[1][0], cnf[1][1]
-    sensitivity, specificity = tp / (tp+fn), tn / (tn+fp)
-    return sensitivity, specificity
+import predict
+import score
 
 
 def get_class_gt_and_preds(
@@ -106,6 +16,22 @@ def get_class_gt_and_preds(
         probs,
         class_int,
         threshold):
+
+    def get_binary_preds_for_class(probs, class_int, threshold):
+        probs = np.copy(probs)
+        class_probs = probs[:, :, class_int]
+        mask_as_one = class_probs >= threshold
+        class_probs[mask_as_one] = 1
+        class_probs[~mask_as_one] = 0
+        return class_probs
+
+    def get_ground_truths_for_class(ground_truths, class_int):
+        ground_truths = np.copy(ground_truths)
+        class_mask = ground_truths == class_int
+        ground_truths[class_mask] = 1
+        ground_truths[~class_mask] = 0
+        return ground_truths
+
     ground_truth_class = get_ground_truths_for_class(
         ground_truths, class_int)
     predictions = get_binary_preds_for_class(
@@ -117,14 +43,18 @@ def get_class_gt_and_preds(
 
 def get_aggregate_gt_and_preds(
         ground_truths, probs, decoder=False, language_model=None):
-    if decoder is True and language_model is not None:
-        raise NotImplementedError()  # TODO: fix
-        predictions = np.array([decode.beam_search(probs_indiv, language_model)
-                                for probs_indiv in tqdm(probs)])
-    else:
-        predictions = np.argmax(probs, axis=-1)
 
-    # Repeat the predictions by the number of reviewers.
+    def decode_probs(probs, decoder, language_model):
+        if decoder is True and language_model is not None:
+            raise NotImplementedError()  # TODO: fix
+            predictions = np.array(
+                [decode.beam_search(probs_indiv, language_model)
+                 for probs_indiv in tqdm(probs)])
+        else:
+            predictions = np.argmax(probs, axis=-1)
+        return predictions
+
+    predictions = decode_probs(probs, decoder, language_model)
     predictions = np.tile(
         predictions, (ground_truths.shape[0], 1))
     return predictions
@@ -134,7 +64,12 @@ def evaluate_classes(ground_truths, probs, classes, thresholds=[0.5]):
     def evaluate_class(ground_truths, probs, classes, class_int, threshold):
         ground_truth_class, predictions = get_class_gt_and_preds(
             ground_truths, probs, class_int, threshold)
-        scores = compute_scores_class(ground_truth_class, predictions)
+        classes_binarized = ['None', classes[class_int]]
+        scores = score.score(
+            ground_truth_class,
+            predictions,
+            classes_binarized,
+            binary_evaluate=True)
         print(classes[class_int], scores, threshold)
 
     for class_int in range(len(classes)):
@@ -145,12 +80,20 @@ def evaluate_classes(ground_truths, probs, classes, thresholds=[0.5]):
 def evaluate_aggregate(ground_truths, probs, classes, decoder=False):
     predictions = get_aggregate_gt_and_preds(
         ground_truths, probs, decoder=decoder)
-    compute_scores(ground_truths, predictions, classes)
+    score.score(
+        ground_truths,
+        predictions,
+        classes,
+        confusion_table=True,
+        report=True)
 
 
 def evaluate(args, train_params, test_params):
-    ground_truths, probs, classes = get_ground_truths_and_probs(
-        args, train_params, test_params)
+    x, ground_truths, classes = load.load_test(
+            test_params,
+            train_params=train_params,
+            split=args.split)
+    probs = predict.get_ensemble_pred_probs(args.model_paths, x)
     evaluate_aggregate(ground_truths, probs, classes, decoder=args.decode)
     evaluate_classes(ground_truths, probs, classes, np.linspace(0, 1, 5))
 
