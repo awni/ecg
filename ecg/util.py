@@ -1,9 +1,18 @@
 import os
 import json
+import time
 
 
 def get_confusion_figure_path(model_path):
     return model_path + '.png'
+
+
+def get_plot_path(type_of_plot):
+    directory = './plots'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return directory + '/' + str(type_of_plot) + '-' + \
+        str(int(time.time())) + '.png'
 
 
 def get_prediction_path_for_model(model_path, split):

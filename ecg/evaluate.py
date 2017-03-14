@@ -10,28 +10,9 @@ import load
 import json
 import decode
 import util
+import plot
 from joblib import Memory
 memory = Memory(cachedir='./cache')
-
-
-def plot_confusion_matrix(cm, classes, model_path=None):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    cmap = plt.cm.Blues
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title('Confusion matrix')
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=90)
-    plt.yticks(tick_marks, classes)
-
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.show()
-    if model_path is not None:
-        plt.savefig(util.get_confusion_figure_path(model_path))
 
 
 @memory.cache
@@ -54,18 +35,17 @@ def compute_scores(
         classes,
         confusion_table=True,
         report=True,
-        plot=True):
+        plotting=True):
 
     ground_truth_flat = ground_truth.flatten().tolist()
     predictions_flat = predictions.flatten().tolist()
 
     cnf_matrix = confusion_matrix(ground_truth_flat, predictions_flat).tolist()
-    if plot is True:
+    if plotting is True:
         try:
-            plot_confusion_matrix(
+            plot.plot_confusion_matrix(
                 np.log10(np.array(cnf_matrix) + 1),
-                classes,
-                args.model_path)
+                classes)
         except:
             print("Skipping plot")
 
@@ -135,11 +115,10 @@ def get_class_gt_and_preds(
     return ground_truth_class, predictions
 
 
-def get_aggregate_gt_and_preds(ground_truths, probs, decoder=False):
-    if decoder is True:
+def get_aggregate_gt_and_preds(
+        ground_truths, probs, decoder=False, language_model=None):
+    if decoder is True and language_model is not None:
         raise NotImplementedError()  # TODO: fix
-        # language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
-        language_model = None
         predictions = np.array([decode.beam_search(probs_indiv, language_model)
                                 for probs_indiv in tqdm(probs)])
     else:
@@ -178,12 +157,12 @@ def evaluate(args, train_params, test_params):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("test_config_file", help="path to config file")
-    parser.add_argument("--split", help="train/val", choices=['train', 'test'],
-                        default='test')
     parser.add_argument(
         'model_paths',
         nargs='+',
         help="path to models")
+    parser.add_argument("--split", help="train/val", choices=['train', 'test'],
+                        default='test')
     parser.add_argument('--decode', action='store_true')
     args = parser.parse_args()
     train_params = util.get_model_params(args.model_paths[0])
