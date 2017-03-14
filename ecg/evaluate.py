@@ -82,6 +82,7 @@ def compute_scores(
 
 
 def get_binary_preds_for_class(probs, class_int, threshold=0.5):
+    probs = np.copy(probs)
     class_probs = probs[:, :, class_int]
     mask_as_one = class_probs >= threshold
     class_probs[mask_as_one] = 1
@@ -90,6 +91,7 @@ def get_binary_preds_for_class(probs, class_int, threshold=0.5):
 
 
 def get_ground_truths_for_class(ground_truths, class_int):
+    ground_truths = np.copy(ground_truths)
     class_mask = ground_truths == class_int
     ground_truths[class_mask] = 1
     ground_truths[~class_mask] = 0
@@ -126,14 +128,13 @@ def evaluate_classes(args, train_params, test_params):
         for threshold in np.linspace(0, 1, 5):
             print(class_name, threshold)
             ground_truth_class = get_ground_truths_for_class(
-                np.copy(ground_truths), class_int)
+                ground_truths, class_int)
             predictions = get_binary_preds_for_class(
-                np.copy(probs), class_int, threshold=threshold)
-            # Repeat the predictions by the number of reviewers.
+                probs, class_int, threshold=threshold)
             predictions = np.tile(
-                predictions, (test_params.get("num_reviewers", 1), 1))
+                predictions, (ground_truth_class.shape[0], 1))
 
-            compute_scores_class(ground_truth_class, predictions)
+            print(compute_scores_class(ground_truth_class, predictions))
 
 
 def evaluate_aggregate(args, train_params, test_params):
