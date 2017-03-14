@@ -12,8 +12,8 @@ import score
 
 class Evaluator():
     def evaluate(self, ground_truths, probs):
-        self.process_ground_truths(ground_truths)
-        self.process_probs(probs)
+        self._to_gt(ground_truths)
+        self._to_preds(probs)
         self.score()
 
 
@@ -22,10 +22,23 @@ class MultiCategoryEval(Evaluator):
         self.classes = classes
         self.decoder = decoder
 
-    def process_ground_truths(self, ground_truths):
-        self.ground_truths = ground_truths
+    def _seq_to_set(self, arr):
+        return [np.unique(record_labels).tolist() for record_labels in arr]
 
-    def process_probs(self, probs):
+    def _seq_to_set_gt(self):
+        gt = self.seq_gt.reshape((-1, self.seq_gt.shape[-1]))
+        set_gt = self._seq_to_set(gt)
+        return set_gt
+
+    def _seq_to_set_preds(self):
+        set_preds = self._seq_to_set(self.seq_preds)
+        return set_preds
+
+    def _to_gt(self, ground_truths):
+        self.seq_gt = ground_truths
+        self.set_gt = self._seq_to_set_gt()
+
+    def _to_preds(self, probs):
         if self.decoder:
             raise NotImplementedError()  # TODO: fix
             predictions = np.array(
@@ -35,14 +48,15 @@ class MultiCategoryEval(Evaluator):
             predictions = np.argmax(probs, axis=-1)
 
         predictions = np.tile(
-            predictions, (self.ground_truths.shape[0], 1))
+            predictions, (self.seq_gt.shape[0], 1))
 
-        self.predictions = predictions
+        self.seq_preds = predictions
+        self.set_preds = self._seq_to_set_preds()
 
     def score(self):
         score.score(
-            self.ground_truths,
-            self.predictions,
+            self.seq_gt,
+            self.seq_preds,
             self.classes,
             confusion_table=True,
             report=True)
