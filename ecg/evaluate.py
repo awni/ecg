@@ -81,7 +81,7 @@ def compute_scores(
             target_names=classes, digits=3))
 
 
-def get_binary_preds_for_class(probs, class_int, threshold=0.5):
+def get_binary_preds_for_class(probs, class_int, threshold):
     probs = np.copy(probs)
     class_probs = probs[:, :, class_int]
     mask_as_one = class_probs >= threshold
@@ -121,40 +121,59 @@ def compute_scores_class(ground_truth_class, predictions):
     return sensitivity, specificity
 
 
-def evaluate_classes(args, train_params, test_params):
-    ground_truths, probs, classes = get_ground_truths_and_probs(
-        args, train_params, test_params)
-    for class_int, class_name in enumerate(classes):
-        for threshold in np.linspace(0, 1, 5):
-            print(class_name, threshold)
-            ground_truth_class = get_ground_truths_for_class(
-                ground_truths, class_int)
-            predictions = get_binary_preds_for_class(
-                probs, class_int, threshold=threshold)
-            predictions = np.tile(
-                predictions, (ground_truth_class.shape[0], 1))
-
-            print(compute_scores_class(ground_truth_class, predictions))
+def get_class_gt_and_preds(
+        ground_truths,
+        probs,
+        class_int,
+        threshold):
+    ground_truth_class = get_ground_truths_for_class(
+        ground_truths, class_int)
+    predictions = get_binary_preds_for_class(
+        probs, class_int, threshold)
+    predictions = np.tile(
+        predictions, (ground_truth_class.shape[0], 1))
+    return ground_truth_class, predictions
 
 
-def evaluate_aggregate(args, train_params, test_params):
-    ground_truths, probs, classes = get_ground_truths_and_probs(
-        args, train_params, test_params)
-    if args.decode is True:
+def get_aggregate_gt_and_preds(ground_truths, probs, decoder=False):
+    if decoder is True:
         raise NotImplementedError()  # TODO: fix
         # language_model = decode.LM(dl.y_train, dl.output_dim, order=2)
         language_model = None
-        predictions = np.array([decode.beam_search(prediction, language_model)
-                                for prediction in tqdm(probs)])
+        predictions = np.array([decode.beam_search(probs_indiv, language_model)
+                                for probs_indiv in tqdm(probs)])
     else:
         predictions = np.argmax(probs, axis=-1)
 
     # Repeat the predictions by the number of reviewers.
     predictions = np.tile(
-        predictions, (test_params.get("num_reviewers", 1), 1))
+        predictions, (ground_truths.shape[0], 1))
+    return predictions
 
+
+def evaluate_classes(ground_truths, probs, classes, thresholds=[0.5]):
+    def evaluate_class(ground_truths, probs, classes, class_int, threshold):
+        ground_truth_class, predictions = get_class_gt_and_preds(
+            ground_truths, probs, class_int, threshold)
+        scores = compute_scores_class(ground_truth_class, predictions)
+        print(classes[class_int], scores, threshold)
+
+    for class_int in range(len(classes)):
+        for threshold in thresholds:
+            evaluate_class(ground_truths, probs, classes, class_int, threshold)
+
+
+def evaluate_aggregate(ground_truths, probs, classes, decoder=False):
+    predictions = get_aggregate_gt_and_preds(
+        ground_truths, probs, decoder=decoder)
     compute_scores(ground_truths, predictions, classes)
 
+
+def evaluate(args, train_params, test_params):
+    ground_truths, probs, classes = get_ground_truths_and_probs(
+        args, train_params, test_params)
+    evaluate_aggregate(ground_truths, probs, classes, decoder=args.decode)
+    evaluate_classes(ground_truths, probs, classes, np.linspace(0, 1, 5))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -173,5 +192,4 @@ if __name__ == '__main__':
     test_params.update(test_new_params)
     if "label_review" in test_new_params["EVAL_PATH"]:
         assert(args.split == 'test')
-    evaluate_aggregate(args, train_params, test_params)
-    evaluate_classes(args, train_params, test_params)
+    evaluate(args, train_params, test_params)

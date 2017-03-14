@@ -2,10 +2,11 @@ import evaluate
 import json
 import load
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 import argparse
 
 
-def get_ground_truths_and_human_prediction(ground_truths, num_reviewers):
+def get_ground_truths_and_human_probs(ground_truths, num_reviewers):
     ground_truths = np.swapaxes(ground_truths, 0, 1)
     select_index = np.random.randint(0, num_reviewers, size=len(ground_truths))
     human_prediction_mask = np.zeros(
@@ -15,50 +16,34 @@ def get_ground_truths_and_human_prediction(ground_truths, num_reviewers):
 
     predictions = ground_truths[human_prediction_mask]
 
+    enc = OneHotEncoder(sparse=False)
+    probs = enc.fit_transform(predictions.reshape(-1, 1)).reshape(
+        (predictions.shape[0], predictions.shape[1], -1))
+
     ground_truths = ground_truths[~human_prediction_mask].reshape(
         (len(ground_truths), num_reviewers - 1, -1))
     ground_truths = np.swapaxes(ground_truths, 0, 1)
 
-    return ground_truths, predictions
+    return ground_truths, probs
+
+
+def agreement_aggregate(ground_truths, probs, classes):
+    return evaluate.evaluate_aggregate(ground_truths, probs, classes)
+
+
+def agreement_classes(ground_truths, probs, classes):
+    return evaluate.evaluate_classes(ground_truths, probs, classes)
 
 
 def agreement(args, params):
-    x, ground_truths, classes = load.load_test(params)
-    num_reviewers = params["num_reviewers"]
-    ground_truths, predictions = get_ground_truths_and_human_prediction(
-        ground_truths, num_reviewers)
-    predictions = np.tile(predictions, (num_reviewers - 1, 1))
-
-    evaluate.compute_scores(ground_truths, predictions, classes)
-
-
-def compute_metrics(ground_truths, predictions, classes):
-    all_metrics = []
-    for class_int, class_name in enumerate(classes):
-        print(class_name)
-        ground_truth_class = evaluate.get_ground_truths_for_class(
-            ground_truths, class_int)
-        preds = evaluate.get_ground_truths_for_class(
-            predictions, class_int)
-        # Repeat the predictions by the number of reviewers.
-        preds = np.tile(preds, (ground_truth_class.shape[0], 1))
-        class_metrics = evaluate.compute_scores_class(
-            ground_truth_class, preds)
-        print(class_metrics)
-        all_metrics.append(class_metrics)
-
-
-def class_agreement(args, params):
-    x, ground_truths, classes = load.load_test(params)
-    num_reviewers = params["num_reviewers"]
-    ground_truths, predictions = get_ground_truths_and_human_prediction(
-        ground_truths, num_reviewers)
-    compute_metrics(ground_truths, predictions, classes)
-
+    _, ground_truths, classes = load.load_test(params)
+    ground_truths, probs = get_ground_truths_and_human_probs(
+        ground_truths, params["num_reviewers"])
+    agreement_aggregate(ground_truths, probs, classes)
+    agreement_classes(ground_truths, probs, classes)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     params = json.load(open('configs/test.json', 'r'))
     agreement(args, params)
-    class_agreement(args, params)
