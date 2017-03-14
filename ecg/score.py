@@ -16,14 +16,16 @@ def get_confusion_matrix(gt, preds):
     return cnf
 
 
-def score(
+def seq_score(
         ground_truth,
         predictions,
         classes,
         confusion_table=False,
         report=False,
         plotting=False,
-        binary_evaluate=False):
+        binary_evaluate=False,
+        class_name=None,
+        threshold=None):
 
     cnf = get_confusion_matrix(ground_truth, predictions)
 
@@ -45,5 +47,5 @@ def score(
 
     if binary_evaluate is True:
         tn, fp, fn, tp = cnf[0][0], cnf[0][1], cnf[1][0], cnf[1][1]
-        sensitivity, specificity = tp / (tp+fn), tn / (tn+fp)
-        return sensitivity, specificity
+        scores = (sensitivity, specificity) = tp / (tp+fn), tn / (tn+fp)
+        print(class_name, scores, threshold)

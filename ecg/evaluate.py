@@ -11,32 +11,45 @@ import score
 
 
 class Evaluator():
+    def _seq_to_set_gt(self):
+        gt = self.seq_gt.reshape((-1, self.seq_gt.shape[-1]))
+        set_gt = self._seq_to_set(gt)
+        self.set_gt = set_gt
+
+    def _seq_to_set_preds(self):
+        set_preds = self._seq_to_set(self.seq_preds)
+        self.set_preds = set_preds
+
     def evaluate(self, ground_truths, probs):
         self._to_gt(ground_truths)
         self._to_preds(probs)
-        self.score()
+        self._seq_to_set_gt()
+        self._seq_to_set_preds()
+        self.seq_score()
+        # self.set_score()
+
+    def seq_score(self):
+        score.seq_score(
+            self.seq_gt,
+            self.seq_preds,
+            self.classes,
+            **self.seq_score_params)
 
 
 class MultiCategoryEval(Evaluator):
     def __init__(self, classes, decoder=None):
         self.classes = classes
         self.decoder = decoder
+        self.seq_score_params = {
+            'confusion_table': True,
+            'report': True
+        }
 
     def _seq_to_set(self, arr):
         return [np.unique(record_labels).tolist() for record_labels in arr]
 
-    def _seq_to_set_gt(self):
-        gt = self.seq_gt.reshape((-1, self.seq_gt.shape[-1]))
-        set_gt = self._seq_to_set(gt)
-        return set_gt
-
-    def _seq_to_set_preds(self):
-        set_preds = self._seq_to_set(self.seq_preds)
-        return set_preds
-
     def _to_gt(self, ground_truths):
         self.seq_gt = ground_truths
-        self.set_gt = self._seq_to_set_gt()
 
     def _to_preds(self, probs):
         if self.decoder:
@@ -51,15 +64,6 @@ class MultiCategoryEval(Evaluator):
             predictions, (self.seq_gt.shape[0], 1))
 
         self.seq_preds = predictions
-        self.set_preds = self._seq_to_set_preds()
-
-    def score(self):
-        score.score(
-            self.seq_gt,
-            self.seq_preds,
-            self.classes,
-            confusion_table=True,
-            report=True)
 
 
 class BinaryEval(Evaluator):
@@ -68,30 +72,35 @@ class BinaryEval(Evaluator):
         self.class_int = class_int
         self.class_name = class_name
         self.classes = ['Not ' + class_name, class_name]
+        self.seq_score_params = {
+            'binary_evaluate': True,
+            'class_name': class_name,
+            'threshold': threshold
+        }
 
-    def process_probs(self, probs):
+    def _seq_to_set(self, arr):
+        set_records = []
+        for record_labels in arr.astype('int'):
+            unique = set(np.unique(record_labels))
+            unique.discard(0)
+            set_records.append(list(unique))
+        return set_records
+
+    def _to_gt(self, ground_truths):
+        ground_truths = np.copy(ground_truths)
+        class_mask = ground_truths == self.class_int
+        ground_truths[class_mask] = 1
+        ground_truths[~class_mask] = 0
+        self.seq_gt = ground_truths
+
+    def _to_preds(self, probs):
         predictions = probs[:, :, self.class_int]
         mask_as_one = predictions >= self.threshold
         predictions[mask_as_one] = 1
         predictions[~mask_as_one] = 0
         predictions = np.tile(
-            predictions, (self.ground_truths.shape[0], 1))
-        self.predictions = predictions
-
-    def process_ground_truths(self, ground_truths):
-        ground_truths = np.copy(ground_truths)
-        class_mask = ground_truths == self.class_int
-        ground_truths[class_mask] = 1
-        ground_truths[~class_mask] = 0
-        self.ground_truths = ground_truths
-
-    def score(self):
-        scores = score.score(
-            self.ground_truths,
-            self.predictions,
-            self.classes,
-            binary_evaluate=True)
-        print(self.class_name, scores, self.threshold)
+            predictions, (self.seq_gt.shape[0], 1))
+        self.seq_preds = predictions
 
 
 def evaluate_classes(ground_truths, probs, classes, thresholds=[0.5]):
