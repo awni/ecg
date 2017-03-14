@@ -1,91 +1,95 @@
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
 import argparse
 import numpy as np
 from tqdm import tqdm
 import load
 import json
-import decode
 import util
 import predict
 import score
 
 
-def get_class_gt_and_preds(
-        ground_truths,
-        probs,
-        class_int,
-        threshold):
-
-    def get_binary_preds_for_class(probs, class_int, threshold):
-        probs = np.copy(probs)
-        class_probs = probs[:, :, class_int]
-        mask_as_one = class_probs >= threshold
-        class_probs[mask_as_one] = 1
-        class_probs[~mask_as_one] = 0
-        return class_probs
-
-    def get_ground_truths_for_class(ground_truths, class_int):
-        ground_truths = np.copy(ground_truths)
-        class_mask = ground_truths == class_int
-        ground_truths[class_mask] = 1
-        ground_truths[~class_mask] = 0
-        return ground_truths
-
-    ground_truth_class = get_ground_truths_for_class(
-        ground_truths, class_int)
-    predictions = get_binary_preds_for_class(
-        probs, class_int, threshold)
-    predictions = np.tile(
-        predictions, (ground_truth_class.shape[0], 1))
-    return ground_truth_class, predictions
+class Evaluator():
+    def evaluate(self, ground_truths, probs):
+        self.process_ground_truths(ground_truths)
+        self.process_probs(probs)
+        self.score()
 
 
-def get_aggregate_gt_and_preds(
-        ground_truths, probs, decoder=False, language_model=None):
+class MultiCategoryEval(Evaluator):
+    def __init__(self, classes, decoder=None):
+        self.classes = classes
+        self.decoder = decoder
 
-    def decode_probs(probs, decoder, language_model):
-        if decoder is True and language_model is not None:
+    def process_ground_truths(self, ground_truths):
+        self.ground_truths = ground_truths
+
+    def process_probs(self, probs):
+        if self.decoder:
             raise NotImplementedError()  # TODO: fix
             predictions = np.array(
-                [decode.beam_search(probs_indiv, language_model)
+                [self.decoder.beam_search(probs_indiv)
                  for probs_indiv in tqdm(probs)])
         else:
             predictions = np.argmax(probs, axis=-1)
-        return predictions
 
-    predictions = decode_probs(probs, decoder, language_model)
-    predictions = np.tile(
-        predictions, (ground_truths.shape[0], 1))
-    return predictions
+        predictions = np.tile(
+            predictions, (self.ground_truths.shape[0], 1))
+
+        self.predictions = predictions
+
+    def score(self):
+        score.score(
+            self.ground_truths,
+            self.predictions,
+            self.classes,
+            confusion_table=True,
+            report=True)
+
+
+class BinaryEval(Evaluator):
+    def __init__(self, class_int, class_name, threshold):
+        self.threshold = threshold
+        self.class_int = class_int
+        self.class_name = class_name
+        self.classes = ['Not ' + class_name, class_name]
+
+    def process_probs(self, probs):
+        predictions = probs[:, :, self.class_int]
+        mask_as_one = predictions >= self.threshold
+        predictions[mask_as_one] = 1
+        predictions[~mask_as_one] = 0
+        predictions = np.tile(
+            predictions, (self.ground_truths.shape[0], 1))
+        self.predictions = predictions
+
+    def process_ground_truths(self, ground_truths):
+        ground_truths = np.copy(ground_truths)
+        class_mask = ground_truths == self.class_int
+        ground_truths[class_mask] = 1
+        ground_truths[~class_mask] = 0
+        self.ground_truths = ground_truths
+
+    def score(self):
+        scores = score.score(
+            self.ground_truths,
+            self.predictions,
+            self.classes,
+            binary_evaluate=True)
+        print(self.class_name, scores, self.threshold)
 
 
 def evaluate_classes(ground_truths, probs, classes, thresholds=[0.5]):
-    def evaluate_class(ground_truths, probs, classes, class_int, threshold):
-        ground_truth_class, predictions = get_class_gt_and_preds(
-            ground_truths, probs, class_int, threshold)
-        classes_binarized = ['None', classes[class_int]]
-        scores = score.score(
-            ground_truth_class,
-            predictions,
-            classes_binarized,
-            binary_evaluate=True)
-        print(classes[class_int], scores, threshold)
-
     for class_int in range(len(classes)):
         for threshold in thresholds:
-            evaluate_class(ground_truths, probs, classes, class_int, threshold)
+            evaluator = BinaryEval(class_int, classes[class_int], threshold)
+            evaluator.evaluate(ground_truths, probs)
 
 
 def evaluate_aggregate(ground_truths, probs, classes, decoder=False):
-    predictions = get_aggregate_gt_and_preds(
-        ground_truths, probs, decoder=decoder)
-    score.score(
-        ground_truths,
-        predictions,
-        classes,
-        confusion_table=True,
-        report=True)
+    evaluator = MultiCategoryEval(classes)
+    evaluator.evaluate(ground_truths, probs)
 
 
 def evaluate(args, train_params, test_params):
