@@ -1,5 +1,6 @@
 from __future__ import division
 from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import precision_recall_fscore_support
 import plot
 import numpy as np
 from tabulate import tabulate
@@ -16,6 +17,23 @@ def get_confusion_matrix(gt, preds):
     return cnf
 
 
+def set_score(
+        gt,
+        preds,
+        classes,
+        is_binary=False,
+        class_name=None,
+        threshold=None,
+        **params):
+    print('Set Score')
+    if is_binary is True:
+        print(class_name, precision_recall_fscore_support(
+            gt, preds, average='binary'), threshold)
+    else:
+        print(classification_report(
+            gt, preds, target_names=classes, digits=3))
+
+
 def seq_score(
         ground_truth,
         predictions,
@@ -23,10 +41,11 @@ def seq_score(
         confusion_table=False,
         report=False,
         plotting=False,
-        binary_evaluate=False,
+        is_binary=False,
         class_name=None,
         threshold=None):
 
+    print('Sequence Score')
     cnf = get_confusion_matrix(ground_truth, predictions)
 
     if plotting is True:
@@ -45,7 +64,7 @@ def seq_score(
         print(classification_report(
             gt_flat, preds_flat, target_names=classes, digits=3))
 
-    if binary_evaluate is True:
+    if is_binary is True:
         tn, fp, fn, tp = cnf[0][0], cnf[0][1], cnf[1][0], cnf[1][1]
         scores = (sensitivity, specificity) = tp / (tp+fn), tn / (tn+fp)
         print(class_name, scores, threshold)

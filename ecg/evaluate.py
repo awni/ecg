@@ -26,27 +26,38 @@ class Evaluator():
         self._seq_to_set_gt()
         self._seq_to_set_preds()
         self.seq_score()
-        # self.set_score()
+        self.set_score()
 
     def seq_score(self):
         score.seq_score(
             self.seq_gt,
             self.seq_preds,
             self.classes,
-            **self.seq_score_params)
+            **self.score_params)
+
+    def set_score(self):
+        score.set_score(
+            self.set_gt,
+            self.set_preds,
+            self.classes,
+            **self.score_params)
 
 
 class MultiCategoryEval(Evaluator):
     def __init__(self, classes, decoder=None):
         self.classes = classes
         self.decoder = decoder
-        self.seq_score_params = {
+        self.score_params = {
             'confusion_table': True,
             'report': True
         }
 
     def _seq_to_set(self, arr):
-        return [np.unique(record_labels).tolist() for record_labels in arr]
+        labels = [set(
+            np.unique(record_labels).tolist()) for record_labels in arr]
+        from sklearn.preprocessing import MultiLabelBinarizer
+        mlb = MultiLabelBinarizer()
+        return mlb.fit_transform(labels)
 
     def _to_gt(self, ground_truths):
         self.seq_gt = ground_truths
@@ -72,8 +83,8 @@ class BinaryEval(Evaluator):
         self.class_int = class_int
         self.class_name = class_name
         self.classes = ['Not ' + class_name, class_name]
-        self.seq_score_params = {
-            'binary_evaluate': True,
+        self.score_params = {
+            'is_binary': True,
             'class_name': class_name,
             'threshold': threshold
         }
@@ -84,7 +95,9 @@ class BinaryEval(Evaluator):
             unique = set(np.unique(record_labels))
             unique.discard(0)
             set_records.append(list(unique))
-        return set_records
+        from sklearn import preprocessing
+        lb = preprocessing.MultiLabelBinarizer(classes=[1])
+        return lb.fit_transform(set_records)
 
     def _to_gt(self, ground_truths):
         ground_truths = np.copy(ground_truths)
@@ -94,6 +107,7 @@ class BinaryEval(Evaluator):
         self.seq_gt = ground_truths
 
     def _to_preds(self, probs):
+        probs = np.copy(probs)
         predictions = probs[:, :, self.class_int]
         mask_as_one = predictions >= self.threshold
         predictions[mask_as_one] = 1
@@ -122,7 +136,8 @@ def evaluate(args, train_params, test_params):
             split=args.split)
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
     evaluate_aggregate(ground_truths, probs, classes, decoder=args.decode)
-    evaluate_classes(ground_truths, probs, classes, np.linspace(0, 1, 5))
+    evaluate_classes(
+        ground_truths, probs, classes, np.linspace(0, 1, 3, endpoint=False))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
