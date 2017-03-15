@@ -27,20 +27,11 @@ def get_ground_truths_and_human_probs(ground_truths, num_reviewers):
     return ground_truths, probs
 
 
-def agreement_aggregate(ground_truths, probs, classes):
-    return evaluate.evaluate_aggregate(ground_truths, probs, classes)
-
-
-def agreement_classes(ground_truths, probs, classes):
-    return evaluate.evaluate_classes(ground_truths, probs, classes)
-
-
 def agreement(args, params):
     _, ground_truths, classes = load.load_test(params)
     ground_truths, probs = get_ground_truths_and_human_probs(
         ground_truths, params["num_reviewers"])
-    agreement_aggregate(ground_truths, probs, classes)
-    agreement_classes(ground_truths, probs, classes)
+    evaluate.evaluate_all(ground_truths, probs, classes)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
