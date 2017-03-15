@@ -11,6 +11,10 @@ import score
 
 
 class Evaluator():
+    def __init__(self, scorer):
+        self.scorer = scorer
+        self.score_params = {}
+
     def _seq_to_set_gt(self):
         self.set_gt = self._seq_to_set(self.seq_gt)
 
@@ -24,39 +28,34 @@ class Evaluator():
     def _flat_seq_gt(self):
         self.seq_gt = self.seq_gt.reshape((-1, self.seq_gt.shape[-1]))
 
-    def score(self, gt, preds, **params):
-        self.score_params.update(**params)
-        score.score(
+    def score(self, gt, preds):
+        self.scorer.score(
             gt,
             preds,
             self.classes,
             **self.score_params)
 
-    def seq_score(self):
-        self.score(self.seq_gt.ravel(), self.seq_preds.ravel())
-
-    def set_score(self):
-        self.score(self.set_gt, self.set_preds, confusion_table=False)
-
-    def evaluate(self, ground_truths, probs):
+    def evaluate(self, ground_truths, probs, metric='seq'):
+        assert(metric in ['set', 'seq'])
         self._to_seq_gt(ground_truths)
         self._to_seq_preds(probs)
         self._repeat_seq_preds()
         self._flat_seq_gt()
-        self._seq_to_set_gt()
-        self._seq_to_set_preds()
-        self.seq_score()
-        self.set_score()
+        if metric == 'seq':
+            self.score(
+                self.seq_gt.ravel(), self.seq_preds.ravel())
+        else:
+            self._seq_to_set_gt()
+            self._seq_to_set_preds()
+            self.score(
+                self.set_gt, self.set_preds)
 
 
-class MultiCategoryEval(Evaluator):
-    def __init__(self, classes, decoder=None):
+class MulticlassEval(Evaluator):
+    def __init__(self, scorer, classes, decoder=None):
+        Evaluator.__init__(self, scorer)
         self.classes = classes
         self.decoder = decoder
-        self.score_params = {
-            'confusion_table': True,
-            'report': True
-        }
 
     def _seq_to_set(self, arr):
         labels = [set(
@@ -81,13 +80,13 @@ class MultiCategoryEval(Evaluator):
 
 
 class BinaryEval(Evaluator):
-    def __init__(self, class_int, class_name, threshold):
+    def __init__(self, scorer, class_int, class_name, threshold):
+        Evaluator.__init__(self, scorer)
         self.threshold = threshold
         self.class_int = class_int
         self.class_name = class_name
         self.classes = ['Not ' + class_name, class_name]
         self.score_params = {
-            'is_binary': True,
             'class_name': class_name,
             'threshold': threshold
         }
@@ -118,27 +117,42 @@ class BinaryEval(Evaluator):
         self.seq_preds = predictions
 
 
-def evaluate_classes(ground_truths, probs, classes, thresholds=[0.5]):
-    for class_int in range(len(classes)):
+def evaluate_binary(
+        ground_truths, probs, classes, thresholds, metric):
+    scorer = score.BinaryScorer()
+    for class_int in tqdm(range(len(classes))):
         for threshold in thresholds:
-            evaluator = BinaryEval(class_int, classes[class_int], threshold)
-            evaluator.evaluate(ground_truths, probs)
+            evaluator = BinaryEval(
+                scorer, class_int, classes[class_int], threshold)
+            evaluator.evaluate(ground_truths, probs, metric=metric)
+    scorer.display_scores()
 
 
-def evaluate_aggregate(ground_truths, probs, classes, decoder=False):
-    evaluator = MultiCategoryEval(classes)
-    evaluator.evaluate(ground_truths, probs)
+def evaluate_multiclass(
+        ground_truths, probs, classes, metric, decoder=False):
+    scorer = score.MulticlassScorer()
+    evaluator = MulticlassEval(scorer, classes)
+    evaluator.evaluate(ground_truths, probs, metric=metric)
+    scorer.display_scores()
+
+
+def evaluate_all(gt, probs, classes, thresholds=[0.5], decoder=None):
+    for metric in ['seq', 'set']:
+        evaluate_multiclass(
+            gt, probs, classes, metric, decoder=decoder)
+        evaluate_binary(
+            gt, probs, classes, thresholds, metric)
 
 
 def evaluate(args, train_params, test_params):
-    x, ground_truths, classes = load.load_test(
+    x, gt, classes = load.load_test(
             test_params,
             train_params=train_params,
             split=args.split)
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
-    evaluate_aggregate(ground_truths, probs, classes, decoder=args.decode)
-    evaluate_classes(
-        ground_truths, probs, classes, np.linspace(0, 1, 3, endpoint=False))
+    thresholds = np.linspace(0, 1, 5, endpoint=False)
+    evaluate_all(gt, probs, classes, thresholds, args.decode)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
