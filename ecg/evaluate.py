@@ -12,35 +12,41 @@ import score
 
 class Evaluator():
     def _seq_to_set_gt(self):
-        gt = self.seq_gt.reshape((-1, self.seq_gt.shape[-1]))
-        set_gt = self._seq_to_set(gt)
-        self.set_gt = set_gt
+        self.set_gt = self._seq_to_set(self.seq_gt)
 
     def _seq_to_set_preds(self):
-        set_preds = self._seq_to_set(self.seq_preds)
-        self.set_preds = set_preds
+        self.set_preds = self._seq_to_set(self.seq_preds)
+
+    def _repeat_seq_preds(self):
+        self.seq_preds = np.tile(
+            self.seq_preds, (self.seq_gt.shape[0], 1))
+
+    def _flat_seq_gt(self):
+        self.seq_gt = self.seq_gt.reshape((-1, self.seq_gt.shape[-1]))
+
+    def score(self, gt, preds, **params):
+        self.score_params.update(**params)
+        score.score(
+            gt,
+            preds,
+            self.classes,
+            **self.score_params)
+
+    def seq_score(self):
+        self.score(self.seq_gt.ravel(), self.seq_preds.ravel())
+
+    def set_score(self):
+        self.score(self.set_gt, self.set_preds, confusion_table=False)
 
     def evaluate(self, ground_truths, probs):
-        self._to_gt(ground_truths)
-        self._to_preds(probs)
+        self._to_seq_gt(ground_truths)
+        self._to_seq_preds(probs)
+        self._repeat_seq_preds()
+        self._flat_seq_gt()
         self._seq_to_set_gt()
         self._seq_to_set_preds()
         self.seq_score()
         self.set_score()
-
-    def seq_score(self):
-        score.seq_score(
-            self.seq_gt,
-            self.seq_preds,
-            self.classes,
-            **self.score_params)
-
-    def set_score(self):
-        score.set_score(
-            self.set_gt,
-            self.set_preds,
-            self.classes,
-            **self.score_params)
 
 
 class MultiCategoryEval(Evaluator):
@@ -59,10 +65,10 @@ class MultiCategoryEval(Evaluator):
         mlb = MultiLabelBinarizer()
         return mlb.fit_transform(labels)
 
-    def _to_gt(self, ground_truths):
+    def _to_seq_gt(self, ground_truths):
         self.seq_gt = ground_truths
 
-    def _to_preds(self, probs):
+    def _to_seq_preds(self, probs):
         if self.decoder:
             raise NotImplementedError()  # TODO: fix
             predictions = np.array(
@@ -70,9 +76,6 @@ class MultiCategoryEval(Evaluator):
                  for probs_indiv in tqdm(probs)])
         else:
             predictions = np.argmax(probs, axis=-1)
-
-        predictions = np.tile(
-            predictions, (self.seq_gt.shape[0], 1))
 
         self.seq_preds = predictions
 
@@ -99,21 +102,19 @@ class BinaryEval(Evaluator):
         lb = preprocessing.MultiLabelBinarizer(classes=[1])
         return lb.fit_transform(set_records)
 
-    def _to_gt(self, ground_truths):
+    def _to_seq_gt(self, ground_truths):
         ground_truths = np.copy(ground_truths)
         class_mask = ground_truths == self.class_int
         ground_truths[class_mask] = 1
         ground_truths[~class_mask] = 0
         self.seq_gt = ground_truths
 
-    def _to_preds(self, probs):
+    def _to_seq_preds(self, probs):
         probs = np.copy(probs)
         predictions = probs[:, :, self.class_int]
         mask_as_one = predictions >= self.threshold
         predictions[mask_as_one] = 1
         predictions[~mask_as_one] = 0
-        predictions = np.tile(
-            predictions, (self.seq_gt.shape[0], 1))
         self.seq_preds = predictions
 
 

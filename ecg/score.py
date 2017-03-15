@@ -17,26 +17,9 @@ def get_confusion_matrix(gt, preds):
     return cnf
 
 
-def set_score(
+def score(
         gt,
         preds,
-        classes,
-        is_binary=False,
-        class_name=None,
-        threshold=None,
-        **params):
-    print('Set Score')
-    if is_binary is True:
-        print(class_name, precision_recall_fscore_support(
-            gt, preds, average='binary'), threshold)
-    else:
-        print(classification_report(
-            gt, preds, target_names=classes, digits=3))
-
-
-def seq_score(
-        ground_truth,
-        predictions,
         classes,
         confusion_table=False,
         report=False,
@@ -45,8 +28,7 @@ def seq_score(
         class_name=None,
         threshold=None):
 
-    print('Sequence Score')
-    cnf = get_confusion_matrix(ground_truth, predictions)
+    cnf = get_confusion_matrix(gt, preds)
 
     if plotting is True:
         plot.plot_confusion_matrix(
@@ -59,12 +41,14 @@ def seq_score(
         print(tabulate(cnf, headers=[c[:1] for c in classes]))
 
     if report is True:
-        gt_flat, preds_flat = flatten_gt_and_preds(
-            ground_truth, predictions)
         print(classification_report(
-            gt_flat, preds_flat, target_names=classes, digits=3))
+            gt, preds, target_names=classes, digits=3))
 
     if is_binary is True:
+        print(class_name, precision_recall_fscore_support(
+            gt, preds, average='binary'), threshold)
+        """
         tn, fp, fn, tp = cnf[0][0], cnf[0][1], cnf[1][0], cnf[1][1]
         scores = (sensitivity, specificity) = tp / (tp+fn), tn / (tn+fp)
         print(class_name, scores, threshold)
+        """
