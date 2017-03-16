@@ -1,3 +1,4 @@
+from __future__ import print_function
 from __future__ import division
 from sklearn.metrics import classification_report, confusion_matrix
 from tabulate import tabulate
@@ -18,11 +19,11 @@ class BinaryScorer(Scorer):
         self.rows = []
         self.headers = [
             'c_name',
-            'threshold',
             'specificity',
             'precision',
             'recall',
-            'f1'
+            'f1',
+            'threshold'
         ]
 
     def score(
@@ -41,15 +42,18 @@ class BinaryScorer(Scorer):
 
         row = [
             class_name,
-            threshold,
             specificity,
             ppv,
             sensitivity,
-            f1
+            f1,
+            threshold
         ]
         self.rows.append(row)
 
-    def display_scores(self):
+    def display_scores(self, metric=None):
+        if metric is not None:
+            print()
+            print('==========' + metric + '==========')
         print(tabulate(self.rows, headers=self.headers))
 
 
@@ -60,7 +64,10 @@ class MulticlassScorer(Scorer):
         self.report = classification_report(
                 gt, preds, target_names=self.classes, digits=3)
 
-    def display_scores(self, confusion_table=False):
+    def display_scores(self, metric=None, confusion_table=False):
+        if metric is not None:
+            print()
+            print('==========' + metric + '==========')
         if confusion_table is True:
             for i, row in enumerate(self.cnf):
                 row.insert(0, self.classes[i])

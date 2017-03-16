@@ -125,7 +125,7 @@ def evaluate_binary(
             evaluator = BinaryEval(
                 scorer, class_int, classes[class_int], threshold)
             evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores()
+    scorer.display_scores(metric=metric)
 
 
 def evaluate_multiclass(
@@ -133,7 +133,7 @@ def evaluate_multiclass(
     scorer = score.MulticlassScorer()
     evaluator = MulticlassEval(scorer, classes)
     evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores()
+    scorer.display_scores(metric=metric)
 
 
 def evaluate_all(gt, probs, classes, thresholds=[0.5], decoder=None):
