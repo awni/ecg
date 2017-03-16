@@ -61,7 +61,7 @@ class BinaryScorer(Scorer):
             metric=None,
             model_title=None):
         Scorer.display_scores(self, metric, model_title)
-        print(tabulate(self.rows, headers=self.headers))
+        print(tabulate(self.rows, headers=self.headers, floatfmt=".3f"))
 
 
 class MulticlassScorer(Scorer):
