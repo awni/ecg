@@ -41,7 +41,9 @@ def agreement(args, params):
         probs_all.append(probs)
     ground_truths = np.concatenate(tuple(gt_all), axis=1)
     probs = np.concatenate(tuple(probs_all), axis=0)
-    evaluate.evaluate_all(ground_truths, probs, classes)
+    evaluate.evaluate_all(
+        ground_truths, probs, classes,
+        model_title='Human Agreement')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

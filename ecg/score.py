@@ -13,6 +13,12 @@ class Scorer(object):
 
         self.cnf = confusion_matrix(*flatten_gt_and_preds(gt, preds)).tolist()
 
+    def display_scores(self, metric, model_title):
+        print()
+        print('===Metric==', metric)
+        print('===Model===', model_title)
+        print()
+
 
 class BinaryScorer(Scorer):
     def __init__(self):
@@ -50,10 +56,11 @@ class BinaryScorer(Scorer):
         ]
         self.rows.append(row)
 
-    def display_scores(self, metric=None):
-        if metric is not None:
-            print()
-            print('==========' + metric + '==========')
+    def display_scores(
+            self,
+            metric=None,
+            model_title=None):
+        Scorer.display_scores(self, metric, model_title)
         print(tabulate(self.rows, headers=self.headers))
 
 
@@ -64,10 +71,12 @@ class MulticlassScorer(Scorer):
         self.report = classification_report(
                 gt, preds, target_names=self.classes, digits=3)
 
-    def display_scores(self, metric=None, confusion_table=False):
-        if metric is not None:
-            print()
-            print('==========' + metric + '==========')
+    def display_scores(
+            self,
+            metric=None,
+            confusion_table=False,
+            model_title=None):
+        Scorer.display_scores(self, metric, model_title)
         if confusion_table is True:
             for i, row in enumerate(self.cnf):
                 row.insert(0, self.classes[i])
