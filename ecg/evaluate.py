@@ -118,30 +118,32 @@ class BinaryEval(Evaluator):
 
 
 def evaluate_binary(
-        ground_truths, probs, classes, thresholds, metric):
+        ground_truths, probs, classes, thresholds, metric, model_title):
     scorer = score.BinaryScorer()
     for class_int in tqdm(range(len(classes))):
         for threshold in thresholds:
             evaluator = BinaryEval(
                 scorer, class_int, classes[class_int], threshold)
             evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores()
+    scorer.display_scores(metric=metric, model_title=model_title)
 
 
 def evaluate_multiclass(
-        ground_truths, probs, classes, metric, decoder=False):
+        ground_truths, probs, classes, metric, model_title, decoder=False):
     scorer = score.MulticlassScorer()
     evaluator = MulticlassEval(scorer, classes)
     evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores()
+    scorer.display_scores(metric=metric, model_title=model_title)
 
 
-def evaluate_all(gt, probs, classes, thresholds=[0.5], decoder=None):
+def evaluate_all(
+        gt, probs, classes,
+        model_title='', thresholds=[0.5], decoder=None):
     for metric in ['seq', 'set']:
         evaluate_multiclass(
-            gt, probs, classes, metric, decoder=decoder)
+            gt, probs, classes, metric, model_title, decoder=decoder)
         evaluate_binary(
-            gt, probs, classes, thresholds, metric)
+            gt, probs, classes, thresholds, metric, model_title)
 
 
 def evaluate(args, train_params, test_params):
@@ -151,7 +153,9 @@ def evaluate(args, train_params, test_params):
             split=args.split)
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
     thresholds = np.linspace(0, 1, 5, endpoint=False)
-    evaluate_all(gt, probs, classes, thresholds, args.decode)
+    evaluate_all(
+        gt, probs, classes, model_title=str(args.model_paths),
+        thresholds=thresholds, decoder=args.decode)
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from __future__ import division
 from sklearn.metrics import classification_report, confusion_matrix
 from tabulate import tabulate
@@ -12,17 +13,23 @@ class Scorer(object):
 
         self.cnf = confusion_matrix(*flatten_gt_and_preds(gt, preds)).tolist()
 
+    def display_scores(self, metric, model_title):
+        print()
+        print('===Metric==', metric)
+        print('===Model===', model_title)
+        print()
+
 
 class BinaryScorer(Scorer):
     def __init__(self):
         self.rows = []
         self.headers = [
             'c_name',
-            'threshold',
             'specificity',
             'precision',
             'recall',
-            'f1'
+            'f1',
+            'threshold'
         ]
 
     def score(
@@ -41,16 +48,20 @@ class BinaryScorer(Scorer):
 
         row = [
             class_name,
-            threshold,
             specificity,
             ppv,
             sensitivity,
-            f1
+            f1,
+            threshold
         ]
         self.rows.append(row)
 
-    def display_scores(self):
-        print(tabulate(self.rows, headers=self.headers))
+    def display_scores(
+            self,
+            metric=None,
+            model_title=None):
+        Scorer.display_scores(self, metric, model_title)
+        print(tabulate(self.rows, headers=self.headers, floatfmt=".3f"))
 
 
 class MulticlassScorer(Scorer):
@@ -60,7 +71,12 @@ class MulticlassScorer(Scorer):
         self.report = classification_report(
                 gt, preds, target_names=self.classes, digits=3)
 
-    def display_scores(self, confusion_table=False):
+    def display_scores(
+            self,
+            metric=None,
+            confusion_table=False,
+            model_title=None):
+        Scorer.display_scores(self, metric, model_title)
         if confusion_table is True:
             for i, row in enumerate(self.cnf):
                 row.insert(0, self.classes[i])

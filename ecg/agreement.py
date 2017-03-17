@@ -29,9 +29,21 @@ def get_ground_truths_and_human_probs(ground_truths, num_reviewers):
 
 def agreement(args, params):
     _, ground_truths, classes = load.load_test(params)
-    ground_truths, probs = get_ground_truths_and_human_probs(
-        ground_truths, params["num_reviewers"])
-    evaluate.evaluate_all(ground_truths, probs, classes)
+    NUM_REPETITIONS = 10
+    gt_all = []
+    probs_all = []
+    for i in range(NUM_REPETITIONS):
+        gt, probs = get_ground_truths_and_human_probs(
+            ground_truths,
+            params["num_reviewers"]
+            )
+        gt_all.append(gt)
+        probs_all.append(probs)
+    ground_truths = np.concatenate(tuple(gt_all), axis=1)
+    probs = np.concatenate(tuple(probs_all), axis=0)
+    evaluate.evaluate_all(
+        ground_truths, probs, classes,
+        model_title='Human Agreement')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
