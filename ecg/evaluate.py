@@ -151,9 +151,6 @@ def evaluate(args, train_params, test_params):
             test_params,
             train_params=train_params,
             split=args.split)
-    # TODO slice for testing
-    x = x[:1000,...]
-    gt = gt[:, :1000, :]
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
     thresholds = np.linspace(0, 1, 6, endpoint=False)
     decoder = decode.Decoder(y_train, len(classes)) \
