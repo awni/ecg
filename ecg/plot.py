@@ -2,10 +2,16 @@ import numpy as np
 import util
 
 
-def plot_confusion_matrix(cm, classes):
+def init_matplot_lib():
+    global plt
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    plt.clf()
+
+
+def plot_confusion_matrix(cm, classes):
+    init_matplot_lib()
     cmap = plt.cm.Blues
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title('Confusion matrix')
@@ -22,16 +28,23 @@ def plot_confusion_matrix(cm, classes):
 
 
 def plot_precision_recall(classes, class_data, metric):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    plt.clf()
-    for class_name in classes:
+    init_matplot_lib()
+
+    def conditional_plot(precision, recall, color):
+        if len(precision) > 1:
+            recall.append(0)
+            precision.append(1)
+            plt.plot(recall, precision, lw=2, c=color, label=class_name)
+        else:
+            plt.scatter(recall, precision, c=[color], label=class_name)
+
+    from matplotlib.pyplot import cm
+    colors = iter(cm.rainbow(np.linspace(0, 1, len(classes))))
+    for class_name, color in zip(classes, colors):
         recall = map(lambda x: x[3], class_data[class_name])
-        recall.append(0)
         precision = map(lambda x: x[2], class_data[class_name])
-        precision.append(1)
-        plt.plot(recall, precision, lw=2, label=class_name)
+        conditional_plot(precision, recall, color)
+
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('Recall')
