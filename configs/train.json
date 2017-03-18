@@ -20,7 +20,7 @@
     "optimizer": "adam",
     "batch_size": 128,
 
-    "blacklist_path": "./data/label_review",
+    "blacklist_path": "./data/label_review/set2",
     "data_path": "./data/batches",
     "FOLDER_TO_SAVE": "./saved/"
 }
