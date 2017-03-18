@@ -32,7 +32,6 @@ class Evaluator():
         self.scorer.score(
             gt,
             preds,
-            self.classes,
             **self.score_params)
 
     def evaluate(self, ground_truths, probs, metric='seq'):
@@ -56,6 +55,9 @@ class MulticlassEval(Evaluator):
         Evaluator.__init__(self, scorer)
         self.classes = classes
         self.decoder = decoder
+        self.score_params = {
+            'classes': classes
+        }
 
     def _seq_to_set(self, arr):
         labels = [set(
@@ -85,7 +87,6 @@ class BinaryEval(Evaluator):
         self.threshold = threshold
         self.class_int = class_int
         self.class_name = class_name
-        self.classes = ['Not ' + class_name, class_name]
         self.score_params = {
             'class_name': class_name,
             'threshold': threshold
@@ -119,21 +120,21 @@ class BinaryEval(Evaluator):
 
 def evaluate_binary(
         ground_truths, probs, classes, thresholds, metric, model_title):
-    scorer = score.BinaryScorer()
+    scorer = score.BinaryScorer(model_title=model_title, metric=metric)
     for class_int in tqdm(range(len(classes))):
         for threshold in thresholds:
             evaluator = BinaryEval(
                 scorer, class_int, classes[class_int], threshold)
             evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores(metric=metric, model_title=model_title)
+    scorer.display_scores()
 
 
 def evaluate_multiclass(
         ground_truths, probs, classes, metric, model_title, decoder=False):
-    scorer = score.MulticlassScorer()
+    scorer = score.MulticlassScorer(metric=metric, model_title=model_title)
     evaluator = MulticlassEval(scorer, classes)
     evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores(metric=metric, model_title=model_title)
+    scorer.display_scores()
 
 
 def evaluate_all(
@@ -152,9 +153,9 @@ def evaluate(args, train_params, test_params):
             train_params=train_params,
             split=args.split)
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
-    thresholds = np.linspace(0, 1, 5, endpoint=False)
+    thresholds = np.linspace(0, 1, 6, endpoint=False)
     evaluate_all(
-        gt, probs, classes, model_title=str(args.model_paths),
+        gt, probs, classes, model_title=', '.join(args.model_paths),
         thresholds=thresholds, decoder=args.decode)
 
 
