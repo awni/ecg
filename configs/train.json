@@ -2,7 +2,7 @@
     "toy": false,
     "normalizer": "robust_scale",
     "step": 256,
-    "test_frac": 0.2,
+    "test_frac": 0.1,
     "relabel_classes": {},
 
     "amplitude_scale": true,
