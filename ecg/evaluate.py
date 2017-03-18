@@ -8,7 +8,7 @@ import json
 import util
 import predict
 import score
-
+import decode
 
 class Evaluator():
     def __init__(self, scorer):
@@ -70,8 +70,7 @@ class MulticlassEval(Evaluator):
         self.seq_gt = ground_truths
 
     def _to_seq_preds(self, probs):
-        if self.decoder:
-            raise NotImplementedError()  # TODO: fix
+        if self.decoder is not None:
             predictions = np.array(
                 [self.decoder.beam_search(probs_indiv)
                  for probs_indiv in tqdm(probs)])
@@ -130,9 +129,9 @@ def evaluate_binary(
 
 
 def evaluate_multiclass(
-        ground_truths, probs, classes, metric, model_title, decoder=False):
+        ground_truths, probs, classes, metric, model_title, decoder=None):
     scorer = score.MulticlassScorer(metric=metric, model_title=model_title)
-    evaluator = MulticlassEval(scorer, classes)
+    evaluator = MulticlassEval(scorer, classes, decoder=decoder)
     evaluator.evaluate(ground_truths, probs, metric=metric)
     scorer.display_scores()
 
@@ -148,15 +147,20 @@ def evaluate_all(
 
 
 def evaluate(args, train_params, test_params):
-    x, gt, classes = load.load_test(
+    x, gt, classes, y_train = load.load_test(
             test_params,
             train_params=train_params,
             split=args.split)
+    # TODO slice for testing
+    x = x[:1000,...]
+    gt = gt[:, :1000, :]
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
     thresholds = np.linspace(0, 1, 6, endpoint=False)
+    decoder = decode.Decoder(y_train, len(classes)) \
+                    if args.decode else None
     evaluate_all(
         gt, probs, classes, model_title=', '.join(args.model_paths),
-        thresholds=thresholds, decoder=args.decode)
+        thresholds=thresholds, decoder=decoder)
 
 
 if __name__ == '__main__':

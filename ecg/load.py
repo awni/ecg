@@ -273,7 +273,7 @@ def load_test(test_params, train_params=None, split='test'):
         ground_truth = np.argmax(y, axis=-1)
         ground_truths.append(ground_truth)
     ground_truths = np.array(ground_truths)
-    return x, ground_truths, dl.classes
+    return x, ground_truths, dl.classes, dl.y_train
 
 
 if __name__ == "__main__":
