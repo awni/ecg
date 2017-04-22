@@ -94,7 +94,7 @@ def train(args, params):
     else:
         import load
 
-    dl, _ = load.load_train(params)
+    dl, processor = load.load_train(params)
 
     x_train = dl.x_train
     y_train = dl.y_train
@@ -113,7 +113,8 @@ def train(args, params):
     save_params(params, start_time, experiment_name)
 
     params.update({
-        "input_shape": x_train[0].shape
+        "input_shape": x_train[0].shape,
+        "num_categories": len(processor.classes)
     })
 
     model = network.build_network(**params)
