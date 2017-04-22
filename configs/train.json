@@ -5,7 +5,7 @@
     "test_frac": 0.1,
     "relabel_classes": {},
 
-    "amplitude_scale": true,
+    "amplitude_scale": false,
 
     "conv_subsample_lengths": [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
     "conv_filter_length": 16,
@@ -20,7 +20,7 @@
     "optimizer": "adam",
     "batch_size": 128,
 
-    "blacklist_path": "./data/label_review/set2",
+    "blacklist_path": "./data/label_review/CE_APR_2017",
     "data_path": "./data/batches",
     "FOLDER_TO_SAVE": "./saved/"
 }

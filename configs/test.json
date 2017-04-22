@@ -5,5 +5,5 @@
   "test_split_start": 0,
   "num_reviewers": 5,
 
-  "EVAL_PATH": "./data/label_review/set2"
+  "EVAL_PATH": "./data/label_review/CE_APRIL_2017"
 }
