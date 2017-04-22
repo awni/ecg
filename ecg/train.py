@@ -89,7 +89,6 @@ def train(args, params):
 
     params["test_split_start"] = args.test_split_start
 
-
     if params.get("wave_model", False):
         import wave_load as load
     else:
@@ -114,8 +113,7 @@ def train(args, params):
     save_params(params, start_time, experiment_name)
 
     params.update({
-        "input_shape": x_train[0].shape,
-        "num_categories": dl.output_dim
+        "input_shape": x_train[0].shape
     })
 
     model = network.build_network(**params)
