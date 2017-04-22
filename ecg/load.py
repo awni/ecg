@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
-from builtins import dict
+
 from builtins import zip
 from builtins import range
 import json
@@ -10,7 +10,7 @@ import fnmatch
 import os
 import warnings
 import argparse
-import collections
+
 from tqdm import tqdm
 from process import Processor
 from joblib import Memory
@@ -27,8 +27,6 @@ class Loader(object):
             ecg_samp_rate=200.0,
             ecg_ext='.ecg',
             epi_ext='.episodes.json',
-            relabel_classes={},
-            ignore_classes=[],
             blacklist_path='',
             duration=30,
             test_frac=0.2,
@@ -46,8 +44,6 @@ class Loader(object):
         self.ecg_ext = ecg_ext
         self.epi_ext = epi_ext
         self.blacklist_path = blacklist_path
-        self.ignore_classes = ignore_classes
-        self.relabel_classes = relabel_classes
         self.duration = duration
         self.test_split_start = test_split_start
         self.test_frac = test_frac
@@ -57,38 +53,8 @@ class Loader(object):
         self.fit_processor = fit_processor
 
         self.load()
-        self.setup_label_mappings()
         (self.x_train, self.y_train, self.x_test, self.y_test) = \
             self.processor.process(self, fit=self.fit_processor)
-
-    def setup_label_mappings(self):
-        if len(self.relabel_classes) > 0:
-            print("Relabelling Classes...")
-            for split in ['_train', '_test']:
-                y = getattr(self, 'y' + split)
-                y_new = [[self.relabel_classes[s] if s in self.relabel_classes
-                         else s for s in y_indiv] for y_indiv in y]
-                setattr(self, 'y' + split, y_new)
-
-        if len(self.ignore_classes) > 0:
-            for ignore_class in self.ignore_classes:
-                print("Ignoring class: " + ignore_class)
-                for split in ['_train', '_test']:
-                    attr = getattr(self, 'y' + split)
-                    if len(attr) > 0:
-                        indices = np.where(np.sum(attr == ignore_class,
-                                           axis=1) == 0)[0]
-                        for prop in ['x', 'y']:
-                            setattr(self, prop + split, getattr(
-                                self, prop + split)[indices])
-
-        y_tot = list(self.y_train) + list(self.y_test)
-        label_counter = collections.Counter(
-            l for labels in y_tot for l in labels)
-        self.classes = sorted([c for c, _ in label_counter.most_common()])
-
-        self.int_to_class = dict(zip(range(len(self.classes)), self.classes))
-        self.class_to_int = {c: i for i, c in self.int_to_class.items()}
 
     def get_all_records(self, path):
         for root, dirnames, filenames in os.walk(path):
@@ -219,10 +185,6 @@ class Loader(object):
         else:
             self.x_test = self.y_test = []
 
-    @property
-    def output_dim(self):
-        return len(self.int_to_class)
-
 
 @memory.cache
 def load_train(params):
@@ -232,7 +194,6 @@ def load_train(params):
 
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of test set {}".format(len(loader.x_test)))
-    print("Output dimension {}".format(loader.output_dim))
     return loader, processor
 
 
@@ -244,7 +205,6 @@ def load_using_processor(params, processor):
 
     print("Length of training set {}".format(len(loader.x_train)))
     print("Length of test set {}".format(len(loader.x_test)))
-    print("Output dimension {}".format(loader.output_dim))
     return loader
 
 
@@ -273,7 +233,7 @@ def load_test(test_params, train_params=None, split='test'):
         ground_truth = np.argmax(y, axis=-1)
         ground_truths.append(ground_truth)
     ground_truths = np.array(ground_truths)
-    return x, ground_truths, dl.classes, dl.y_train
+    return x, ground_truths, processor.classes, dl.y_train
 
 
 if __name__ == "__main__":
