@@ -10,6 +10,7 @@ import predict
 import score
 import decode
 
+
 class Evaluator():
     def __init__(self, scorer):
         self.scorer = scorer
@@ -153,8 +154,7 @@ def evaluate(args, train_params, test_params):
             split=args.split)
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
     thresholds = np.linspace(0, 1, 6, endpoint=False)
-    decoder = decode.Decoder(y_train, len(classes)) \
-                    if args.decode else None
+    decoder = decode.Decoder(y_train, len(classes)) if args.decode else None
     evaluate_all(
         gt, probs, classes, model_title=', '.join(args.model_paths),
         thresholds=thresholds, decoder=decoder)
