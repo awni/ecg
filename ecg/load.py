@@ -201,27 +201,26 @@ def load_train(params):
     return loader, processor
 
 
-def load_using_processor(params, processor, fit_processor=False):
+def load_x_gt_using_processor(params, processor, split='test'):
     print("Loading using processor...")
-    params["fit_processor"] = fit_processor
-    params["data_path"] = params["EVAL_PATH"]
-    loader = Loader(processor, **params)
+    dl = Loader(processor, **params)
 
-    print("Length of training set {}".format(len(loader.x_train)))
-    print("Length of test set {}".format(len(loader.x_test)))
-    return loader
+    print("Length of training set {}".format(len(dl.x_train)))
+    print("Length of test set {}".format(len(dl.x_test)))
+
+    (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
+        (dl.x_test, dl.y_test)
+    print("Size: " + str(len(x)) + " examples.")
+    gt = np.array([np.argmax(y, axis=-1)])
+    return x, gt, dl
 
 
 @memory.cache
 def load_test(test_params, train_params=None, split='test'):
     assert("EVAL_PATH" in test_params)
     _, processor = load_train(train_params)
-    dl = load_using_processor(test_params, processor)
-    (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
-        (dl.x_test, dl.y_test)
-    print("Size: " + str(len(x)) + " examples.")
-    ground_truths = np.array([np.argmax(y, axis=-1)])
-    return x, ground_truths, processor.classes, dl.y_train
+    x, gt, loader = load_x_gt_using_processor(test_params, processor)
+    return x, gt, processor, loader
 
 
 if __name__ == "__main__":

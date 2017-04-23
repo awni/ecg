@@ -148,15 +148,16 @@ def evaluate_all(
 
 
 def evaluate(args, train_params, test_params):
-    x, gt, classes, y_train = load.load_test(
+    x, gt, processor, loader = load.load_test(
             test_params,
             train_params=train_params,
             split=args.split)
     probs = predict.get_ensemble_pred_probs(args.model_paths, x)
     thresholds = np.linspace(0, 1, 6, endpoint=False)
-    decoder = decode.Decoder(y_train, len(classes)) if args.decode else None
+    decoder = decode.Decoder(loader.y_train, len(processor.classes)) \
+        if args.decode else None
     evaluate_all(
-        gt, probs, classes, model_title=', '.join(args.model_paths),
+        gt, probs, processor.classes, model_title=', '.join(args.model_paths),
         thresholds=thresholds, decoder=decoder)
 
 
