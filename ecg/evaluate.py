@@ -154,7 +154,10 @@ def evaluate(args, train_params, test_params):
             test_params,
             train_params=train_params,
             split=args.split)
-    probs = predict.get_ensemble_pred_probs(args.model_paths, x)
+    probs = predict.get_ensemble_pred_probs(
+        args.model_paths,
+        x,
+        geo_mean=args.geo_mean)
     thresholds = np.linspace(0, 1, 6, endpoint=False)
     decoder = decode.Decoder(loader.y_train, len(processor.classes)) \
         if args.decode else None
@@ -173,6 +176,7 @@ if __name__ == '__main__':
     parser.add_argument("--split", help="train/val", choices=['train', 'test'],
                         default='test')
     parser.add_argument('--decode', action='store_true')
+    parser.add_argument('--geo_mean', action='store_true')
     args = parser.parse_args()
     train_params = util.get_model_params(args.model_paths[0])
     test_params = train_params.copy()
