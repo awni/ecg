@@ -201,9 +201,9 @@ def load_train(params):
     return loader, processor
 
 
-def load_using_processor(params, processor):
+def load_using_processor(params, processor, fit_processor=False):
     print("Loading using processor...")
-    params["fit_processor"] = False
+    params["fit_processor"] = fit_processor
     params["data_path"] = params["EVAL_PATH"]
     loader = Loader(processor, **params)
 
@@ -215,20 +215,13 @@ def load_using_processor(params, processor):
 @memory.cache
 def load_test(test_params, train_params=None, split='test'):
     assert("EVAL_PATH" in test_params)
-    if train_params is not None:
-        _, processor = load_train(train_params)
-        test_params["fit_processor"] = False
-    else:
-        processor = Processor(**test_params)
-        test_params["fit_processor"] = True
-
-    test_params["data_path"] = test_params["EVAL_PATH"]
-    dl = Loader(processor, **test_params)
+    _, processor = load_train(train_params)
+    dl = load_using_processor(test_params, processor)
     (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
         (dl.x_test, dl.y_test)
     print("Size: " + str(len(x)) + " examples.")
-    ground_truth = np.argmax(y, axis=-1)
-    return x, ground_truth, processor.classes, dl.y_train
+    ground_truths = np.array([np.argmax(y, axis=-1)])
+    return x, ground_truths, processor.classes, dl.y_train
 
 
 if __name__ == "__main__":
