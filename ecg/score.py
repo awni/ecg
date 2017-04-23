@@ -48,9 +48,8 @@ class BinaryScorer(Scorer):
 
         recall = sensitivity = tp / (tp + fn)
         specificity = tn / (tn + fp)
-        precision = ppv = 0 if tp == 0 else tp / (tp + fp)
-        f1 = 0 if (precision == 0 or recall == 0) else \
-            (2 * precision * recall) / (precision + recall)
+        precision = ppv = 1 if (tp == 0 and fp == 0) else tp / (tp + fp)
+        f1 = (2 * precision * recall) / (precision + recall)
 
         row = [
             class_name,
@@ -66,7 +65,10 @@ class BinaryScorer(Scorer):
     def display_scores(self):
         Scorer.display_scores(self)
         print(tabulate(self.rows, headers=self.headers, floatfmt=".3f"))
-        self.plot_precision_recall()
+        try:
+            self.plot_precision_recall()
+        except:
+            print("Cannot plot.")
 
     def plot_precision_recall(self):
         plot.plot_precision_recall(
