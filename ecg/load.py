@@ -201,7 +201,8 @@ def load_train(params):
     return loader, processor
 
 
-def load_x_gt_using_processor(params, processor, split='test'):
+@memory.cache
+def load_x_y_with_processor(params, processor, split='test'):
     print("Loading using processor...")
     dl = Loader(processor, **params)
 
@@ -211,16 +212,19 @@ def load_x_gt_using_processor(params, processor, split='test'):
     (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
         (dl.x_test, dl.y_test)
     print("Size: " + str(len(x)) + " examples.")
-    gt = np.array([np.argmax(y, axis=-1)])
-    return x, gt, dl
+    return x, y, dl
 
 
 @memory.cache
 def load_test(test_params, train_params=None, split='test'):
-    assert("EVAL_PATH" in test_params)
-    _, processor = load_train(train_params)
-    x, gt, loader = load_x_gt_using_processor(test_params, processor)
-    return x, gt, processor, loader
+    if train_params is None:
+        processor = Processor(**test_params)
+    else:
+        _, processor = load_train(train_params)
+    x, y, dl = load_x_y_with_processor(
+        test_params, processor, split=split)
+    gt = np.array([np.argmax(y, axis=-1)])
+    return x, gt, processor, dl
 
 
 if __name__ == "__main__":
@@ -228,7 +232,7 @@ if __name__ == "__main__":
     parser.add_argument("config_file", help="path to config file")
     args = parser.parse_args()
     params = json.load(open(args.config_file, 'r'))
-    if 'data_path' in params:
-        load_train(params)
-    elif 'EVAL_PATH' in params:
+    if 'blacklist_path' == "":
         load_test(params)
+    else:
+        load_train(params)

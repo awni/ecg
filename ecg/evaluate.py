@@ -143,8 +143,10 @@ def evaluate_all(
     for metric in ['seq', 'set']:
         evaluate_multiclass(
             gt, probs, classes, metric, model_title, decoder=decoder)
+        """
         evaluate_binary(
             gt, probs, classes, thresholds, metric, model_title)
+        """
 
 
 def evaluate(args, train_params, test_params):
@@ -176,6 +178,6 @@ if __name__ == '__main__':
     test_params = train_params.copy()
     test_new_params = json.load(open(args.test_config_file, 'r'))
     test_params.update(test_new_params)
-    if "label_review" in test_new_params["EVAL_PATH"]:
+    if "label_review" in test_new_params["data_path"]:
         assert(args.split == 'test')
     evaluate(args, train_params, test_params)
