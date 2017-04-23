@@ -48,7 +48,10 @@ class BinaryScorer(Scorer):
 
         recall = sensitivity = tp / (tp + fn)
         specificity = tn / (tn + fp)
-        precision = ppv = tp / (tp + fp)
+        try:
+            precision = ppv = tp / (tp + fp)
+        except ZeroDivisionError:
+            precision = ppv = 0
         f1 = (2 * precision * recall) / (precision + recall)
 
         row = [
