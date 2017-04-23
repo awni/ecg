@@ -14,6 +14,7 @@ import argparse
 from tqdm import tqdm
 from process import Processor
 from joblib import Memory
+import glob
 memory = Memory(cachedir='./cache')
 
 # FIXME: step and samp_rate and duration should be part of process, not load
@@ -103,6 +104,9 @@ class Loader(object):
 
         base = os.path.splitext(record)[0]
         ep_json = base + self.epi_ext
+        filenames = glob.glob(ep_json)
+        assert(len(filenames) == 1)
+        ep_json = filenames[0]
         with open(ep_json, 'r') as fid:
             episodes = json.load(fid)['episodes']
         episodes = sorted(episodes, key=lambda x: x['onset'])
@@ -213,27 +217,18 @@ def load_test(test_params, train_params=None, split='test'):
     assert("EVAL_PATH" in test_params)
     if train_params is not None:
         _, processor = load_train(train_params)
+        test_params["fit_processor"] = False
     else:
         processor = Processor(**test_params)
+        test_params["fit_processor"] = True
 
-    test_params["fit_processor"] = False
     test_params["data_path"] = test_params["EVAL_PATH"]
-
-    ground_truths = []
-    num_reviewers = test_params["num_reviewers"]
-    for i in range(num_reviewers):
-        if num_reviewers == 1:
-            test_params["epi_ext"] = ".episodes.json"
-        else:
-            test_params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
-        dl = Loader(processor, **test_params)
-        (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
-            (dl.x_test, dl.y_test)
-        print("Size: " + str(len(x)) + " examples.")
-        ground_truth = np.argmax(y, axis=-1)
-        ground_truths.append(ground_truth)
-    ground_truths = np.array(ground_truths)
-    return x, ground_truths, processor.classes, dl.y_train
+    dl = Loader(processor, **test_params)
+    (x, y) = (dl.x_train, dl.y_train) if split == 'train' else \
+        (dl.x_test, dl.y_test)
+    print("Size: " + str(len(x)) + " examples.")
+    ground_truth = np.argmax(y, axis=-1)
+    return x, ground_truth, processor.classes, dl.y_train
 
 
 if __name__ == "__main__":

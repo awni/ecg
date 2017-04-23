@@ -3,7 +3,7 @@
   "test_frac": 1,
   "blacklist_path": "",
   "test_split_start": 0,
-  "num_reviewers": 5,
+  "epi_ext": "_grp*.episodes.json",
 
-  "EVAL_PATH": "./data/label_review/CE_APRIL_2017"
+  "EVAL_PATH": "data/label_review/CE_APR_2017/"
 }
