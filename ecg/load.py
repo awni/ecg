@@ -204,6 +204,7 @@ def load_train(params):
 @memory.cache
 def load_x_y_with_processor(params, processor, split='test'):
     print("Loading using processor...")
+    params['fit_processor'] = False
     dl = Loader(processor, **params)
 
     print("Length of training set {}".format(len(dl.x_train)))
