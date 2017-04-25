@@ -8,7 +8,8 @@ NUM_TEST_REVIEWERS = 6
 
 
 def human_performance(args, params):
-    _, ground_truths, processor, dl = load.load_test(params)
+    _, ground_truths, processor, dl = load.load_test(
+        params, fit_processor=True)
     gt_all = []
     probs_all = []
     for i in range(NUM_TEST_REVIEWERS):

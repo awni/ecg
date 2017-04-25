@@ -202,9 +202,9 @@ def load_train(params):
 
 
 @memory.cache
-def load_x_y_with_processor(params, processor, split='test'):
+def load_x_y_with_processor(params, processor, split='test', fit_processor=False):
     print("Loading using processor...")
-    params['fit_processor'] = False
+    params['fit_processor'] = fit_processor
     dl = Loader(processor, **params)
 
     print("Length of training set {}".format(len(dl.x_train)))
@@ -217,13 +217,14 @@ def load_x_y_with_processor(params, processor, split='test'):
 
 
 @memory.cache
-def load_test(test_params, train_params=None, split='test'):
+def load_test(
+        test_params, train_params=None, split='test', fit_processor=False):
     if train_params is None:
         processor = Processor(**test_params)
     else:
         _, processor = load_train(train_params)
     x, y, dl = load_x_y_with_processor(
-        test_params, processor, split=split)
+        test_params, processor, split=split, fit_processor=fit_processor)
     gt = np.array([np.argmax(y, axis=-1)])
     return x, gt, processor, dl
 
