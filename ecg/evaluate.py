@@ -178,7 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('--decode', action='store_true')
     parser.add_argument('--geo_mean', action='store_true')
     args = parser.parse_args()
-    train_params = util.get_model_params(args.model_paths[0])
+    train_params = util.get_model_params(args.model_paths[0])  # FIXME: bug
     test_params = train_params.copy()
     test_new_params = json.load(open(args.test_config_file, 'r'))
     test_params.update(test_new_params)
