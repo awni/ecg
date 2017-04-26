@@ -65,8 +65,7 @@ class Processor(object):
         self.y_test = self.transform_to_int_label(self.y_test)
 
     def process(self, loader, fit=True):
-        if fit is True:
-            self.setup_label_mappings(loader)
+        self.setup_label_mappings(loader, fit)
         self.x_train = np.array(loader.x_train)
         self.x_test = np.array(loader.x_test)
         self.process_x(fit)
@@ -77,7 +76,7 @@ class Processor(object):
 
         return (self.x_train, self.y_train, self.x_test, self.y_test)
 
-    def setup_label_mappings(self, loader):
+    def setup_label_mappings(self, loader, fit):
         if len(self.relabel_classes) > 0:
             print("Relabelling Classes...")
             for split in ['_train', '_test']:
@@ -98,12 +97,14 @@ class Processor(object):
                             setattr(loader, prop + split, getattr(
                                 loader, prop + split)[indices])
 
-        y_tot = list(loader.y_train) + list(loader.y_test)
-        label_counter = collections.Counter(
-            l for labels in y_tot for l in labels)
-        self.classes = sorted([c for c, _ in label_counter.most_common()])
-        self.int_to_class = dict(zip(range(len(self.classes)), self.classes))
-        self.class_to_int = {c: i for i, c in self.int_to_class.items()}
+        if fit is True:
+            y_tot = list(loader.y_train) + list(loader.y_test)
+            label_counter = collections.Counter(
+                l for labels in y_tot for l in labels)
+            self.classes = sorted([c for c, _ in label_counter.most_common()])
+            self.int_to_class = dict(
+                zip(range(len(self.classes)), self.classes))
+            self.class_to_int = {c: i for i, c in self.int_to_class.items()}
 
     def transform_to_int_label(self, y_split):
         labels_mod = []
