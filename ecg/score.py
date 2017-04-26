@@ -87,3 +87,12 @@ class MulticlassScorer(Scorer):
     def display_scores(self):
         Scorer.display_scores(self)
         print(self.report)
+        try:
+            self.plot_classification_report()
+        except:
+            print("Cannot plot.")
+
+    def plot_classification_report(self):
+        plot.plot_classification_report(
+            self.report,
+            title="Classification report (" + self.metric + " F1)")
