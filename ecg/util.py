@@ -15,10 +15,6 @@ def get_plot_path(type_of_plot):
         str(int(time.time())) + '.png'
 
 
-def get_prediction_path_for_model(model_path, split):
-    return model_path + '-pred-' + split + '.pkl'
-
-
 def get_model_params(model_path):
     params = json.load(open(
         os.path.dirname(model_path) + '/params.json', 'r'))

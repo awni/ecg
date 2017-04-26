@@ -160,23 +160,10 @@ def plot_classification_report(
     Plot scikit-learn classification report.
     Extension based on http://stackoverflow.com/a/31689645/395857
     '''
+    import evaluate
     init_matplot_lib()
-    lines = classification_report.split('\n')
-
-    classes = []
-    plotMat = []
-    support = []
-    class_names = []
-    for line in lines[2: (len(lines) - 2)]:
-        t = line.strip().split()
-        if len(t) < 2:
-            continue
-        classes.append(t[0])
-        v = [float(x) for x in t[1: len(t) - 1]]
-        support.append(int(t[-1]))
-        class_names.append(t[0])
-        plotMat.append(v)
-
+    classes, plotMat, support, class_names = \
+        evaluate.parse_classification_report(classification_report)
     xlabel = 'Metrics'
     ylabel = 'Classes'
     xticklabels = ['Precision', 'Recall', 'F1-score']
