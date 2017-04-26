@@ -86,6 +86,7 @@ class MulticlassScorer(Scorer):
 
     def display_scores(self):
         Scorer.display_scores(self)
+        print(self.report)
         try:
             self.plot_confusion_matrix()
             self.plot_classification_report()
