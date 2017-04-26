@@ -119,33 +119,36 @@ class BinaryEval(Evaluator):
 
 
 def evaluate_binary(
-        ground_truths, probs, classes, thresholds, metric, model_title):
+        ground_truths, probs, classes, thresholds, metric, model_title,
+        plot=False):
     scorer = score.BinaryScorer(model_title=model_title, metric=metric)
     for class_int in tqdm(range(len(classes))):
         for threshold in thresholds:
             evaluator = BinaryEval(
                 scorer, class_int, classes[class_int], threshold)
             evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores()
+    scorer.display_scores(plot=plot)
 
 
 def evaluate_multiclass(
-        ground_truths, probs, classes, metric, model_title, decoder=None):
+        ground_truths, probs, classes, metric, model_title,
+        decoder=None, plot=False):
     scorer = score.MulticlassScorer(metric=metric, model_title=model_title)
     evaluator = MulticlassEval(scorer, classes, decoder=decoder)
     evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores()
+    scorer.display_scores(plot=plot)
 
 
 def evaluate_all(
         gt, probs, classes,
-        model_title='', thresholds=[0.5], decoder=None):
+        model_title='', thresholds=[0.5], decoder=None, plot=False):
     for metric in ['seq', 'set']:
         evaluate_multiclass(
-            gt, probs, classes, metric, model_title, decoder=decoder)
+            gt, probs, classes, metric, model_title,
+            decoder=decoder, plot=plot)
         """
         evaluate_binary(
-            gt, probs, classes, thresholds, metric, model_title)
+            gt, probs, classes, thresholds, metric, model_title, plot=plot)
         """
 
 
@@ -163,7 +166,7 @@ def evaluate(args, train_params, test_params):
         if args.decode else None
     evaluate_all(
         gt, probs, processor.classes, model_title=', '.join(args.model_paths),
-        thresholds=thresholds, decoder=decoder)
+        thresholds=thresholds, decoder=decoder, plot=args.plot)
 
 
 if __name__ == '__main__':
@@ -177,6 +180,7 @@ if __name__ == '__main__':
                         default='test')
     parser.add_argument('--decode', action='store_true')
     parser.add_argument('--geo_mean', action='store_true')
+    parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
     train_params = util.get_model_params(args.model_paths[0])  # FIXME: bug
     test_params = train_params.copy()

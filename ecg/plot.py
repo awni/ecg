@@ -30,8 +30,11 @@ def plot_confusion_matrix(
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.gcf().subplots_adjust(bottom=0.2)
     plt.show()
-    plt.savefig(util.get_plot_path('confusion-' + title))
+    plt.savefig(
+        util.get_plot_path('confusion-' + title),
+        bbox_inches='tight')
 
 
 def plot_precision_recall(classes, class_data, metric):
@@ -71,7 +74,8 @@ def show_values(pc, fmt="%.2f", **kw):
     from itertools import izip
     pc.update_scalarmappable()
     ax = pc.get_axes()
-    for p, color, value in izip(pc.get_paths(), pc.get_facecolors(), pc.get_array()):
+    for p, color, value in izip(
+            pc.get_paths(), pc.get_facecolors(), pc.get_array()):
         x, y = p.vertices[:-2, :].mean(0)
         if np.all(color[:3] > 0.5):
             color = (0.0, 0.0, 0.0)
@@ -105,8 +109,8 @@ def heatmap(
 
     # Plot it out
     fig, ax = plt.subplots()
-    #c = ax.pcolor(AUC, edgecolors='k', linestyle= 'dashed', linewidths=0.2, cmap='RdBu', vmin=0.0, vmax=1.0)
-    c = ax.pcolor(AUC, edgecolors='k', linestyle= 'dashed', linewidths=0.2, cmap=cmap)
+    c = ax.pcolor(
+        AUC, edgecolors='k', linestyle='dashed', linewidths=0.2, cmap=cmap)
 
     # put the major ticks at the middle of each cell
     ax.set_yticks(np.arange(AUC.shape[0]) + 0.5, minor=False)
@@ -147,13 +151,11 @@ def heatmap(
 
     # resize
     fig = plt.gcf()
-    # fig.set_size_inches(cm2inch(40, 20))
-    # fig.set_size_inches(cm2inch(40*4, 20*4))
     fig.set_size_inches(cm2inch(figure_width, figure_height))
 
 
 def plot_classification_report(
-        classification_report, title='Classification report', cmap='PuBu'):
+        classification_report, title='Classification report', cmap='Blues'):
     '''
     Plot scikit-learn classification report.
     Extension based on http://stackoverflow.com/a/31689645/395857
@@ -183,6 +185,9 @@ def plot_classification_report(
     figure_width = 25
     figure_height = len(class_names) + 7
     correct_orientation = True
-    heatmap(np.array(plotMat), title, xlabel, ylabel, xticklabels, yticklabels, figure_width, figure_height, correct_orientation=correct_orientation, cmap=cmap)
+    heatmap(
+        np.array(plotMat), title, xlabel, ylabel, xticklabels, yticklabels,
+        figure_width, figure_height,
+        correct_orientation=correct_orientation, cmap=cmap)
     plt.savefig(util.get_plot_path(title), dpi=200, bbox_inches='tight')
     plt.close()
