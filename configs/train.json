@@ -3,7 +3,7 @@
     "normalizer": "robust_scale",
     "step": 256,
     "test_frac": 0.1,
-    "relabel_classes": {},
+    "relabel_classes": {"AFIB": "AF", "AFL": "AF"},
 
     "amplitude_scale": false,
 
