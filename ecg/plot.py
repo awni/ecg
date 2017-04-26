@@ -10,9 +10,16 @@ def init_matplot_lib():
     plt.clf()
 
 
-def plot_confusion_matrix(cm, classes):
+def plot_confusion_matrix(
+        cm, classes, title="", normalize=True, cmap='RdPu'):
     init_matplot_lib()
-    cmap = plt.cm.Blues
+    cm = np.array(cm)
+    if normalize is True:
+        cm = cm.astype(np.float) / cm.sum(axis=1)
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title('Confusion matrix')
     plt.colorbar()
@@ -24,7 +31,7 @@ def plot_confusion_matrix(cm, classes):
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.show()
-    plt.savefig(util.get_plot_path('confusion'))
+    plt.savefig(util.get_plot_path('confusion-' + title))
 
 
 def plot_precision_recall(classes, class_data, metric):

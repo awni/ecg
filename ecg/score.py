@@ -86,11 +86,18 @@ class MulticlassScorer(Scorer):
 
     def display_scores(self):
         Scorer.display_scores(self)
-        print(self.report)
         try:
+            self.plot_confusion_matrix()
             self.plot_classification_report()
         except:
             print("Cannot plot.")
+
+    def plot_confusion_matrix(self):
+        if self.metric is not 'set':
+            plot.plot_confusion_matrix(
+                self.cnf,
+                self.classes,
+                title=self.metric)
 
     def plot_classification_report(self):
         plot.plot_classification_report(
