@@ -24,7 +24,7 @@ def parse_classification_report(report):
         support.append(int(t[-1]))
         class_names.append(t[0])
         plotMat.append(v)
-    return plotMat, support, class_names
+    return np.array(plotMat), support, class_names
 
 
 class Evaluator():
@@ -148,11 +148,12 @@ def evaluate_binary(
 
 def evaluate_multiclass(
         ground_truths, probs, classes, metric, model_title,
-        decoder=None, plot=False):
+        decoder=None, plot=False, display_scores=True):
     scorer = score.MulticlassScorer(metric=metric, model_title=model_title)
     evaluator = MulticlassEval(scorer, classes, decoder=decoder)
     evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores(plot=plot)
+    if display_scores:
+        scorer.display_scores(plot=plot)
     return evaluator
 
 
