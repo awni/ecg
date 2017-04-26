@@ -62,13 +62,14 @@ class BinaryScorer(Scorer):
         self.rows_by_classes[class_name].append(row)
         self.rows.append(row)
 
-    def display_scores(self):
+    def display_scores(self, plot=False):
         Scorer.display_scores(self)
         print(tabulate(self.rows, headers=self.headers, floatfmt=".3f"))
-        try:
-            self.plot_precision_recall()
-        except:
-            print("Cannot plot.")
+        if plot is True:
+            try:
+                self.plot_precision_recall()
+            except:
+                print("Cannot plot.")
 
     def plot_precision_recall(self):
         plot.plot_precision_recall(
@@ -84,14 +85,15 @@ class MulticlassScorer(Scorer):
         self.report = classification_report(
                 gt, preds, target_names=self.classes, digits=3)
 
-    def display_scores(self):
+    def display_scores(self, plot=False):
         Scorer.display_scores(self)
         print(self.report)
-        try:
-            self.plot_confusion_matrix()
-            self.plot_classification_report()
-        except:
-            print("Cannot plot.")
+        if plot is True:
+            try:
+                self.plot_confusion_matrix()
+                self.plot_classification_report()
+            except:
+                print("Cannot plot.")
 
     def plot_confusion_matrix(self):
         if self.metric is not 'set':
