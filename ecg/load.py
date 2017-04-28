@@ -202,7 +202,8 @@ def load_train(params):
 
 
 @memory.cache
-def load_x_y_with_processor(params, processor, split='test', fit_processor=False):
+def load_x_y_with_processor(
+        params, processor, split='test', fit_processor=False):
     print("Loading using processor...")
     params['fit_processor'] = fit_processor
     dl = Loader(processor, **params)
