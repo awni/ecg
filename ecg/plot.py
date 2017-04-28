@@ -1,5 +1,6 @@
 import numpy as np
 import util
+import sklearn.preprocessing
 
 
 def init_matplot_lib():
@@ -7,33 +8,29 @@ def init_matplot_lib():
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    plt.style.use('classic')
     plt.clf()
 
 
 def plot_confusion_matrix(
-        cm, classes, title="", normalize=True, cmap='RdPu'):
+        cm, classes, title="", normalize=True, cmap='Blues'):
     init_matplot_lib()
-    cm = np.array(cm)
-    if normalize is True:
-        cm = cm.astype(np.float) / cm.sum(axis=1)
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
 
+    classes = [c if c != 'SUDDEN_BRADY' else 'CHB' for c in classes]
+
+    cm = sklearn.preprocessing.normalize(cm, norm='l1', axis=1, copy=True)
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title('Confusion matrix')
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=90)
     plt.yticks(tick_marks, classes)
-
+    plt.clim(0, 1)
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.gcf().subplots_adjust(bottom=0.2)
     plt.show()
     plt.savefig(
-        util.get_plot_path('confusion-' + title),
+        util.get_plot_path('confusion-' + title), dpi=400, format='pdf',
         bbox_inches='tight')
 
 
@@ -160,6 +157,7 @@ def plot_classification_report(
     Plot scikit-learn classification report.
     Extension based on http://stackoverflow.com/a/31689645/395857
     '''
+
     import evaluate
     init_matplot_lib()
     classes, plotMat, support, class_names = \
