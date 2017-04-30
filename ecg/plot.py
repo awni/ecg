@@ -9,6 +9,7 @@ def init_matplot_lib():
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     plt.style.use('classic')
+    matplotlib.rcParams.update({'font.size': 17})
     plt.clf()
 
 
@@ -30,7 +31,8 @@ def plot_confusion_matrix(
     plt.xlabel('Predicted label')
     plt.show()
     plt.savefig(
-        util.get_plot_path('confusion-' + title), dpi=400, format='pdf',
+        util.get_plot_path('confusion-' + title) + '.pdf', dpi=400,
+        format='pdf',
         bbox_inches='tight')
 
 
