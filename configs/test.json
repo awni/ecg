@@ -4,7 +4,7 @@
   "blacklist_path": "",
   "test_split_start": 0,
   "epi_ext": "_grp*.episodes.json",
-  "relabel_classes": {"AFIB": "AF", "AFL": "AF"},
+  "relabel_classes": {"AFIB": "AF", "AFL": "AF", "NSR": "SINUS", "SUDDEN_BRADY": "CHB"},
 
   "data_path": "data/label_review/CE_APR_2017/"
 }
