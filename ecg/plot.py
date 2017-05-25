@@ -1,5 +1,6 @@
 import numpy as np
 import util
+import sklearn.preprocessing
 
 
 def init_matplot_lib():
@@ -7,33 +8,31 @@ def init_matplot_lib():
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    plt.style.use('classic')
+    matplotlib.rcParams.update({'font.size': 17})
     plt.clf()
 
 
 def plot_confusion_matrix(
-        cm, classes, title="", normalize=True, cmap='RdPu'):
+        cm, classes, title="", normalize=True, cmap='Blues'):
     init_matplot_lib()
-    cm = np.array(cm)
-    if normalize is True:
-        cm = cm.astype(np.float) / cm.sum(axis=1)
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
 
+    classes = [c if c != 'SUDDEN_BRADY' else 'CHB' for c in classes]
+
+    cm = sklearn.preprocessing.normalize(cm, norm='l1', axis=1, copy=True)
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title('Confusion matrix')
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=90)
     plt.yticks(tick_marks, classes)
-
+    plt.clim(0, 1)
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.gcf().subplots_adjust(bottom=0.2)
     plt.show()
     plt.savefig(
-        util.get_plot_path('confusion-' + title),
+        util.get_plot_path('confusion-' + title) + '.pdf', dpi=400,
+        format='pdf',
         bbox_inches='tight')
 
 
@@ -160,23 +159,11 @@ def plot_classification_report(
     Plot scikit-learn classification report.
     Extension based on http://stackoverflow.com/a/31689645/395857
     '''
+
+    import evaluate
     init_matplot_lib()
-    lines = classification_report.split('\n')
-
-    classes = []
-    plotMat = []
-    support = []
-    class_names = []
-    for line in lines[2: (len(lines) - 2)]:
-        t = line.strip().split()
-        if len(t) < 2:
-            continue
-        classes.append(t[0])
-        v = [float(x) for x in t[1: len(t) - 1]]
-        support.append(int(t[-1]))
-        class_names.append(t[0])
-        plotMat.append(v)
-
+    classes, plotMat, support, class_names = \
+        evaluate.parse_classification_report(classification_report)
     xlabel = 'Metrics'
     ylabel = 'Classes'
     xticklabels = ['Precision', 'Recall', 'F1-score']

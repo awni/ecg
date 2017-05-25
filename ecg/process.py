@@ -52,13 +52,12 @@ class Processor(object):
             self.x_test = wavelet_transformer.transform(self.x_test)
 
         if self.normalizer is not False:
-            if fit is True:
+            if fit is True and len(self.x_train) > 0:
                 self.n = featurize.Normalizer(self.normalizer)
                 self.n.fit(self.x_train)
-            if len(self.x_train) > 0:
                 self.x_train = self.n.transform(self.x_train)
-            if len(self.x_test) > 0:
-                self.x_test = self.n.transform(self.x_test)
+                if len(self.x_test) > 0:
+                    self.x_test = self.n.transform(self.x_test)
 
     def process_y(self):
         self.y_train = self.transform_to_int_label(self.y_train)

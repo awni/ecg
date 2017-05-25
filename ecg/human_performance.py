@@ -25,10 +25,11 @@ def human_performance(args, params):
     probs = np.concatenate(tuple(probs_all), axis=0)
     evaluate.evaluate_all(
             ground_truths, probs, processor.classes,
-            model_title='Human Performance Average')
+            model_title='Human Performance Average', plot=args.plot)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
     params = json.load(open('configs/test.json', 'r'))
     human_performance(args, params)

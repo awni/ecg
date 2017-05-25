@@ -11,6 +11,22 @@ import score
 import decode
 
 
+def parse_classification_report(report):
+    lines = report.split('\n')
+    plotMat = []
+    support = []
+    class_names = []
+    for line in lines[2: (len(lines) - 2)]:
+        t = line.strip().split()
+        if len(t) < 2:
+            continue
+        v = [float(x) for x in t[1: len(t) - 1]]
+        support.append(int(t[-1]))
+        class_names.append(t[0])
+        plotMat.append(v)
+    return np.array(plotMat), support, class_names
+
+
 class Evaluator():
     def __init__(self, scorer):
         self.scorer = scorer
@@ -132,11 +148,13 @@ def evaluate_binary(
 
 def evaluate_multiclass(
         ground_truths, probs, classes, metric, model_title,
-        decoder=None, plot=False):
+        decoder=None, plot=False, display_scores=True):
     scorer = score.MulticlassScorer(metric=metric, model_title=model_title)
     evaluator = MulticlassEval(scorer, classes, decoder=decoder)
     evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores(plot=plot)
+    if display_scores:
+        scorer.display_scores(plot=plot)
+    return evaluator
 
 
 def evaluate_all(
