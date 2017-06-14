@@ -59,6 +59,8 @@ class Loader(object):
 
     def get_all_records(self, path):
         for root, dirnames, filenames in os.walk(path):
+            print(filenames)
+            print(self.ecg_ext)
             for filename in fnmatch.filter(filenames, '*' + self.ecg_ext):
                 yield(os.path.join(root, filename))
 
@@ -156,13 +158,16 @@ class Loader(object):
     def construct_dataset(self, records):
         data = []
         for record in tqdm(records):
-            episodes = self.load_episodes(record)
-            labels = self.make_labels(episodes)
-            segments = self.load_ecg(record)
-            if len(labels) == 0:
-                print(episodes)
-                print(labels)
-            data.extend(zip(segments, labels))
+            try:
+                episodes = self.load_episodes(record)
+                labels = self.make_labels(episodes)
+                segments = self.load_ecg(record)
+                if len(labels) == 0:
+                    print(episodes)
+                    print(labels)
+                data.extend(zip(segments, labels))
+            except:
+                print('Could not load ' + record)
         return data
 
     def load(self):
