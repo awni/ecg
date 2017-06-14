@@ -59,8 +59,6 @@ class Loader(object):
 
     def get_all_records(self, path):
         for root, dirnames, filenames in os.walk(path):
-            print(filenames)
-            print(self.ecg_ext)
             for filename in fnmatch.filter(filenames, '*' + self.ecg_ext):
                 yield(os.path.join(root, filename))
 
