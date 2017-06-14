@@ -162,7 +162,7 @@ def plot_classification_report(
 
     import evaluate
     init_matplot_lib()
-    classes, plotMat, support, class_names = \
+    plotMat, support, class_names = \
         evaluate.parse_classification_report(classification_report)
     xlabel = 'Metrics'
     ylabel = 'Classes'
