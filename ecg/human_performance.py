@@ -4,7 +4,7 @@ import load
 import argparse
 import numpy as np
 
-NUM_TEST_REVIEWERS = 4
+NUM_TEST_REVIEWERS = 5
 
 
 def get_matching_indices(x_gt, x_rev):
@@ -28,7 +28,7 @@ def human_performance(args, params):
         params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
         x_rev, probs, dl = load.load_x_y_with_processor(params, processor)
         gt_i, rev_i = get_matching_indices(x_gt, x_rev)
-        gt = ground_truths[:, gt_i] 
+        gt = ground_truths[:, gt_i]
         probs = probs[rev_i]
         evaluate.evaluate_all(
             gt, probs, processor.classes,
