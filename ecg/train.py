@@ -13,6 +13,7 @@ import numpy as np
 
 import network
 import random
+import load
 
 MAX_EPOCHS = 100
 
@@ -87,12 +88,7 @@ def train(args, params):
             if "dropout" in key:
                 params[key] = 0
 
-    params["test_split_start"] = args.test_split_start
-
-    if params.get("wave_model", False):
-        import wave_load as load
-    else:
-        import load
+    params["test_split_start"] = args.test_split_start        
 
     dl, processor = load.load_train(params)
 
