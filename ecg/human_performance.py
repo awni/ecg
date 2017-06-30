@@ -17,11 +17,7 @@ def get_matching_indices(x_gt, x_rev):
             gt_i.append(match)
     return gt_i, rev_i
 
-
-
-def human_performance(args, params):
-    x_gt, ground_truths, processor, dl = load.load_test(
-        params, fit_processor=True)
+def human_gt_and_probs(params, x_gt, ground_truths, processor, review_indiv=False):
     gt_all = []
     probs_all = []
     for i in range(NUM_TEST_REVIEWERS):
@@ -30,13 +26,22 @@ def human_performance(args, params):
         gt_i, rev_i = get_matching_indices(x_gt, x_rev)
         gt = ground_truths[:, gt_i]
         probs = probs[rev_i]
-        evaluate.evaluate_all(
-            gt, probs, processor.classes,
-            model_title='Human Performance with review ' + str(i))
+        if review_indiv is True:
+            evaluate.evaluate_all(
+                gt, probs, processor.classes,
+                model_title='Human Performance with review ' + str(i))
         gt_all.append(gt)
         probs_all.append(probs)
     ground_truths = np.concatenate(tuple(gt_all), axis=1)
     probs = np.concatenate(tuple(probs_all), axis=0)
+    return ground_truths, probs
+
+
+def human_performance(args, params):
+    x_gt, ground_truths, processor, dl = load.load_test(
+        params, fit_processor=True)
+    ground_truths, probs = human_gt_and_probs(
+        params, x_gt, ground_truths, processor, review_indiv=True)
     evaluate.evaluate_all(
             ground_truths, probs, processor.classes,
             model_title='Human Performance Average', plot=args.plot)
