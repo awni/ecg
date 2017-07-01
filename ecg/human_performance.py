@@ -4,7 +4,7 @@ import load
 import argparse
 import numpy as np
 
-NUM_TEST_REVIEWERS = 5
+TEST_REVIEWS = [0, 1, 2, 3, 5]
 
 
 def get_matching_indices(x_gt, x_rev):
@@ -20,7 +20,7 @@ def get_matching_indices(x_gt, x_rev):
 def human_gt_and_probs(params, x_gt, ground_truths, processor, review_indiv=False):
     gt_all = []
     probs_all = []
-    for i in range(NUM_TEST_REVIEWERS):
+    for i in TEST_REVIEWS:
         params["epi_ext"] = "_rev" + str(i) + ".episodes.json"
         x_rev, probs, dl = load.load_x_y_with_processor(params, processor)
         gt_i, rev_i = get_matching_indices(x_gt, x_rev)
