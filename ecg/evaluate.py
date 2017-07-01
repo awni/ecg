@@ -9,6 +9,7 @@ import util
 import predict
 import score
 import decode
+import re
 
 
 def parse_classification_report(report):
@@ -16,13 +17,14 @@ def parse_classification_report(report):
     plotMat = []
     support = []
     class_names = []
-    for line in lines[2: (len(lines) - 2)]:
-        t = line.strip().split()
+    for line in lines[2: len(lines)]:
+        t = re.split('\s\s+', line.strip())
         if len(t) < 2:
             continue
         v = [float(x) for x in t[1: len(t) - 1]]
+        if t[0] != 'avg / total':
+            class_names.append(t[0])
         support.append(int(t[-1]))
-        class_names.append(t[0])
         plotMat.append(v)
     return np.array(plotMat), support, class_names
 
