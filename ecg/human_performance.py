@@ -4,7 +4,7 @@ import load
 import argparse
 import numpy as np
 
-TEST_REVIEWS = [0, 1, 2, 3, 5]
+TEST_REVIEWS = [0, 1, 2, 3, 4, 5]
 
 
 def get_matching_indices(x_gt, x_rev):
