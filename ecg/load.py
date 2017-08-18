@@ -28,7 +28,7 @@ class Loader(object):
             ecg_samp_rate=200.0,
             ecg_ext='.ecg',
             epi_ext='.episodes.json',
-            blacklist_path='',
+            blacklist_paths=[],
             duration=30,
             test_frac=0.2,
             test_split_start=0,
@@ -44,7 +44,7 @@ class Loader(object):
         self.ecg_samp_rate = ecg_samp_rate
         self.ecg_ext = ecg_ext
         self.epi_ext = epi_ext
-        self.blacklist_path = blacklist_path
+        self.blacklist_paths = blacklist_paths
         self.duration = duration
         self.test_split_start = test_split_start
         self.test_frac = test_frac
@@ -67,12 +67,15 @@ class Loader(object):
 
     def build_blacklist(self):
         print('Building blacklist...')
+        assert(isinstance(self.blacklist_paths, list))
         self.blacklist = []
         pids = {}
-        for record in tqdm(self.get_all_records(self.blacklist_path)):
-            pid = self.patient_id(record)
-            pids[pid] = True
-            self.blacklist.append(pid)
+        for blacklist_path in self.blacklist_paths:
+            print(blacklist_path)
+            for record in tqdm(self.get_all_records(blacklist_path)):
+                pid = self.patient_id(record)
+                pids[pid] = True
+                self.blacklist.append(pid)
         print('Contains', len(pids), 'patients')
 
     def stratify(self, records):
@@ -169,8 +172,7 @@ class Loader(object):
         return data
 
     def load(self):
-        if (self.blacklist_path != ""):
-            self.build_blacklist()
+        self.build_blacklist()
         records = self.get_all_records(self.data_path)
         train, test = self.stratify(records)
         if self.toy is True:
@@ -238,7 +240,7 @@ if __name__ == "__main__":
     parser.add_argument("config_file", help="path to config file")
     args = parser.parse_args()
     params = json.load(open(args.config_file, 'r'))
-    if 'blacklist_path' == "":
+    if params['blacklist_paths'] == []:
         load_test(params)
     else:
         load_train(params)
