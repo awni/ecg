@@ -3,7 +3,7 @@
     "normalizer": "robust_scale",
     "step": 256,
     "test_frac": 0.1,
-    "relabel_classes": {"NSR": "SINUS", "SUDDEN_BRADY": "CHB"},
+    "relabel_classes": {"NSR": "SINUS", "SUDDEN_BRADY": "AVB", "AVB_TYPE2": "AVB", "AFIB": "AF", "AFL": "AF"},
 
     "amplitude_scale": false,
 
@@ -20,7 +20,7 @@
     "optimizer": "adam",
     "batch_size": 128,
 
-    "blacklist_path": "./data/label_review/CARDIOL_MAY_2017/",
+    "blacklist_paths": ["./data/label_review/CARDIOL_MAY_2017/", "./data/batches/kids_blacklist"],
     "data_path": "./data/batches",
     "FOLDER_TO_SAVE": "./saved/"
 }

@@ -4,7 +4,7 @@
   "blacklist_path": "",
   "test_split_start": 0,
   "epi_ext": "_grp*.episodes.json",
-  "relabel_classes": {"NSR": "SINUS", "SUDDEN_BRADY": "CHB"},
+  "relabel_classes": {"NSR": "SINUS", "SUDDEN_BRADY": "AVB", "AVB_TYPE2": "AVB", "AFIB": "AF", "AFL": "AF"},
 
-  "data_path": "data/label_review/CARDIOL_MAY_2017/"
+  "data_path": "test_set"
 }
