@@ -20,7 +20,7 @@
     "optimizer": "adam",
     "batch_size": 128,
 
-    "blacklist_paths": ["./data/label_review/CARDIOL_MAY_2017/", "./data/batches/kids_blacklist"],
+    "blacklist_paths": ["./data/label_review/CARDIOL_MAY_2017/", "./data/batches/kids_blacklist", "./data/batches/vf_blacklist"],
     "data_path": "./data/batches",
     "FOLDER_TO_SAVE": "./saved/"
 }
