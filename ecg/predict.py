@@ -5,6 +5,7 @@ import json
 import load
 import util
 from joblib import Memory
+import time
 
 memory = Memory(cachedir='./cache')
 
@@ -24,10 +25,15 @@ def get_ensemble_pred_probs(model_paths, x):
     return probs
 
 def load_predictions(path):
-    gt = np.load('./gt.npy')
-    probs = np.load('./preds.npy')
-    classes = np.load('./classes.npy')
+    gt = np.load(path + '/gt.npy')
+    probs = np.load(path + '/preds.npy')
+    classes = np.load(path + '/classes.npy')
     return gt, probs, classes
+
+def get_folder_name(start_time):
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    return folder_name
 
 
 def predict(args, train_params, test_params):
@@ -36,13 +42,22 @@ def predict(args, train_params, test_params):
         train_params=train_params,
         split=args.split)
     probs = get_ensemble_pred_probs(args.model_paths, x)
-    save_predictions(gt, probs, processor.classes)
+
+    folder_name = 'saved/predictions/' + str(int(time.time()))
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    test_params["model_paths"] = args.model_paths
+    with open(folder_name + '/params.json', 'w') as outfile:
+        json.dump(test_params, outfile)
+    
+    save_predictions(folder_name, gt, probs, processor.classes)
 
 
-def save_predictions(gt, probs, classes):
-    np.save('./preds', probs)
-    np.save('./gt', gt)
-    np.save('./classes', classes)
+def save_predictions(path, gt, probs, classes):
+    np.save(path + '/preds', probs)
+    np.save(path + '/gt', gt)
+    np.save(path + '/classes', classes)
 
 
 if __name__ == '__main__':
