@@ -1,6 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 import argparse
+import re
 import numpy as np
 from tqdm import tqdm
 import load
@@ -9,7 +10,6 @@ import util
 import predict
 import score
 import decode
-import re
 
 
 def parse_classification_report(report):
@@ -166,46 +166,23 @@ def evaluate_all(
         evaluate_multiclass(
             gt, probs, classes, metric, model_title,
             decoder=decoder, plot=plot)
-        """
         evaluate_binary(
             gt, probs, classes, thresholds, metric, model_title, plot=plot)
-        """
 
 
-def evaluate(args, train_params, test_params):
-    x, gt, processor, loader = load.load_test(
-            test_params,
-            train_params=train_params,
-            split=args.split)
-    probs = predict.get_ensemble_pred_probs(
-        args.model_paths,
-        x,
-        geo_mean=args.geo_mean)
+def evaluate(args, params):
+    gt, probs, classes = predict.load_predictions(args.prediction_folder)
     thresholds = np.linspace(0, 1, 6, endpoint=False)
-    decoder = decode.Decoder(loader.y_train, len(processor.classes)) \
-        if args.decode else None
     evaluate_all(
-        gt, probs, processor.classes, model_title=', '.join(args.model_paths),
-        thresholds=thresholds, decoder=decoder, plot=args.plot)
+        gt, probs, classes, model_title=(',').join(params["model_paths"]),
+        thresholds=thresholds, decoder=None, plot=args.plot)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("test_config_file", help="path to config file")
-    parser.add_argument(
-        'model_paths',
-        nargs='+',
-        help="path to models")
-    parser.add_argument("--split", help="train/val", choices=['train', 'test'],
-                        default='test')
+    parser.add_argument("prediction_folder", help="path to prediction folder")
     parser.add_argument('--decode', action='store_true')
-    parser.add_argument('--geo_mean', action='store_true')
     parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
-    train_params = util.get_model_params(args.model_paths[0])  # FIXME: bug
-    test_params = train_params.copy()
-    test_new_params = json.load(open(args.test_config_file, 'r'))
-    test_params.update(test_new_params)
-    if "label_review" in test_new_params["data_path"]:
-        assert(args.split == 'test')
-    evaluate(args, train_params, test_params)
+    params = json.load(open(args.prediction_folder + '/params.json', 'r'))
+    evaluate(args, params)
