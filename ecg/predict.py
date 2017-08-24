@@ -23,20 +23,26 @@ def get_ensemble_pred_probs(model_paths, x):
     probs = np.mean(all_model_probs, axis=0)
     return probs
 
-def get_saved_pred_probs(path):
-    return np.load(path)
+def load_predictions(path):
+    probs = np.load('./preds')
+    gt = np.load('./gt')
+    classes = np.load('./classes')
+    return gt, probs, classes
 
 
 def predict(args, train_params, test_params):
-    x, gt, processor, loader = load.load_test(
+    x, gt, processor, _ = load.load_test(
         test_params,
         train_params=train_params,
         split=args.split)
     probs = get_ensemble_pred_probs(args.model_paths, x)
-    save_prediction_probs(probs)
+    save_predictions(gt, probs, processor.classes)
 
-def save_prediction_probs(probs):
+
+def save_predictions(gt, probs, classes):
     np.save('./preds', probs)
+    np.save('./gt', probs)
+    np.save('./classes', classes)
 
 
 if __name__ == '__main__':
