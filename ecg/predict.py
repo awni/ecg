@@ -24,9 +24,9 @@ def get_ensemble_pred_probs(model_paths, x):
     return probs
 
 def load_predictions(path):
-    probs = np.load('./preds')
-    gt = np.load('./gt')
-    classes = np.load('./classes')
+    gt = np.load('./gt.npy')
+    probs = np.load('./preds.npy')
+    classes = np.load('./classes.npy')
     return gt, probs, classes
 
 
@@ -41,7 +41,7 @@ def predict(args, train_params, test_params):
 
 def save_predictions(gt, probs, classes):
     np.save('./preds', probs)
-    np.save('./gt', probs)
+    np.save('./gt', gt)
     np.save('./classes', classes)
 
 
