@@ -1,8 +1,9 @@
 from __future__ import print_function
 from __future__ import division
 from collections import defaultdict
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 from tabulate import tabulate
+import numpy as np
 import plot
 
 
@@ -30,79 +31,55 @@ class BinaryScorer(Scorer):
     def __init__(self, **params):
         Scorer.__init__(self, **params)
         self.rows = []
-        self.rows_by_classes = defaultdict(list)
+        self.rows_by_classes = {}
         self.headers = [
             'c_name',
-            'specificity',
-            'precision',
-            'recall',
-            'f1',
-            'threshold'
+            'roc_auc',
+            'false_pos_rates',
+            'true_pos_rates'
         ]
 
-    def score(self, gt, preds, class_name=None, threshold=None):
-        self.compute_confusion_matrix(gt, preds)
-
-        tn, fp = self.cnf[0][0], self.cnf[0][1]
-        fn, tp = self.cnf[1][0], self.cnf[1][1]
-
-        recall = sensitivity = tp / (tp + fn)
-        specificity = tn / (tn + fp)
-        precision = ppv = 1 if (tp == 0 and fp == 0) else tp / (tp + fp)
-        f1 = (2 * precision * recall) / (precision + recall)
-
+    def score(self, gt, probs, class_name=None):
+        auc = roc_auc_score(gt, probs)
+        fprs, tprs, _ = roc_curve(gt, probs)
         row = [
             class_name,
-            specificity,
-            ppv,
-            sensitivity,
-            f1,
-            threshold
+            auc,
+            fprs,
+            tprs
         ]
-        self.rows_by_classes[class_name].append(row)
+        self.rows_by_classes[class_name] = row
         self.rows.append(row)
 
-    def display_scores(self, plot=False):
+    def display_scores(self, plot_flag=False):
         Scorer.display_scores(self)
-        print(tabulate(self.rows, headers=self.headers, floatfmt=".3f"))
-        if plot is True:
+        print(tabulate([row[:2] for row in self.rows], headers=self.headers, floatfmt=".3f"))
+        if plot_flag is True:
             try:
-                self.plot_precision_recall()
+                plot.plot_roc(
+                    classes=self.rows_by_classes.keys(),
+                    class_data=self.rows_by_classes,
+                    metric=self.metric)
             except:
                 print("Cannot plot.")
 
-    def plot_precision_recall(self):
-        plot.plot_precision_recall(
-            classes=self.rows_by_classes.keys(),
-            class_data=self.rows_by_classes,
-            metric=self.metric)
-
-
 class MulticlassScorer(Scorer):
-    def score(self, gt, preds, classes=None):
+    def score(self, gt, probs, classes=None):
+        preds = probs
         self.compute_confusion_matrix(gt, preds)
         self.classes = classes
         self.report = classification_report(
                 gt, preds, target_names=self.classes, digits=3)
 
-    def display_scores(self, plot=False):
+    def display_scores(self, plot_flag=False):
         Scorer.display_scores(self)
         print(self.report)
-        if plot is True:
+        if plot_flag is True:
             try:
-                self.plot_confusion_matrix()
-                self.plot_classification_report()
+                if self.metric is not 'set':
+                    plot.plot_confusion_matrix(
+                        self.cnf,
+                        self.classes,
+                        title=self.metric)
             except:
                 print("Cannot plot.")
-
-    def plot_confusion_matrix(self):
-        if self.metric is not 'set':
-            plot.plot_confusion_matrix(
-                self.cnf,
-                self.classes,
-                title=self.metric)
-
-    def plot_classification_report(self):
-        plot.plot_classification_report(
-            self.report,
-            title="Classification report (" + self.metric + " F1)")
