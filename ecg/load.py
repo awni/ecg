@@ -164,8 +164,7 @@ class Loader(object):
                 labels = self.make_labels(episodes)
                 segments = self.load_ecg(record)
                 if len(labels) == 0:
-                    print(episodes)
-                    print(labels)
+                    warnings.warn("skipping...")
                 data.extend(zip(segments, labels))
             except:
                 print('Could not load ' + record)

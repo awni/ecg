@@ -44,7 +44,7 @@ def human_performance(args, params):
         params, x_gt, ground_truths, processor, review_indiv=True)
     evaluate.evaluate_all(
             ground_truths, probs, processor.classes,
-            model_title='Human Performance Average', plot=args.plot)
+            model_title='Human Performance Average', plot_flag=args.plot)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
