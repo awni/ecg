@@ -29,7 +29,8 @@ def load_predictions(path):
     gt = np.load(path + '/gt.npy')
     probs = np.load(path + '/preds.npy')
     classes = np.load(path + '/classes.npy')
-    return gt, probs, classes
+    x = np.load(path + '/x.npy')
+    return gt, probs, classes, x
 
 def get_folder_name(start_time):
     if not os.path.exists(folder_name):
@@ -52,13 +53,14 @@ def predict(args, train_params, test_params):
     with open(folder_name + '/params.json', 'w') as outfile:
         json.dump(test_params, outfile)
     
-    save_predictions(folder_name, gt, probs, processor.classes)
+    save_predictions(folder_name, gt, probs, processor.classes, x)
 
 
-def save_predictions(path, gt, probs, classes):
+def save_predictions(path, gt, probs, classes, x):
     np.save(path + '/preds', probs)
     np.save(path + '/gt', gt)
     np.save(path + '/classes', classes)
+    np.save(path + '/x', x)
 
 
 if __name__ == '__main__':
