@@ -48,7 +48,8 @@ def human_performance(args, params):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("test_config_file", help="path to config file")
     parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
-    params = json.load(open('configs/test.json', 'r'))
+    params = json.load(open(args.test_config_file, 'r'))
     human_performance(args, params)
