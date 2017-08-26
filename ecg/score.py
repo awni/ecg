@@ -41,7 +41,7 @@ class BinaryScorer(Scorer):
 
     def score(self, gt, probs, class_name=None):
         auc = roc_auc_score(gt, probs)
-        if len(np.unique(probs) == 2): # probs are only 0 and 1
+        if len(np.unique(probs)) == 2: # probs are only 0 and 1
             # then no point in roc
             cnf = confusion_matrix(gt, probs)
             tn = cnf[0][0]
@@ -64,7 +64,7 @@ class BinaryScorer(Scorer):
     def display_scores(self, plot_flag=False):
         Scorer.display_scores(self)
         # if fprs/tprs is an array, don't print it
-        if isinstance(self.rows[0][2], list):
+        if isinstance(self.rows[2][2], np.ndarray):
             rows_print = [row[:2] for row in self.rows]
         else:
             rows_print = self.rows
