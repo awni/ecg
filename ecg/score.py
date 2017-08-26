@@ -41,7 +41,17 @@ class BinaryScorer(Scorer):
 
     def score(self, gt, probs, class_name=None):
         auc = roc_auc_score(gt, probs)
-        fprs, tprs, _ = roc_curve(gt, probs)
+        if len(np.unique(probs) == 2): # probs are only 0 and 1
+            # then no point in roc
+            cnf = confusion_matrix(gt, probs)
+            tn = cnf[0][0]
+            fn = cnf[1][0]
+            fp = cnf[0][1]
+            tp = cnf[1][1]
+            fprs = fp / (fp + tn)
+            tprs = tp / (tp + fn)
+        else:
+            fprs, tprs, _ = roc_curve(gt, probs)
         row = [
             class_name,
             auc,
@@ -53,7 +63,12 @@ class BinaryScorer(Scorer):
 
     def display_scores(self, plot_flag=False):
         Scorer.display_scores(self)
-        print(tabulate([row[:2] for row in self.rows], headers=self.headers, floatfmt=".3f"))
+        # if fprs/tprs is an array, don't print it
+        if isinstance(self.rows[0][2], list):
+            rows_print = [row[:2] for row in self.rows]
+        else:
+            rows_print = self.rows
+        print(tabulate(rows_print, headers=self.headers, floatfmt=".3f"))
         if plot_flag is True:
             try:
                 plot.plot_roc(
