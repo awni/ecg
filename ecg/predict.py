@@ -7,6 +7,7 @@ import load
 import util
 from joblib import Memory
 import time
+import pickle
 
 memory = Memory(cachedir='./cache')
 
@@ -29,7 +30,7 @@ def load_predictions(path):
     x = np.load(path + '/x.npy')
     gt = np.load(path + '/gt.npy')
     probs = np.load(path + '/probs.npy')
-    classes = np.load(path + '/processor.npy')
+    processor = pickle.load(open(path + '/processor', 'r'))
     return x, gt, probs, processor
 
 def get_folder_name(start_time):
@@ -52,7 +53,7 @@ def predict(args, train_params, test_params):
     test_params["model_paths"] = args.model_paths
     with open(folder_name + '/params.json', 'w') as outfile:
         json.dump(test_params, outfile)
-    
+
     save_predictions(folder_name, x, gt, probs, processor)
 
 
@@ -60,7 +61,7 @@ def save_predictions(path, x, gt, probs, processor):
     np.save(path + '/x', x)
     np.save(path + '/gt', gt)
     np.save(path + '/probs', probs)
-    np.save(path + '/processor', processor)
+    pickle.dump(processor, open(path + '/processor', 'w+'))
 
 
 if __name__ == '__main__':
