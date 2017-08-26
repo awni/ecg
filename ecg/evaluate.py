@@ -11,6 +11,24 @@ import predict
 import score
 import decode
 
+
+def parse_classification_report(report):
+    lines = report.split('\n')
+    plotMat = []
+    support = []
+    class_names = []
+    for line in lines[2: len(lines)]:
+        t = re.split('\s\s+', line.strip())
+        if len(t) < 2:
+            continue
+        v = [float(x) for x in t[1: len(t) - 1]]
+        if t[0] != 'avg / total':
+            class_names.append(t[0])
+        support.append(int(t[-1]))
+        plotMat.append(v)
+    return np.array(plotMat), support, class_names
+
+
 class Evaluator():
     def __init__(self, scorer):
         self.scorer = scorer
@@ -129,9 +147,9 @@ def evaluate_all(
 
 
 def evaluate(args, params):
-    gt, probs, classes, _ = predict.load_predictions(args.prediction_folder)
+    x, gt, probs, processor = predict.load_predictions(args.prediction_folder)
     evaluate_all(
-        gt, probs, classes, model_title=(',').join(params["model_paths"]),
+        gt, probs, processor.classes, model_title=(',').join(params["model_paths"]),
         plot_flag=args.plot)
 
 
