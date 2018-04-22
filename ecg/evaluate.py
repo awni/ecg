@@ -82,7 +82,7 @@ class MulticlassEval(Evaluator):
         labels = [set(
             np.unique(record_labels).tolist()) for record_labels in arr]
         from sklearn.preprocessing import MultiLabelBinarizer
-        mlb = MultiLabelBinarizer()
+        mlb = MultiLabelBinarizer(classes=range(len(self.classes)))
         return mlb.fit_transform(labels)
 
     def _to_seq_gt(self, ground_truths):
