@@ -22,7 +22,7 @@ source ecg_env/bin/activate
 
 Install the requirements (this may take a few minutes).
 
-**NB** If you do not have a GPU, change line XX in requirements.txt from 
+**NB** If you do not have a GPU, change line 67 in requirements.txt from 
 
 ```
 tensorflow-gpu==1.0.1
