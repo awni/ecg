@@ -1,0 +1,10 @@
+{
+  "toy": false,
+  "test_frac": 1,
+  "blacklist_paths": [],
+  "test_split_start": 0,
+  "epi_ext": ".episodes.json",
+  "relabel_classes": {"NSR": "SINUS", "SUDDEN_BRADY": "AVB", "AVB_TYPE2": "AVB", "AFIB": "AF", "AFL": "AF"},
+
+  "data_path": "data/batches/"
+}
