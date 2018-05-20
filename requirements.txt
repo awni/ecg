@@ -64,7 +64,6 @@ six==1.10.0
 sklearn==0.0
 subprocess32==3.2.7
 tabulate==0.7.7
-tensorflow-gpu==1.0.1
 terminado==0.6
 testpath==0.3.1
 Theano==0.8.2

@@ -6,8 +6,7 @@ Clone the repository
 git clone git@github.com:awni/ecg.git
 ```
 
-
-Install `virtualenv` with
+If you don't have `virtualenv`, install it with
 
 ```
 pip install virtualenv
@@ -22,22 +21,14 @@ source ecg_env/bin/activate
 
 Install the requirements (this may take a few minutes).
 
-**NB** If you do not have a GPU, change line 67 in requirements.txt from 
-
+For CPU only support run
 ```
-tensorflow-gpu==1.0.1
-```
-
-to
-
-```
-tensorflow==1.0.1
+./setup.sh
 ```
 
-Now run
-
+To install with GPU support run
 ```
-pip install -r requirements.txt
+env TF=gpu ./setup.sh
 ```
 
 ## Training
@@ -63,7 +54,7 @@ python ecg/train.py
 After each epoch the model is saved in
 `ecg/saved/default/<experiment_id>/<model_id>.hdf5`.
 
-**NB** this model is only trained on 128 examples. This is far too few to see
+**NB**: this model is only trained on 128 examples. This is far too few to see
 good generalization performance, but the code should run and produce a valid
 model.
 
