@@ -1,23 +1,17 @@
-from builtins import str
 import argparse
 import numpy as np
 import json
 import os
 import load
 import util
-from joblib import Memory
 import time
 import pickle
 
-memory = Memory(cachedir='./cache')
-
-@memory.cache
 def get_model_pred_probs(model_path, x):
     from keras.models import load_model
     model = load_model(model_path)
     probs = model.predict(x, verbose=1)
     return probs
-
 
 def get_ensemble_pred_probs(model_paths, x):
     print("Averaging " + str(len(model_paths)) + " model predictions...")
@@ -38,7 +32,6 @@ def get_folder_name(start_time):
         os.makedirs(folder_name)
     return folder_name
 
-
 def predict(args, train_params, test_params):
     x, gt, processor, _ = load.load_test(
         test_params,
@@ -56,13 +49,11 @@ def predict(args, train_params, test_params):
 
     save_predictions(folder_name, x, gt, probs, processor)
 
-
 def save_predictions(path, x, gt, probs, processor):
     np.save(path + '/x', x)
     np.save(path + '/gt', gt)
     np.save(path + '/probs', probs)
     pickle.dump(processor, open(path + '/processor', 'w+'))
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -5,7 +5,6 @@ from tqdm import tqdm
 import warnings
 import scipy.signal as scs
 
-
 class Normalizer(object):
     def __init__(self, strategy):
         self.scaler = None

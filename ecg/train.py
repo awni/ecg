@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from builtins import open
 from builtins import int
 from builtins import str
+
 import argparse
 import json
 import os
@@ -17,19 +18,16 @@ import load
 
 MAX_EPOCHS = 100
 
-
 def get_folder_name(start_time, experiment_name):
     folder_name = FOLDER_TO_SAVE + experiment_name + '/' + start_time
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
     return folder_name
 
-
 def get_filename_for_saving(start_time, experiment_name):
     saved_filename = get_folder_name(start_time, experiment_name) + \
         "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
     return saved_filename
-
 
 def plot_model(model, start_time, experiment_name):
     from keras.utils.visualize_util import plot
@@ -38,7 +36,6 @@ def plot_model(model, start_time, experiment_name):
         to_file=get_folder_name(start_time, experiment_name) + '/model.png',
         show_shapes=True,
         show_layer_names=False)
-
 
 def save_params(params, start_time, experiment_name):
     saving_filename = get_folder_name(start_time, experiment_name) + \
@@ -49,19 +46,16 @@ def save_params(params, start_time, experiment_name):
     with open(saving_filename, 'w') as outfile:
         outfile.write(save_str)
 
-
 def get_augment_fn(params):
     if params.get("amplitude_scale", False):
         return amplitude_scale
     else:
         return None
 
-
 def amplitude_scale(x):
     scales = np.random.uniform(low=0.25, high=2.0,
                                size=(x.shape[0], 1, 1))
     return scales * x
-
 
 def data_generator(x, y, batch_size, augmenter=None):
     num_examples = x.shape[0]
@@ -77,7 +71,6 @@ def data_generator(x, y, batch_size, augmenter=None):
                 x_mb = augmenter(x_mb)
             yield (x_mb, y_mb)
 
-
 def train(args, params):
     global FOLDER_TO_SAVE
 
@@ -88,7 +81,7 @@ def train(args, params):
             if "dropout" in key:
                 params[key] = 0
 
-    params["test_split_start"] = args.test_split_start        
+    params["test_split_start"] = args.test_split_start
 
     dl, processor = load.load_train(params)
 
@@ -161,7 +154,6 @@ def train(args, params):
         validation_data=(x_test, y_test),
         callbacks=[checkpointer, reduce_lr, stopping],
         verbose=args.verbose)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
