@@ -2,8 +2,6 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
-from builtins import zip
-from builtins import range
 import json
 import numpy as np
 import fnmatch
@@ -16,7 +14,6 @@ from process import Processor
 import glob
 
 # FIXME: step and samp_rate and duration should be part of process, not load
-
 
 class Loader(object):
     def __init__(

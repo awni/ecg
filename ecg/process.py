@@ -1,56 +1,29 @@
 from __future__ import division
 from __future__ import print_function
-from builtins import dict
+
 import numpy as np
 import featurize
 import collections
-
 
 class Processor(object):
     def __init__(
         self,
         use_one_hot_labels=True,
         normalizer=False,
-        wavelet_fns=[],
-        wavelet_type='discrete',
         relabel_classes={},
         ignore_classes=[],
-        wavelet_level=1,
-        use_bandpass_filter=False,
         **kwargs
     ):
-        self.wavelet_fns = wavelet_fns
         self.normalizer = normalizer
-        self.wavelet_type = wavelet_type
         self.ignore_classes = ignore_classes
         self.relabel_classes = relabel_classes
-        self.wavelet_level = wavelet_level
         self.use_one_hot_labels = use_one_hot_labels
-        self.use_bandpass_filter = use_bandpass_filter
         self.n = None
         self.classes = None
         self.int_to_class = None
         self.class_to_int = None
 
     def process_x(self, fit):
-        if self.use_bandpass_filter is True:
-            bp_filter = featurize.BandPassFilter()
-            self.x_train = bp_filter.transform(self.x_train)
-            self.x_test = bp_filter.transform(self.x_test)
-
-        if len(self.wavelet_fns) != 0:
-            if (self.wavelet_type == 'discrete'):
-                wavelet_transformer = \
-                    featurize.DiscreteWaveletTransformer(
-                        self.wavelet_fns, self.wavelet_level)
-            elif (self.wavelet_type == 'continuous'):
-                wavelet_transformer = \
-                    featurize.ContinuousWaveletTransformer(self.wavelet_fns)
-            else:
-                raise ValueError("Wavelet type not defined.")
-            self.x_train = wavelet_transformer.transform(self.x_train)
-            self.x_test = wavelet_transformer.transform(self.x_test)
-
         if self.normalizer is not False:
             if fit is True and len(self.x_train) > 0:
                 self.n = featurize.Normalizer(self.normalizer)
