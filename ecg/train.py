@@ -142,12 +142,12 @@ def train(args, params):
                     batch_size=batch_size,
                     augmenter=get_augment_fn(params))
 
-    samples_per_epoch = batch_size * int(x_train.shape[0] / batch_size)
+    steps_per_epoch = int(x_train.shape[0] / batch_size)
 
     model.fit_generator(
         train_data,
-        samples_per_epoch=samples_per_epoch,
-        nb_epoch=MAX_EPOCHS,
+        steps_per_epoch=steps_per_epoch,
+        epochs=MAX_EPOCHS,
         validation_data=(x_test, y_test),
         callbacks=[checkpointer, reduce_lr, stopping],
         verbose=args.verbose)
