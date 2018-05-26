@@ -9,8 +9,6 @@ import json
 import util
 import predict
 import score
-import decode
-
 
 def parse_classification_report(report):
     lines = report.split('\n')

@@ -13,9 +13,7 @@ import argparse
 
 from tqdm import tqdm
 from process import Processor
-from joblib import Memory
 import glob
-memory = Memory(cachedir='./cache')
 
 # FIXME: step and samp_rate and duration should be part of process, not load
 
@@ -194,7 +192,6 @@ class Loader(object):
             self.x_test = self.y_test = []
 
 
-@memory.cache
 def load_train(params):
     assert('data_path' in params)
     processor = Processor(**params)
@@ -205,7 +202,6 @@ def load_train(params):
     return loader, processor
 
 
-@memory.cache
 def load_x_y_with_processor(
         params, processor, split='test', fit_processor=False):
     print("Loading using processor...")
@@ -221,7 +217,6 @@ def load_x_y_with_processor(
     return x, y, dl
 
 
-@memory.cache
 def load_test(
         test_params, train_params=None, split='test', fit_processor=False):
     if train_params is None:
