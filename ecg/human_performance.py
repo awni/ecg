@@ -6,7 +6,6 @@ import numpy as np
 
 TEST_REVIEWS = [0, 1, 2, 3, 4, 5]
 
-
 def get_matching_indices(x_gt, x_rev):
     gt_i, rev_i = [], []
     for index, x_i in enumerate(x_rev):
@@ -44,12 +43,11 @@ def human_performance(args, params):
         params, x_gt, ground_truths, processor, review_indiv=True)
     evaluate.evaluate_all(
             ground_truths, probs, processor.classes,
-            model_title='Human Performance Average', plot_flag=args.plot)
+            model_title='Human Performance Average')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("test_config_file", help="path to config file")
-    parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
     params = json.load(open(args.test_config_file, 'r'))
     human_performance(args, params)

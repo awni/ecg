@@ -1,31 +1,12 @@
 from __future__ import division
 from __future__ import print_function
 import argparse
-import re
 import numpy as np
 from tqdm import tqdm
 import load
 import json
-import util
 import predict
 import score
-
-def parse_classification_report(report):
-    lines = report.split('\n')
-    plotMat = []
-    support = []
-    class_names = []
-    for line in lines[2: len(lines)]:
-        t = re.split('\s\s+', line.strip())
-        if len(t) < 2:
-            continue
-        v = [float(x) for x in t[1: len(t) - 1]]
-        if t[0] != 'avg / total':
-            class_names.append(t[0])
-        support.append(int(t[-1]))
-        plotMat.append(v)
-    return np.array(plotMat), support, class_names
-
 
 class Evaluator():
     def __init__(self, scorer):
@@ -67,7 +48,6 @@ class Evaluator():
             self.score(
                 self.set_gt, self.set_probs)
 
-
 class MulticlassEval(Evaluator):
     def __init__(self, scorer, classes):
         Evaluator.__init__(self, scorer)
@@ -88,7 +68,6 @@ class MulticlassEval(Evaluator):
 
     def _to_seq_probs(self, probs):
         self.seq_probs = np.argmax(probs, axis=-1)
-
 
 class BinaryEval(Evaluator):
     def __init__(self, scorer, class_int, class_name):
@@ -112,49 +91,40 @@ class BinaryEval(Evaluator):
     def _to_seq_probs(self, probs):
         self.seq_probs = probs[:, :, self.class_int]
 
-
 def evaluate_binary(
-        ground_truths, probs, classes, metric, model_title,
-        plot_flag=False):
+        ground_truths, probs, classes, metric, model_title):
     scorer = score.BinaryScorer(model_title=model_title, metric=metric)
     for class_int in tqdm(range(len(classes))):
         evaluator = BinaryEval(
             scorer, class_int, classes[class_int])
         evaluator.evaluate(ground_truths, probs, metric=metric)
-    scorer.display_scores(plot_flag=plot_flag)
-
+    scorer.display_scores()
 
 def evaluate_multiclass(
         ground_truths, probs, classes, metric, model_title,
-        plot_flag=False, display_scores=True):
+        display_scores=True):
     scorer = score.MulticlassScorer(metric=metric, model_title=model_title)
     evaluator = MulticlassEval(scorer, classes)
     evaluator.evaluate(ground_truths, probs, metric=metric)
     if display_scores:
-        scorer.display_scores(plot_flag=plot_flag)
+        scorer.display_scores()
     return evaluator
 
-
-def evaluate_all(
-        gt, probs, classes, model_title='', plot_flag=False):
+def evaluate_all(gt, probs, classes, model_title=''):
     for metric in ['seq', 'set']:
         evaluate_multiclass(
-            gt, probs, classes, metric, model_title, plot_flag=plot_flag)
+            gt, probs, classes, metric, model_title)
         evaluate_binary(
-            gt, probs, classes, metric, model_title, plot_flag=plot_flag)
-
+            gt, probs, classes, metric, model_title)
 
 def evaluate(args, params):
     x, gt, probs, processor = predict.load_predictions(args.prediction_folder)
     evaluate_all(
-        gt, probs, processor.classes, model_title=(',').join(params["model_paths"]),
-        plot_flag=args.plot)
-
+        gt, probs, processor.classes, model_title=(',').join(params["model_paths"]))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("prediction_folder", help="path to prediction folder")
-    parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
     params = json.load(open(args.prediction_folder + '/params.json', 'r'))
     evaluate(args, params)

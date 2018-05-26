@@ -1,10 +1,10 @@
 from __future__ import print_function
 from __future__ import division
+
 from collections import defaultdict
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 from tabulate import tabulate
 import numpy as np
-import plot
 
 
 class Scorer(object):
@@ -61,7 +61,7 @@ class BinaryScorer(Scorer):
         self.rows_by_classes[class_name] = row
         self.rows.append(row)
 
-    def display_scores(self, plot_flag=False):
+    def display_scores(self):
         Scorer.display_scores(self)
         # if fprs/tprs is an array, don't print it
         if isinstance(self.rows[2][2], np.ndarray):
@@ -69,14 +69,6 @@ class BinaryScorer(Scorer):
         else:
             rows_print = self.rows
         print(tabulate(rows_print, headers=self.headers, floatfmt=".3f"))
-        if plot_flag is True:
-            try:
-                plot.plot_roc(
-                    classes=self.rows_by_classes.keys(),
-                    class_data=self.rows_by_classes,
-                    metric=self.metric)
-            except:
-                print("Cannot plot.")
 
 class MulticlassScorer(Scorer):
     def score(self, gt, probs, classes=None):
@@ -86,15 +78,6 @@ class MulticlassScorer(Scorer):
         self.report = classification_report(
                 gt, preds, target_names=self.classes, digits=3)
 
-    def display_scores(self, plot_flag=False):
+    def display_scores(self):
         Scorer.display_scores(self)
         print(self.report)
-        if plot_flag is True:
-            try:
-                if self.metric is not 'set':
-                    plot.plot_confusion_matrix(
-                        self.cnf,
-                        self.classes,
-                        title=self.metric)
-            except:
-                print("Cannot plot.")

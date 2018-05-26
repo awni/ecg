@@ -26,23 +26,6 @@ def get_filename_for_saving(start_time, experiment_name):
         "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
     return saved_filename
 
-def plot_model(model, start_time, experiment_name):
-    from keras.utils.visualize_util import plot
-    plot(
-        model,
-        to_file=get_folder_name(start_time, experiment_name) + '/model.png',
-        show_shapes=True,
-        show_layer_names=False)
-
-def save_params(params, start_time, experiment_name):
-    saving_filename = get_folder_name(start_time, experiment_name) + \
-        "/params.json"
-    save_str = json.dumps(params, ensure_ascii=False)
-    save_str = save_str if isinstance(save_str, str) \
-        else save_str.decode('utf-8')
-    with open(saving_filename, 'w') as outfile:
-        outfile.write(save_str)
-
 def train(args, params):
     global FOLDER_TO_SAVE
 
@@ -79,11 +62,6 @@ def train(args, params):
     })
 
     model = network.build_network(**params)
-
-    try:
-        plot_model(model, start_time, experiment_name)
-    except:
-        print("Skipping plot")
 
     if args.overfit is True:
         monitor_metric = 'loss'
