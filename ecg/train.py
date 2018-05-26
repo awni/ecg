@@ -43,31 +43,6 @@ def save_params(params, start_time, experiment_name):
     with open(saving_filename, 'w') as outfile:
         outfile.write(save_str)
 
-def get_augment_fn(params):
-    if params.get("amplitude_scale", False):
-        return amplitude_scale
-    else:
-        return None
-
-def amplitude_scale(x):
-    scales = np.random.uniform(low=0.25, high=2.0,
-                               size=(x.shape[0], 1, 1))
-    return scales * x
-
-def data_generator(x, y, batch_size, augmenter=None):
-    num_examples = x.shape[0]
-    indices = np.arange(num_examples)
-    while True:
-        np.random.shuffle(indices)
-        end = num_examples - batch_size + 1
-        for i in range(0, end, batch_size):
-            idx = indices[i:i+batch_size]
-            x_mb = x[idx, ...]
-            y_mb = y[idx, ...]
-            if augmenter is not None:
-                x_mb = augmenter(x_mb)
-            yield (x_mb, y_mb)
-
 def train(args, params):
     global FOLDER_TO_SAVE
 
@@ -137,16 +112,9 @@ def train(args, params):
 
     batch_size = params.get("batch_size", 32)
 
-    train_data = data_generator(
-                    x_train, y_train,
-                    batch_size=batch_size,
-                    augmenter=get_augment_fn(params))
-
-    steps_per_epoch = int(x_train.shape[0] / batch_size)
-
-    model.fit_generator(
-        train_data,
-        steps_per_epoch=steps_per_epoch,
+    model.fit(
+        x_train, y_train,
+        batch_size=batch_size,
         epochs=MAX_EPOCHS,
         validation_data=(x_test, y_test),
         callbacks=[checkpointer, reduce_lr, stopping],

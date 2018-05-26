@@ -1,11 +1,8 @@
 {
     "toy": false,
-    "normalizer": "robust_scale",
     "step": 256,
     "test_frac": 0.1,
     "relabel_classes": {"NSR": "SINUS", "SUDDEN_BRADY": "AVB", "AVB_TYPE2": "AVB", "AFIB": "AF", "AFL": "AF"},
-
-    "amplitude_scale": false,
 
     "conv_subsample_lengths": [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
     "conv_filter_length": 16,

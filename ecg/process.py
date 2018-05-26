@@ -2,20 +2,43 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-import featurize
 import collections
+from sklearn import preprocessing
+from tqdm import tqdm
+import warnings
+
+class Normalizer(object):
+    def __init__(self):
+        self.scaler = None
+
+    def _dim_fix(self, x):
+        if (len(x.shape) == 2):
+            warnings.warn("Expanding Dimensions...")
+            x = np.expand_dims(x, axis=-1)
+        assert(len(x.shape) == 3)
+        return x
+
+    def fit(self, x):
+        print('Fitting Normalization...')
+        x = self._dim_fix(x)
+        x = x.reshape((x.shape[0]*x.shape[1], x.shape[2]))
+        self.scaler = preprocessing.RobustScaler().fit(x)
+
+    def transform(self, x):
+        print('Applying Normalization...')
+        x = self._dim_fix(x)
+        original_shape = x.shape
+        new_shape = (x.shape[0]*x.shape[1], x.shape[2])
+        return self.scaler.transform(
+            x.reshape(new_shape)).reshape(original_shape)
 
 class Processor(object):
     def __init__(
         self,
         use_one_hot_labels=True,
-        normalizer=False,
         relabel_classes={},
-        ignore_classes=[],
         **kwargs
     ):
-        self.normalizer = normalizer
-        self.ignore_classes = ignore_classes
         self.relabel_classes = relabel_classes
         self.use_one_hot_labels = use_one_hot_labels
         self.n = None
@@ -24,14 +47,13 @@ class Processor(object):
         self.class_to_int = None
 
     def process_x(self, fit):
-        if self.normalizer is not False:
-            if fit is True and len(self.x_train) > 0:
-                self.n = featurize.Normalizer(self.normalizer)
-                self.n.fit(self.x_train)
-                if len(self.x_train) > 0:
-                    self.x_train = self.n.transform(self.x_train)
-            if len(self.x_test) > 0:
-                self.x_test = self.n.transform(self.x_test)
+        if fit is True and len(self.x_train) > 0:
+            self.n = Normalizer()
+            self.n.fit(self.x_train)
+            if len(self.x_train) > 0:
+                self.x_train = self.n.transform(self.x_train)
+        if len(self.x_test) > 0:
+            self.x_test = self.n.transform(self.x_test)
 
     def process_y(self):
         self.y_train = self.transform_to_int_label(self.y_train)
@@ -57,18 +79,6 @@ class Processor(object):
                 y_new = [[self.relabel_classes[s] if s in self.relabel_classes
                          else s for s in y_indiv] for y_indiv in y]
                 setattr(loader, 'y' + split, y_new)
-
-        if len(self.ignore_classes) > 0:
-            for ignore_class in self.ignore_classes:
-                print("Ignoring class: " + ignore_class)
-                for split in ['_train', '_test']:
-                    attr = getattr(loader, 'y' + split)
-                    if len(attr) > 0:
-                        indices = np.where(np.sum(attr == ignore_class,
-                                           axis=1) == 0)[0]
-                        for prop in ['x', 'y']:
-                            setattr(loader, prop + split, getattr(
-                                loader, prop + split)[indices])
 
         if fit is True:
             y_tot = list(loader.y_train) + list(loader.y_test)
