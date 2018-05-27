@@ -15,10 +15,13 @@ def get_object_from_dict(**params):
     args = AttrDict(**params)
     return args
 
-def save(params, preproc, dirname):
-    param_f = os.path.join(dirname, "params.json")
-    with open(param_f, 'w') as fid:
-        json.dump(params, fid)
+def load(dirname):
+    preproc_f = os.path.join(dirname, "preproc.bin")
+    with open(preproc_f, 'r') as fid:
+        preproc = pickle.load(fid)
+    return preproc
+
+def save(preproc, dirname):
     preproc_f = os.path.join(dirname, "preproc.bin")
     with open(preproc_f, 'w') as fid:
         pickle.dump(preproc, fid)
