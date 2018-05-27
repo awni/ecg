@@ -49,8 +49,6 @@ def load_episodes(record):
             episode['offset_round'] = episode['offset']
         else:
             episode['offset_round'] = episodes[e+1]['onset_round'] - 1
-
-
     return episodes
 
 def make_labels(episodes):
@@ -94,11 +92,14 @@ def load_train(data_path, dev_frac, blacklist_paths):
     blacklist = build_blacklist(blacklist_paths)
     records = get_all_records(data_path)
     train, dev = stratify(records, dev_frac)
+    print("Constructing train...")
     train = construct_dataset(train)
+    print("Constructing dev...")
     dev = construct_dataset(dev)
     return train, dev
 
 def load_test(data_path):
+    # TODO, figure this out
     pass
 
 def make_json(save_path, dataset):
@@ -119,5 +120,5 @@ if __name__ == "__main__":
     train, dev = load_train(data_path, dev_frac, blacklist_paths)
     make_json("saved/train.json", train)
     make_json("saved/dev.json", dev)
-    test = load_test("path_to_test_set")
-    make_json("saved/test.json", test)
+    #test = load_test("path_to_test_set")
+    #make_json("saved/test.json", test)

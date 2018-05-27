@@ -5,6 +5,7 @@ from __future__ import absolute_import
 import json
 import keras
 import numpy as np
+import tqdm
 
 STEP = 256
 
@@ -33,9 +34,11 @@ def compute_mean_std(x):
 def load_dataset(data_json):
     with open(data_json, 'r') as fid:
         data = [json.loads(l) for l in fid]
-        labels = [d['labels'] for d in data]
-        ecg = [load_ecg(d['ecg']) for d in data]
-    return ecg, labels
+    labels = []; ecgs = []
+    for d in tqdm.tqdm(data):
+        labels.append(d['labels'])
+        ecgs.append(load_ecg(d['ecg']))
+    return ecgs, labels
 
 def load_ecg(record):
     with open(record, 'r') as fid:

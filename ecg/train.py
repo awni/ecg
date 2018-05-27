@@ -29,8 +29,11 @@ def get_filename_for_saving(save_dir):
 
 def train(args, params):
 
+    print("Loading training set...")
     train = load.load_dataset(params['train'])
+    print("Loading dev set...")
     dev = load.load_dataset(params['dev'])
+    print("Building preprocessor...")
     preproc = load.Preproc(*train)
 
     train_x, train_y = preproc.process(*train)
