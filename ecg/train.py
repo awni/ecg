@@ -44,7 +44,7 @@ def train(args, params):
 
     save_dir = make_save_dir(params['save_dir'], args.experiment)
 
-    util.save(params, preproc, save_dir)
+    util.save(preproc, save_dir)
 
     params.update({
         "input_shape": train_x[0].shape,
