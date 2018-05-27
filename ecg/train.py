@@ -1,116 +1,80 @@
 from __future__ import print_function
-from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
 import argparse
 import json
-import os
-import time
+import keras
 import numpy as np
+import os
+import random
+import time
 
 import network
-import random
 import load
+import util
 
 MAX_EPOCHS = 100
 
-def get_folder_name(start_time, experiment_name):
-    folder_name = FOLDER_TO_SAVE + experiment_name + '/' + start_time
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
-    return folder_name
+def make_save_dir(dirname, experiment_name):
+    start_time = str(int(time.time())) + '-' + str(random.randrange(1000))
+    save_dir = os.path.join(dirname, experiment_name, start_time)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    return save_dir
 
-def get_filename_for_saving(start_time, experiment_name):
-    saved_filename = get_folder_name(start_time, experiment_name) + \
-        "/{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5"
-    return saved_filename
+def get_filename_for_saving(save_dir):
+    return os.path.join(save_dir,
+            "{val_loss:.3f}-{val_acc:.3f}-{epoch:03d}-{loss:.3f}-{acc:.3f}.hdf5")
 
 def train(args, params):
-    global FOLDER_TO_SAVE
 
-    if args.overfit is True:
-        params["overfit"] = True
-        params["gaussian_noise"] = 0
-        for key in params:
-            if "dropout" in key:
-                params[key] = 0
+    train = load.load_dataset(params['train'])
+    dev = load.load_dataset(params['dev'])
+    preproc = load.Preproc(*train)
 
-    params["test_split_start"] = args.test_split_start
+    train_x, train_y = preproc.process(*train)
+    print("Training size: " + str(len(train_x)) + " examples.")
 
-    dl, processor = load.load_train(params)
+    dev_x, dev_y = preproc.process(*dev)
+    print("Dev size: " + str(len(dev_x)) + " examples.")
 
-    x_train = dl.x_train
-    y_train = dl.y_train
-    print("Training size: " + str(len(x_train)) + " examples.")
+    save_dir = make_save_dir(params['save_dir'], args.experiment)
 
-    x_test = dl.x_test
-    y_test = dl.y_test
-    print("Test size: " + str(len(x_test)) + " examples.")
-
-    start_time = str(int(time.time())) + '-' + str(random.randrange(1000))
-    experiment_name = args.experiment
-
-    FOLDER_TO_SAVE = params["FOLDER_TO_SAVE"]
-    params["EXPERIMENT_NAME"] = experiment_name
-
-    save_params(params, start_time, experiment_name)
+    util.save(params, preproc, save_dir)
 
     params.update({
-        "input_shape": x_train[0].shape,
-        "num_categories": len(processor.classes)
+        "input_shape": train_x[0].shape,
+        "num_categories": len(preproc.classes)
     })
 
     model = network.build_network(**params)
 
-    if args.overfit is True:
-        monitor_metric = 'loss'
-    else:
-        monitor_metric = 'val_loss'
+    stopping = keras.callbacks.EarlyStopping(patience=8)
 
-    from keras.callbacks import EarlyStopping
-    stopping = EarlyStopping(
-        monitor=monitor_metric,
-        patience=params.get('early_stop_patience', 8),
-        verbose=args.verbose)
+    reduce_lr = keras.callbacks.ReduceLROnPlateau(
+        factor=0.1,
+        patience=2,
+        min_lr=params["learning_rate"] * 0.001)
 
-    from keras.callbacks import ReduceLROnPlateau
-    reduce_lr = ReduceLROnPlateau(
-        monitor=monitor_metric,
-        factor=params.get('reduce_lr_factor', 0.1),
-        patience=params.get('reduce_lr_patience', 2),
-        min_lr=params["learning_rate"] * 0.001,
-        verbose=args.verbose)
-
-    from keras.callbacks import ModelCheckpoint
-    checkpointer = ModelCheckpoint(
-        filepath=get_filename_for_saving(start_time, experiment_name),
-        save_best_only=False,
-        verbose=args.verbose)
+    checkpointer = keras.callbacks.ModelCheckpoint(
+        filepath=get_filename_for_saving(save_dir),
+        save_best_only=False)
 
     batch_size = params.get("batch_size", 32)
 
     model.fit(
-        x_train, y_train,
+        train_x, train_y,
         batch_size=batch_size,
         epochs=MAX_EPOCHS,
-        validation_data=(x_test, y_test),
-        callbacks=[checkpointer, reduce_lr, stopping],
-        verbose=args.verbose)
+        validation_data=(dev_x, dev_y),
+        callbacks=[checkpointer, reduce_lr, stopping])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("config_file", help="path to config file")
     parser.add_argument("--experiment", "-e", help="tag with experiment name",
                         default="default")
-    parser.add_argument("--verbose", "-v", help="verbosity level", default=1,
-                        type=int)
-    parser.add_argument("--test_split_start", "-t", help="test split start",
-                        default=0, type=int)
-    parser.add_argument(
-        "--overfit",
-        help="whether to overfit training set",
-        action="store_true")
     args = parser.parse_args()
     params = json.load(open(args.config_file, 'r'))
     train(args, params)

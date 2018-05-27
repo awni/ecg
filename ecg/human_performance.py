@@ -35,7 +35,6 @@ def human_gt_and_probs(params, x_gt, ground_truths, processor, review_indiv=Fals
     probs = np.concatenate(tuple(probs_all), axis=0)
     return ground_truths, probs
 
-
 def human_performance(args, params):
     x_gt, ground_truths, processor, dl = load.load_test(
         params, fit_processor=True)

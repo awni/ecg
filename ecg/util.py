@@ -1,6 +1,6 @@
 import os
+import cPickle as pickle
 import json
-import time
 
 def get_model_params(model_path):
     params = json.load(open(
@@ -14,3 +14,11 @@ def get_object_from_dict(**params):
             self.__dict__ = self
     args = AttrDict(**params)
     return args
+
+def save(params, preproc, dirname):
+    param_f = os.path.join(dirname, "params.json")
+    with open(param_f, 'w') as fid:
+        json.dump(params, fid)
+    preproc_f = os.path.join(dirname, "preproc.bin")
+    with open(preproc_f, 'w') as fid:
+        pickle.dump(preproc, fid)

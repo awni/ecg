@@ -1,9 +1,4 @@
 {
-    "toy": false,
-    "step": 256,
-    "test_frac": 0.1,
-    "relabel_classes": {"NSR": "SINUS", "SUDDEN_BRADY": "AVB", "AVB_TYPE2": "AVB", "AFIB": "AF", "AFL": "AF"},
-
     "conv_subsample_lengths": [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
     "conv_filter_length": 16,
     "conv_num_filters_start": 32,
@@ -14,10 +9,9 @@
     "conv_increase_channels_at": 4,
 
     "learning_rate": 0.001,
-    "optimizer": "adam",
     "batch_size": 128,
 
-    "blacklist_paths": ["./data/label_review/CARDIOL_MAY_2017/", "./data/batches/kids_blacklist", "./data/batches/vf_blacklist"],
-    "data_path": "./data/batches",
-    "FOLDER_TO_SAVE": "./saved/"
+    "train": "saved/train.json",
+    "dev": "saved/dev.json",
+    "save_dir": "saved"
 }
