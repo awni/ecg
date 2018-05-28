@@ -20,12 +20,11 @@ def predict(data_json, model_path):
     model = keras.models.load_model(model_path)
     probs = model.predict(x, verbose=1)
 
-    print(probs.shape)
-
+    return probs
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("data_json", help="path to data json")
     parser.add_argument("model_path", help="path to model")
     args = parser.parse_args()
-    predict(args.data_json, args.model_path)
+    probs = predict(args.data_json, args.model_path)

@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import argparse
 import fnmatch
+import glob
 import json
 import numpy as np
 import os
@@ -30,10 +31,11 @@ def round_to_step(n, step):
     else:
         return n + (step - diff)
 
-def load_episodes(record):
+def load_episodes(record, epi_ext):
 
     base = os.path.splitext(record)[0]
-    ep_json = base + ".episodes.json" 
+    ep_json = base + epi_ext
+    ep_json = glob.glob(ep_json)[0]
 
     with open(ep_json, 'r') as fid:
         episodes = json.load(fid)['episodes']
@@ -71,10 +73,10 @@ def build_blacklist(blacklist_paths):
             blacklist.add(patient_id(record))
     return blacklist
 
-def construct_dataset(records):
+def construct_dataset(records, epi_ext='.episodes.json'):
     data = []
     for record in tqdm.tqdm(records):
-        labels = make_labels(load_episodes(record))
+        labels = make_labels(load_episodes(record, epi_ext))
         assert len(labels) != 0, "Zero labels?"
         data.append((record, labels))
     return data
@@ -99,8 +101,10 @@ def load_train(data_path, dev_frac, blacklist_paths):
     return train, dev
 
 def load_test(data_path):
-    # TODO, figure this out
-    pass
+    records = get_all_records(data_path)
+    print("Constructing test...")
+    test = construct_dataset(records, '_grp*.episodes.json')
+    return test
 
 def make_json(save_path, dataset):
     with open(save_path, 'w') as fid:
@@ -120,5 +124,5 @@ if __name__ == "__main__":
     train, dev = load_train(data_path, dev_frac, blacklist_paths)
     make_json("saved/train.json", train)
     make_json("saved/dev.json", dev)
-    #test = load_test("path_to_test_set")
-    #make_json("saved/test.json", test)
+    test = load_test("data/label_review/CARDIOL_UNIQ_P/")
+    make_json("saved/test.json", test)
