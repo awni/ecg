@@ -14,11 +14,12 @@ STEP = 256
 RELABEL = {"NSR": "SINUS", "SUDDEN_BRADY": "AVB",
            "AVB_TYPE2": "AVB", "AFIB": "AF", "AFL": "AF"}
 
-def get_all_records(path):
+def get_all_records(path, blacklist=set()):
     records = []
     for root, dirnames, filenames in os.walk(path):
         for filename in fnmatch.filter(filenames, '*.ecg'):
-            records.append(os.path.join(root, filename))
+            if patient_id(filename) not in blacklist:
+                records.append(os.path.join(root, filename))
     return records
 
 def patient_id(record):
@@ -92,7 +93,7 @@ def stratify(records, dev_frac):
 
 def load_train(data_path, dev_frac, blacklist_paths):
     blacklist = build_blacklist(blacklist_paths)
-    records = get_all_records(data_path)
+    records = get_all_records(data_path, blacklist)
     train, dev = stratify(records, dev_frac)
     print("Constructing train...")
     train = construct_dataset(train)
