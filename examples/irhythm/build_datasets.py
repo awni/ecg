@@ -19,7 +19,8 @@ def get_all_records(path, blacklist=set()):
     for root, dirnames, filenames in os.walk(path):
         for filename in fnmatch.filter(filenames, '*.ecg'):
             if patient_id(filename) not in blacklist:
-                records.append(os.path.join(root, filename))
+                records.append(os.path.abspath(
+                    os.path.join(root, filename)))
     return records
 
 def patient_id(record):
@@ -117,13 +118,15 @@ def make_json(save_path, dataset):
 
 
 if __name__ == "__main__":
-    blacklist_paths = ["data/label_review/CARDIOL_MAY_2017/",
-                       "data/batches/kids_blacklist",
-                       "data/batches/vf_blacklist"]
-    data_path = "data/batches"
+    data_dir = "/deep/group/med/irhythm/ecg/clean_30sec_recs/"
+    blacklist_paths = [
+            os.path.join(data_dir, "label_review/CARDIOL_MAY_2017/"),
+            os.path.join(data_dir, "batches/kids_blacklist"),
+            os.path.join(data_dir, "batches/vf_blacklist")]
+    data_path = os.path.join(data_dir, "batches")
     dev_frac = 0.1
     train, dev = load_train(data_path, dev_frac, blacklist_paths)
-    make_json("saved/train.json", train)
-    make_json("saved/dev.json", dev)
-    test = load_test("data/label_review/CARDIOL_UNIQ_P/")
-    make_json("saved/test.json", test)
+    make_json("train.json", train)
+    make_json("dev.json", dev)
+    test = load_test(os.path.join(data_dir, "label_review/CARDIOL_UNIQ_P/"))
+    make_json("test.json", test)
