@@ -11,7 +11,7 @@
     "learning_rate": 0.001,
     "batch_size": 128,
 
-    "train": "saved/train.json",
-    "dev": "saved/dev.json",
+    "train": "examples/irhythm/train.json",
+    "dev": "examples/irhythm/dev.json",
     "save_dir": "saved"
 }

@@ -102,10 +102,10 @@ def load_train(data_path, dev_frac, blacklist_paths):
     dev = construct_dataset(dev)
     return train, dev
 
-def load_test(data_path):
+def load_test(data_path, epi_ext):
     records = get_all_records(data_path)
     print("Constructing test...")
-    test = construct_dataset(records, '_grp*.episodes.json')
+    test = construct_dataset(records, epi_ext)
     return test
 
 def make_json(save_path, dataset):
@@ -119,14 +119,18 @@ def make_json(save_path, dataset):
 
 if __name__ == "__main__":
     data_dir = "/deep/group/med/irhythm/ecg/clean_30sec_recs/"
-    blacklist_paths = [
-            os.path.join(data_dir, "label_review/CARDIOL_MAY_2017/"),
-            os.path.join(data_dir, "batches/kids_blacklist"),
-            os.path.join(data_dir, "batches/vf_blacklist")]
-    data_path = os.path.join(data_dir, "batches")
-    dev_frac = 0.1
-    train, dev = load_train(data_path, dev_frac, blacklist_paths)
-    make_json("train.json", train)
-    make_json("dev.json", dev)
-    test = load_test(os.path.join(data_dir, "label_review/CARDIOL_UNIQ_P/"))
-    make_json("test.json", test)
+    #blacklist_paths = [
+    #        os.path.join(data_dir, "label_review/CARDIOL_MAY_2017/"),
+    #        os.path.join(data_dir, "batches/kids_blacklist"),
+    #        os.path.join(data_dir, "batches/vf_blacklist")]
+    #data_path = os.path.join(data_dir, "batches")
+    #dev_frac = 0.1
+    #train, dev = load_train(data_path, dev_frac, blacklist_paths)
+    #make_json("train.json", train)
+    #make_json("dev.json", dev)
+    test_dir = os.path.join(data_dir, "label_review/CARDIOL_UNIQ_P/")
+    #test = load_test(test_dir, '_grp*.episodes.json')
+    #make_json("test.json", test)
+    for i in range(5):
+        test = load_test(test_dir, "_rev{}.episodes.json".format(i))
+        make_json("test_rev{}.json".format(i), test)

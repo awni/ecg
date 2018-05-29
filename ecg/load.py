@@ -13,18 +13,24 @@ class Preproc:
 
     def __init__(self, ecg, labels):
         self.mean, self.std = compute_mean_std(ecg)
-        self.classes = set(l for label in labels for l in label)
+        self.classes = sorted(set(l for label in labels for l in label))
         self.int_to_class = dict( zip(range(len(self.classes)), self.classes))
         self.class_to_int = {c : i for i, c in self.int_to_class.items()}
 
     def process(self, x, y):
+        return self.process_x(x), self.process_y(y)
+
+    def process_x(self, x):
         x = np.array(x)
         x = (x - self.mean) / self.std
         x = x[:,:, None]
+        return x
+
+    def process_y(self, y):
         y = np.array([[self.class_to_int[c] for c in s] for s in y])
         y = keras.utils.np_utils.to_categorical(
                 y, num_classes=len(self.classes))
-        return x, y
+        return y
 
 def compute_mean_std(x):
     x = np.array(x)

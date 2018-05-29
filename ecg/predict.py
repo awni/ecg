@@ -2,15 +2,11 @@ from __future__ import print_function
 
 import argparse
 import numpy as np
-import json
 import keras
 import os
 
 import load
 import util
-
-def get_model_probs(model_path, x):
-    return probs
 
 def predict(data_json, model_path):
     preproc = util.load(os.path.dirname(model_path))
