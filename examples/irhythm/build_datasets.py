@@ -102,10 +102,23 @@ def load_train(data_path, dev_frac, blacklist_paths):
     dev = construct_dataset(dev)
     return train, dev
 
+def load_rev_id(record, epi_ext):
+
+    base = os.path.splitext(record)[0]
+    ep_json = base + epi_ext
+    ep_json = glob.glob(ep_json)[0]
+
+    with open(ep_json, 'r') as fid:
+        return json.load(fid)['reviewer_id']
+
 def load_test(data_path, epi_ext):
     records = get_all_records(data_path)
     print("Constructing test...")
     test = construct_dataset(records, epi_ext)
+    # Get the reviewer id
+    reviewers = [load_rev_id(r, epi_ext) for r in records]
+    test = [(e, l, r)
+            for (e, l), r in zip(test, reviewers)]
     return test
 
 def make_json(save_path, dataset):
@@ -113,21 +126,23 @@ def make_json(save_path, dataset):
         for d in dataset:
             datum = {'ecg' : d[0],
                      'labels' : d[1]}
+            if len(d) == 3:
+                datum['reviewer'] = d[2]
             json.dump(datum, fid)
             fid.write('\n')
 
 
 if __name__ == "__main__":
     data_dir = "/deep/group/med/irhythm/ecg/clean_30sec_recs/"
-    blacklist_paths = [
-            os.path.join(data_dir, "label_review/CARDIOL_MAY_2017/"),
-            os.path.join(data_dir, "batches/kids_blacklist"),
-            os.path.join(data_dir, "batches/vf_blacklist")]
-    data_path = os.path.join(data_dir, "batches")
-    dev_frac = 0.1
-    train, dev = load_train(data_path, dev_frac, blacklist_paths)
-    make_json("train.json", train)
-    make_json("dev.json", dev)
+#    blacklist_paths = [
+#            os.path.join(data_dir, "label_review/CARDIOL_MAY_2017/"),
+#            os.path.join(data_dir, "batches/kids_blacklist"),
+#            os.path.join(data_dir, "batches/vf_blacklist")]
+#    data_path = os.path.join(data_dir, "batches")
+#    dev_frac = 0.1
+#    train, dev = load_train(data_path, dev_frac, blacklist_paths)
+#    make_json("train.json", train)
+#    make_json("dev.json", dev)
     test_dir = os.path.join(data_dir, "label_review/CARDIOL_UNIQ_P/")
     test = load_test(test_dir, '_grp*.episodes.json')
     make_json("test.json", test)
