@@ -9,16 +9,18 @@ import tqdm
 STEP = 256
 
 def load_ecg_mat(ecg_file):
-    return sio.loadmat(ecg_file)['val'].squeeze()
+    return np.load(ecg_file)
+    #return sio.loadmat(ecg_file)['val'].squeeze()
 
-def resample_and_save(data_path, record):
-    ecg_file = os.path.join(data_path, record + ".mat")
-    ecg = load_ecg_mat(ecg_file)
-    ecg = ssi.resample(ecg, int((200 / 300.) * ecg.size))
-    ecg = ecg.astype(np.float32)
-    new_ecg_file = os.path.join(data_path, record + ".npy")
-    np.save(new_ecg_file, ecg) 
-    return ecg, new_ecg_file
+# TODO, this should go into the preprocessor
+def resample_and_save(dataset, data_path):
+    for record, label in dataset:
+        ecg_file = os.path.join(data_path, record + ".mat")
+        ecg = load_ecg_mat(ecg_file)
+        ecg = ssi.resample(ecg, int((200 / 300.) * ecg.size))
+        ecg = ecg.astype(np.float32)
+        new_ecg_file = os.path.join(data_path, record + ".npy")
+        np.save(new_ecg_file, ecg) 
 
 def load_all(data_path):
     label_file = os.path.join(data_path, "REFERENCE-v3.csv")
@@ -27,7 +29,8 @@ def load_all(data_path):
 
     dataset = []
     for record, label in tqdm.tqdm(records):
-        ecg, ecg_file = resample_and_save(data_path, record)
+        ecg_file = os.path.join(data_path, record + ".npy")
+        ecg = load_ecg_mat(ecg_file)
         num_labels = ecg.shape[0] / STEP
         dataset.append((ecg_file, [label]*num_labels))
     return dataset 
@@ -50,10 +53,13 @@ def make_json(save_path, dataset):
             fid.write('\n')
 
 if __name__ == "__main__":
+    random.seed(2018)
+
     dev_frac = 0.1
     test_frac = 0.1
     data_path = "/deep/group/med/alivecor/training2017/"
     dataset = load_all(data_path)
+    #resample_and_save(dataset, data_path)
     train, dev, test = split(dataset, dev_frac, test_frac)
     make_json("train.json", train)
     make_json("dev.json", dev)

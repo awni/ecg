@@ -7,6 +7,7 @@ import keras
 import numpy as np
 import os
 import random
+import scipy.io as sio
 import tqdm
 
 STEP = 256
@@ -35,20 +36,21 @@ class Preproc:
         return self.process_x(x), self.process_y(y)
 
     def process_x(self, x):
-        x = zero_pad(x)
+        x = pad(x)
         x = (x - self.mean) / self.std
         x = x[:, :, None]
         return x
 
     def process_y(self, y):
-        y = zero_pad([[self.class_to_int[c] for c in s] for s in y])
+        # TODO, awni, fix hack pad with noise for cinc
+        y = pad([[self.class_to_int[c] for c in s] for s in y], val=3, dtype=np.int32) 
         y = keras.utils.np_utils.to_categorical(
                 y, num_classes=len(self.classes))
         return y
 
-def zero_pad(x):
+def pad(x, val=0, dtype=np.float32):
     max_len = max(len(i) for i in x)
-    padded = np.zeros((len(x), max_len))
+    padded = np.full((len(x), max_len), val, dtype=dtype)
     for e, i in enumerate(x):
         padded[e, :len(i)] = i
     return padded
@@ -70,6 +72,8 @@ def load_dataset(data_json):
 def load_ecg(record):
     if os.path.splitext(record)[1] == ".npy":
         ecg = np.load(record)
+    elif os.path.splitext(record)[1] == ".mat":
+        ecg = sio.loadmat(record)['val'].squeeze()
     else:
         with open(record, 'r') as fid:
             ecg = np.fromfile(fid, dtype=np.int16)
