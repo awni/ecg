@@ -35,19 +35,16 @@ def train(args, params):
     dev = load.load_dataset(params['dev'])
     print("Building preprocessor...")
     preproc = load.Preproc(*train)
+    print("Training size: " + str(len(train[0])) + " examples.")
+    print("Dev size: " + str(len(dev[0])) + " examples.")
 
-    train_x, train_y = preproc.process(*train)
-    print("Training size: " + str(len(train_x)) + " examples.")
-
-    dev_x, dev_y = preproc.process(*dev)
-    print("Dev size: " + str(len(dev_x)) + " examples.")
 
     save_dir = make_save_dir(params['save_dir'], args.experiment)
 
     util.save(preproc, save_dir)
 
     params.update({
-        "input_shape": train_x[0].shape,
+        "input_shape": [None, 1],
         "num_categories": len(preproc.classes)
     })
 
@@ -66,12 +63,25 @@ def train(args, params):
 
     batch_size = params.get("batch_size", 32)
 
-    model.fit(
-        train_x, train_y,
-        batch_size=batch_size,
-        epochs=MAX_EPOCHS,
-        validation_data=(dev_x, dev_y),
-        callbacks=[checkpointer, reduce_lr, stopping])
+    if params.get("generator", False):
+        train_gen = load.data_generator(batch_size, preproc, *train)
+        dev_gen = load.data_generator(batch_size, preproc, *dev)
+        model.fit_generator(
+            train_gen,
+            steps_per_epoch=int(len(train[0]) / batch_size),
+            epochs=MAX_EPOCHS,
+            validation_data=dev_gen,
+            validation_steps=int(len(dev[0]) / batch_size),
+            callbacks=[checkpointer, reduce_lr, stopping])
+    else:
+        train_x, train_y = preproc.process(*train)
+        dev_x, dev_y = preproc.process(*dev)
+        model.fit(
+            train_x, train_y,
+            batch_size=batch_size,
+            epochs=MAX_EPOCHS,
+            validation_data=(dev_x, dev_y),
+            callbacks=[checkpointer, reduce_lr, stopping])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

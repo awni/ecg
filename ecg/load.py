@@ -5,9 +5,23 @@ from __future__ import absolute_import
 import json
 import keras
 import numpy as np
+import os
+import random
 import tqdm
 
 STEP = 256
+
+def data_generator(batch_size, preproc, x, y):
+    num_examples = len(x)
+    examples = zip(x, y)
+    examples = sorted(examples, key = lambda x: x[0].shape[0])
+    end = num_examples - batch_size + 1
+    batches = [examples[i:i+batch_size] for i in range(0, end)]
+    random.shuffle(batches)
+    while True:
+        for batch in batches:
+            x, y = zip(*batch)
+            yield preproc.process(x, y)
 
 class Preproc:
 
@@ -21,19 +35,26 @@ class Preproc:
         return self.process_x(x), self.process_y(y)
 
     def process_x(self, x):
-        x = np.array(x)
+        x = zero_pad(x)
         x = (x - self.mean) / self.std
-        x = x[:,:, None]
+        x = x[:, :, None]
         return x
 
     def process_y(self, y):
-        y = np.array([[self.class_to_int[c] for c in s] for s in y])
+        y = zero_pad([[self.class_to_int[c] for c in s] for s in y])
         y = keras.utils.np_utils.to_categorical(
                 y, num_classes=len(self.classes))
         return y
 
+def zero_pad(x):
+    max_len = max(len(i) for i in x)
+    padded = np.zeros((len(x), max_len))
+    for e, i in enumerate(x):
+        padded[e, :len(i)] = i
+    return padded
+
 def compute_mean_std(x):
-    x = np.array(x)
+    x = np.hstack(x)
     return (np.mean(x).astype(np.float32),
            np.std(x).astype(np.float32))
 
@@ -47,16 +68,20 @@ def load_dataset(data_json):
     return ecgs, labels
 
 def load_ecg(record):
-    with open(record, 'r') as fid:
-        ecg = np.fromfile(fid, dtype=np.int16)
+    if os.path.splitext(record)[1] == ".npy":
+        ecg = np.load(record)
+    else:
+        with open(record, 'r') as fid:
+            ecg = np.fromfile(fid, dtype=np.int16)
 
     trunc_samp = STEP * int(len(ecg) / STEP)
     return ecg[:trunc_samp]
 
 if __name__ == "__main__":
-    data_json = "saved/train.json"
+    data_json = "examples/cinc17/train.json"
     train = load_dataset(data_json)
     preproc = Preproc(*train)
-    x, y = preproc.process(*train)
-    print(x.shape, y.shape)
-    print(x.dtype)
+    gen = data_generator(32, preproc, *train)
+    for x, y in gen:
+        print(x.shape, y.shape)
+        break
