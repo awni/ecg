@@ -18,13 +18,13 @@ def add_conv_weight(
         num_filters,
         subsample_length=1,
         **params):
-    from keras.layers.convolutional import Convolution1D
-    layer = Convolution1D(
-        nb_filter=num_filters,
-        filter_length=filter_length,
-        border_mode='same',
-        subsample_length=subsample_length,
-        init=params["conv_init"])(layer)
+    from keras.layers import Conv1D 
+    layer = Conv1D(
+        filters=num_filters,
+        kernel_size=filter_length,
+        strides=subsample_length,
+        padding='same',
+        kernel_initializer=params["conv_init"])(layer)
     return layer
 
 
@@ -45,8 +45,8 @@ def resnet_block(
         subsample_length,
         block_index,
         **params):
-    from keras.layers import merge
-    from keras.layers.pooling import MaxPooling1D
+    from keras.layers import Add 
+    from keras.layers import MaxPooling1D
     from keras.layers.core import Lambda
 
     def zeropad(x):
@@ -59,7 +59,7 @@ def resnet_block(
         shape[2] *= 2
         return tuple(shape)
 
-    shortcut = MaxPooling1D(pool_length=subsample_length)(layer)
+    shortcut = MaxPooling1D(pool_size=subsample_length)(layer)
     zero_pad = (block_index % params["conv_increase_channels_at"]) == 0 \
         and block_index > 0
     if zero_pad is True:
@@ -77,7 +77,7 @@ def resnet_block(
             num_filters,
             subsample_length if i == 0 else 1,
             **params)
-    layer = merge([shortcut, layer], mode="sum")
+    layer = Add()([shortcut, layer])
     return layer
 
 def get_num_filters_at_index(index, num_start_filters, **params):
@@ -111,19 +111,10 @@ def add_output_layer(layer, **params):
     return Activation('softmax')(layer)
 
 def add_compile(model, **params):
-    if params["optimizer"] == "adam":
-        from keras.optimizers import Adam
-        optimizer = Adam(
-            lr=params["learning_rate"],
-            clipnorm=params.get("clipnorm", 1))
-    else:
-        assert(params["optimizer"] == 'sgd')
-        from keras.optimizers import SGD
-        optimizer = SGD(
-            lr=params["learning_rate"],
-            decay=params.get("decay", 1e-4),
-            momentum=params.get("momentum", 0.9),
-            clipnorm=params.get("clipnorm", 1))
+    from keras.optimizers import Adam
+    optimizer = Adam(
+        lr=params["learning_rate"],
+        clipnorm=params.get("clipnorm", 1))
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=optimizer,
@@ -142,6 +133,6 @@ def build_network(**params):
         layer = add_resnet_layers(inputs, **params)
 
     output = add_output_layer(layer, **params)
-    model = Model(input=[inputs], output=[output])
+    model = Model(inputs=[inputs], outputs=[output])
     add_compile(model, **params)
     return model
