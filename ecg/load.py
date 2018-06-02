@@ -17,7 +17,8 @@ def data_generator(batch_size, preproc, x, y):
     examples = zip(x, y)
     examples = sorted(examples, key = lambda x: x[0].shape[0])
     end = num_examples - batch_size + 1
-    batches = [examples[i:i+batch_size] for i in range(0, end)]
+    batches = [examples[i:i+batch_size]
+                for i in range(0, end, batch_size)]
     random.shuffle(batches)
     while True:
         for batch in batches:
@@ -74,7 +75,7 @@ def load_ecg(record):
         ecg = np.load(record)
     elif os.path.splitext(record)[1] == ".mat":
         ecg = sio.loadmat(record)['val'].squeeze()
-    else:
+    else: # Assumes binary 16 bit integers
         with open(record, 'r') as fid:
             ecg = np.fromfile(fid, dtype=np.int16)
 
