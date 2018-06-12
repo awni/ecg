@@ -23,14 +23,12 @@ def load_all(data_path):
         dataset.append((ecg_file, [label]*num_labels))
     return dataset 
 
-def split(dataset, dev_frac, test_frac):
+def split(dataset, dev_frac):
     dev_cut = int(dev_frac * len(dataset))
-    test_cut = dev_cut + int(test_frac * len(dataset))
     random.shuffle(dataset)
     dev = dataset[:dev_cut]
-    test = dataset[dev_cut:test_cut]
-    train = dataset[test_cut:]
-    return train, dev, test
+    train = dataset[dev_cut:]
+    return train, dev
 
 def make_json(save_path, dataset):
     with open(save_path, 'w') as fid:
@@ -44,11 +42,9 @@ if __name__ == "__main__":
     random.seed(2018)
 
     dev_frac = 0.1
-    test_frac = 0.1
     data_path = "/deep/group/med/alivecor/training2017/"
     dataset = load_all(data_path)
-    train, dev, test = split(dataset, dev_frac, test_frac)
+    train, dev = split(dataset, dev_frac)
     make_json("train.json", train)
     make_json("dev.json", dev)
-    make_json("test.json", test)
 

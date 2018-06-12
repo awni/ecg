@@ -1,0 +1,11 @@
+# file: dependencies.txt
+#
+# This file lists additional Debian packages that must be installed
+# prior to running your entry's 'setup.sh' and 'next.sh' scripts.
+# Each package must be on a separate line.
+
+python-six = 1.10.0-3
+python-pbr        = 1.8.0-4.1~bpo8+1
+python-pip
+virtualenv
+libopenblas-base

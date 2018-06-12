@@ -134,5 +134,6 @@ def build_network(**params):
 
     output = add_output_layer(layer, **params)
     model = Model(inputs=[inputs], outputs=[output])
-    add_compile(model, **params)
+    if params.get("compile", True):
+        add_compile(model, **params)
     return model
