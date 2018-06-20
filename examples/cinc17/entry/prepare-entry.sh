@@ -7,7 +7,6 @@ set -o pipefail
 
 mkdir entry && cd entry
 
-pip download -r requirements.txt -d packages
 
 ## Copy source code files
 echo `pwd`
@@ -18,9 +17,8 @@ cp ../next.sh .
 cp ../AUTHORS.txt .
 cp ../dependencies.txt .
 cp ../evaler.py .
-cp ../requirements.txt .
-cp ../weights_only.py .
-cp -r ../packages .
+
+pip download -r ../requirements.txt -d packages
 
 src_dir='../../../../ecg'
 for f in 'util.py' 'load.py' 'network.py'; do
@@ -28,11 +26,11 @@ for f in 'util.py' 'load.py' 'network.py'; do
 done
 
 ## Copy model files
-python weights_only.py /sailhome/awni/ecg/saved/default/1528249597-44/0.412-0.870-015-0.309-0.892.hdf5
-cp /sailhome/awni/ecg/saved/default/1528249597-44/preproc.bin preproc.bin 
+python ../weights_only.py $1
+cp `dirname $1`/preproc.bin preproc.bin 
 
 echo "==== running entry script on validation set ===="
-validation=/deep/group/med/alivecor/sample2017/validation
+validation=../../data/sample2017/validation
 
 for r in `cat $validation/RECORDS`; do
     echo $r

@@ -11,13 +11,14 @@ def load_ecg_mat(ecg_file):
     return sio.loadmat(ecg_file)['val'].squeeze()
 
 def load_all(data_path):
-    label_file = os.path.join(data_path, "REFERENCE-v3.csv")
+    label_file = os.path.join(data_path, "../REFERENCE-v3.csv")
     with open(label_file, 'r') as fid:
         records = [l.strip().split(",") for l in fid]
 
     dataset = []
     for record, label in tqdm.tqdm(records):
         ecg_file = os.path.join(data_path, record + ".mat")
+        ecg_file = os.path.abspath(ecg_file)
         ecg = load_ecg_mat(ecg_file)
         num_labels = ecg.shape[0] / STEP
         dataset.append((ecg_file, [label]*num_labels))
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     random.seed(2018)
 
     dev_frac = 0.1
-    data_path = "/deep/group/med/alivecor/training2017/"
+    data_path = "data/training2017/"
     dataset = load_all(data_path)
     train, dev = split(dataset, dev_frac)
     make_json("train.json", train)

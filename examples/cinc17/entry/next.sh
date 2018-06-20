@@ -23,7 +23,8 @@ set -o pipefail
 
 RECORD=$1
 
-source myenv/bin/activate
+# || true so we can run locally
+source myenv/bin/activate || true
 
 printf "$RECORD," >> answers.txt
 python evaler.py $RECORD >> answers.txt

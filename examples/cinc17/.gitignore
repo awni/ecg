@@ -1,1 +1,3 @@
-*.json
+train.json
+dev.json
+data/
