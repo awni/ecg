@@ -2,9 +2,9 @@
 # The Physionet 2017 Challenge 
 
 Before following this guide first follow the setup instructions in the top-level
-[README](../../../README.md).
+[README](../../README.md).
 
-These instructions walk-through the training and evaluation of a model on the
+These instructions go through the training and evaluation of a model on the
 [Physionet 2017 challenge](https://www.physionet.org/challenge/2017/) dataset.
 
 ## Data
@@ -27,9 +27,9 @@ python ecg/train.py examples/cinc17/config.json -e cinc17
 
 The test dataset for the Physionet 2017 challenge is hidden and maintained by
 the challenge organizers. To evaluate on this dataset requires packaging and
-submitting the code and model to a test server. In general you will need to be
-familiar with the instructions on the challenge
-[website](https://www.physionet.org/challenge/2017/) but we have included some
+submitting the code, dependencies and model to a test server. In general you
+will need to be familiar with the instructions on the challenge
+[website](https://www.physionet.org/challenge/2017/), but we have included some
 scripts to make this as simple as possible.
 
 First change the file in `entry/AUTHORS.txt` to be your name and institution.
