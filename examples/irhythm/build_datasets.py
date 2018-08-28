@@ -83,24 +83,33 @@ def construct_dataset(records, epi_ext='.episodes.json'):
         data.append((record, labels))
     return data
 
-def stratify(records, dev_frac):
+def stratify(records, dev_frac, test_frac):
     pids = list(set(patient_id(record) for record in records))
     random.shuffle(pids)
-    cut = int(len(pids) * dev_frac)
-    dev_pids = set(pids[:cut])
-    train = [r for r in records if patient_id(r) not in dev_pids] 
-    dev = [r for r in records if patient_id(r) in dev_pids] 
-    return train, dev 
+    cut_dev = int(len(pids) * dev_frac)
+    cut_test = int(len(pids) * test_frac)
+    dev_pids = set(pids[:cut_dev])
+    test_pids = set(pids[cut_dev:cut_dev + cut_test])
+    train_pids = set(pids[cut_dev + cut_test:])
 
-def load_train(data_path, dev_frac, blacklist_paths):
+    train = [r for r in records if patient_id(r) in train_pids] 
+    dev = [r for r in records if patient_id(r) in dev_pids] 
+    test = [r for r in records if patient_id(r) in test_pids] 
+    return train, dev, test
+
+def load_train(data_path, dev_frac, test_frac, blacklist_paths):
     blacklist = build_blacklist(blacklist_paths)
+    print("Getting records...")
     records = get_all_records(data_path, blacklist)
-    train, dev = stratify(records, dev_frac)
+    print("Stratify...")
+    train, dev, test = stratify(records, dev_frac, test_frac)
     print("Constructing train...")
     train = construct_dataset(train)
     print("Constructing dev...")
     dev = construct_dataset(dev)
-    return train, dev
+    print("Constructing test...")
+    test = construct_dataset(test)
+    return train, dev, test
 
 def load_rev_id(record, epi_ext):
 
@@ -140,12 +149,14 @@ if __name__ == "__main__":
             os.path.join(data_dir, "batches/vf_blacklist")]
     data_path = os.path.join(data_dir, "batches")
     dev_frac = 0.1
-    train, dev = load_train(data_path, dev_frac, blacklist_paths)
+    test_frac = 0.1
+    train, dev, test = load_train(data_path, dev_frac, test_frac, blacklist_paths)
     make_json("train.json", train)
     make_json("dev.json", dev)
-    test_dir = os.path.join(data_dir, "label_review/CARDIOL_UNIQ_P/")
-    test = load_test(test_dir, '_grp*.episodes.json')
     make_json("test.json", test)
-    for i in range(6):
-        test = load_test(test_dir, "_rev{}.episodes.json".format(i))
-        make_json("test_rev{}.json".format(i), test)
+    #test_dir = os.path.join(data_dir, "label_review/CARDIOL_UNIQ_P/")
+    #test = load_test(test_dir, '_grp*.episodes.json')
+    #make_json("test.json", test)
+    #for i in range(6):
+    #    test = load_test(test_dir, "_rev{}.episodes.json".format(i))
+    #    make_json("test_rev{}.json".format(i), test)

@@ -9,7 +9,7 @@
     "conv_increase_channels_at": 4,
 
     "learning_rate": 0.001,
-    "batch_size": 128,
+    "batch_size": 1,
 
     "train": "examples/irhythm/train.json",
     "dev": "examples/irhythm/dev.json",
