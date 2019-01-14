@@ -64,3 +64,26 @@ python ecg/predict.py <dataset>.json <model>.hdf5
 
 replacing `<dataset>` with an actual path to the dataset and `<model>` with the
 path to the model.
+
+## Citation and Reference
+
+This work is published in the following paper in Nature Medicine
+
+[Cardiologist-level arrhythmia detection and classification in ambulatory electrocardiograms using a deep neural network](https://www.nature.com/articles/s41591-018-0268-3)
+
+If you find this codebase useful for your research please cite:
+
+```
+@article{hannun2019cardiologist,
+  title={Cardiologist-level arrhythmia detection and classification in ambulatory electrocardiograms using a deep neural network},
+  author={Hannun, Awni Y and Rajpurkar, Pranav and Haghpanahi, Masoumeh and Tison, Geoffrey H and Bourn, Codie and Turakhia, Mintu P and Ng, Andrew Y},
+  journal={Nature Medicine},
+  volume={25},
+  number={1},
+  pages={65},
+  year={2019},
+  publisher={Nature Publishing Group}
+}
+```
+
+
