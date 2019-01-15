@@ -67,7 +67,7 @@ path to the model.
 
 ## Citation and Reference
 
-This work is published in the following paper in Nature Medicine
+This work is published in the following paper in *Nature Medicine*
 
 [Cardiologist-level arrhythmia detection and classification in ambulatory electrocardiograms using a deep neural network](https://www.nature.com/articles/s41591-018-0268-3)
 
