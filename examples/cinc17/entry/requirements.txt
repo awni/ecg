@@ -27,5 +27,5 @@ termcolor==1.1.0
 tqdm==4.23.4
 traceback2==1.4.0
 unittest2==1.1.0
-Werkzeug==0.14.1
+Werkzeug==0.15.3
 wheel==0.31.1
