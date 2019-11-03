@@ -95,3 +95,5 @@ ENV/
 
 # Vim
 *.swp
+
+.vscode
