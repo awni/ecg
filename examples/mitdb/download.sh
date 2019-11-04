@@ -4,10 +4,9 @@
 # and 
 # https://physionet.org/physiobank/database/html/mitdbdir/mitdbdir.htm
 
-path=$1
-mkdir $path
-cd $path
-url=https://physionet.org/physiobank/database/mitdb/
+mkdir data
+cd data
+url=https://physionet.org/physiobank/database/mitdb
 for i in {100..234}
 do
     for ext in 'hea' 'dat' 'atr'

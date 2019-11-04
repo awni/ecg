@@ -9,6 +9,7 @@ import os
 import random
 import scipy.io as sio
 import tqdm
+import pickle
 
 STEP = 256
 
@@ -66,9 +67,17 @@ def load_dataset(data_json):
         data = [json.loads(l) for l in fid]
     labels = []; ecgs = []
     for d in tqdm.tqdm(data):
-        labels.append(d['labels'])
+        labels.append(load_label(d['labels']))
         ecgs.append(load_ecg(d['ecg']))
     return ecgs, labels
+
+def load_label(record):
+    if type(record) is list:
+        label = record
+    else: # Assumes pickle file
+        with open(record, 'rb') as fid:
+            label = pickle.load(fid)
+    return label
 
 def load_ecg(record):
     if os.path.splitext(record)[1] == ".npy":
@@ -76,7 +85,7 @@ def load_ecg(record):
     elif os.path.splitext(record)[1] == ".mat":
         ecg = sio.loadmat(record)['val'].squeeze()
     else: # Assumes binary 16 bit integers
-        with open(record, 'r') as fid:
+        with open(record, 'rb') as fid:
             ecg = np.fromfile(fid, dtype=np.int16)
 
     trunc_samp = STEP * int(len(ecg) / STEP)
