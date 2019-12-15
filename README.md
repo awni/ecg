@@ -86,4 +86,26 @@ If you find this codebase useful for your research please cite:
 }
 ```
 
+## Run In AWS Deep Learning AMI
 
+```bash
+source activate tensorflow_p36
+conda install tqdm tensorflow-gpu=1.13.1
+git clone https://github.com/zaiyou12/ecg.git
+cd ecg/example/cinc17
+sh setup.sh
+```
+
+Start from cin17
+
+```bash
+cd ecg
+tmux new -s learning
+python ecg/train.py examples/cinc17/config.json -e cinc17
+```
+
+After training
+
+```bash
+scp -i PEM_FILE ubuntu@54.214.142.90:/home/ubuntu/LOCAL_FILE_PATH ~/Desktop
+```

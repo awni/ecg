@@ -2,6 +2,7 @@
 /cache
 /saved
 /plots
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -97,3 +98,7 @@ ENV/
 *.swp
 
 .vscode
+
+dev.json
+train.json
+build_datasets.ipynb
