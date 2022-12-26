@@ -28,4 +28,4 @@ tqdm==4.23.4
 traceback2==1.4.0
 unittest2==1.1.0
 Werkzeug==0.14.1
-wheel==0.31.1
+wheel==0.38.1
